@@ -208,8 +208,9 @@ class ChinaBank(object):
                 logger.info("时间是同一天 {}, 不再爬取".format(last_info[0]))
             elif last_info[1] == this_info[1]:
                 logger.info("文章个数无新增 {}, 不再爬取".format(last_info[1]))
+                # 同一天的时候插入会造成主键冲突
+                self.record.insert(*this_info)
 
-            self.record.insert(*this_info)
             logger.info("刷新记录{}".format(this_info))
             self.close()
             return

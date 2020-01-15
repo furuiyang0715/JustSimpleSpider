@@ -4,6 +4,9 @@
 import os
 import sqlite3
 import sys
+import traceback
+
+from chinabank.my_log import logger
 
 sys.path.insert(0, "./..")
 
@@ -39,9 +42,15 @@ class Recorder(object):
         :return:
         """
         sql = r'insert into chinabank values ({}, {}, {});'.format(dt, nums, per_num)
-        print("插入本次的信息: ", sql)
-        self.cursor.execute(sql)
-        self.conn.commit()
+        logger.info("插入本次的信息: ", sql)
+        try:
+            self.cursor.execute(sql)
+        except:
+            logger.info("插入 sqlite 数据库失败 ")
+            traceback.print_exc()
+            self.conn.rollback()
+        else:
+            self.conn.commit()
 
     def get_all(self):
         ret = self.cursor.execute(r'select * from chinabank;')

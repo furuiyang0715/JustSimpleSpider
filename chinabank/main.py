@@ -62,7 +62,7 @@ def main():
         logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
         # TODO 如果该列表为空 需要发出上报
         schedule.run_pending()
-        time.sleep(10)
+        time.sleep(300)
         logger.info("No work to do, waiting")
 
 
