@@ -1,10 +1,10 @@
 import redis
 from redis import StrictRedis
 
-from national_statistics.configs import REDIS_HOST, REDIS_PORT, REDIS_DATABASE_NAME
+from national_statistics.configs import REDIS_PORT, REDIS_DATABASE_NAME
 from national_statistics.my_log import logger
 
-redis_cli = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DATABASE_NAME)
+redis_cli = redis.StrictRedis(host="redis", port=REDIS_PORT, db=REDIS_DATABASE_NAME)
 
 
 class SimpleHash(object):

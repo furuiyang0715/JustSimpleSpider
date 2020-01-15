@@ -15,7 +15,7 @@ from selenium.webdriver.common.by import By
 from national_statistics.common.redistools.bloom_filter_service import RedisBloomFilter
 from national_statistics.common.sqltools.mysql_pool import MyPymysqlPool, MqlPipeline
 from national_statistics.configs import (
-    MYSQL_TABLE, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, REDIS_HOST, REDIS_PORT,
+    MYSQL_TABLE, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, REDIS_PORT,
     REDIS_DATABASE_NAME
 )
 from national_statistics.my_log import logger
@@ -52,11 +52,14 @@ class GovStats(object):
         # 对于一次无法完全加载完整页面的情况 采用的方式: 
         capa = DesiredCapabilities.CHROME
         capa["pageLoadStrategy"] = "none"  # 懒加载模式，不等待页面加载完毕
-        self.browser = webdriver.Chrome(desired_capabilities=capa)  # 关键!记得添加 （本地）
-        # self.browser = webdriver.Remote(
-        #     command_executor="http://chrome:4444/wd/hub",
-        #     desired_capabilities=capa
-        # )
+        # self.browser = webdriver.Chrome(desired_capabilities=capa)  # 关键!记得添加 （本地）
+        logger.info("等待 selenium 服务连接 ")
+        time.sleep(30)
+        logger.info("等待结束 ")
+        self.browser = webdriver.Remote(
+            command_executor="http://chrome:4444/wd/hub",
+            desired_capabilities=capa
+        )
 
         self.wait = WebDriverWait(self.browser, 10)
 
@@ -71,7 +74,7 @@ class GovStats(object):
         self.db = MYSQL_DB
         self.table = MYSQL_TABLE
         self.pool = MqlPipeline(self.sql_client, self.db, self.table)
-        self.redis_cli = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DATABASE_NAME)
+        self.redis_cli = redis.StrictRedis(host="redis", port=REDIS_PORT, db=REDIS_DATABASE_NAME)
         # redis 中的键名定义规则是 表名 + "_bloom_filter"
         self.bloom = RedisBloomFilter(self.redis_cli, self.table+"_bloom_filter")
 
