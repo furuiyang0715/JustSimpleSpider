@@ -1,37 +1,14 @@
-# -*- coding: utf-8 -*-
-
 import logging
-import os
 import pprint
 import re
 import sys
-import time
 import traceback
 
 import pymysql
-import requests
-import json
-from lxml import html
-from selenium import webdriver
 from pymysql.cursors import DictCursor
 from DBUtils.PooledDB import PooledDB
-from selenium.webdriver import DesiredCapabilities
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
 
 logger = logging.getLogger()
-
-env = os.environ
-
-MYSQL_HOST = env.get("MYSQL_HOST", "127.0.0.1")
-MYSQL_PORT = env.get("MYSQL_PORT", 3307)
-MYSQL_USER = env.get("MYSQL_USER", "root")
-MYSQL_PASSWORD = env.get("MYSQL_PASSWORD", "ruiyang")
-MYSQL_DB = env.get("MYSQL_DB", "test_furuiyang")
-MYSQL_TABLE = env.get("MYSQL_TABLE", "gov_stats_zxfb")
-ALL_PAGES = int(env.get("ALL_PAGES", 25))
-SELENIUM_HOST = env.get("SELENIUM_HOST", "172.17.0.6")
 
 
 class MqlPipeline(object):
@@ -110,8 +87,7 @@ class MqlPipeline(object):
             logger.info("正在插入 {} 到 mysql 数据库 ".format(vs))
             self.mysql_pool._conn.commit()
         except pymysql.err.IntegrityError:
-            print("重复", to_insert.get("link"))
-            # logger.warning("重复{}".format(to_insert))
+            logger.warning("重复", to_insert)
             self.mysql_pool._conn.rollback()
         except Exception:
             logger.warning("mysql 插入出错, 请检查\n {}".format(to_insert))
@@ -288,166 +264,66 @@ class MyPymysqlPool(BasePymysqlPool):
         self._conn.close()
 
 
-class GovStats(object):
-    # 国家统计局爬虫
-    def __init__(self):
-        self.headers = {
-            'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
-            'Referer': 'https://m.douban.com/movie/nowintheater?loc_id=108288',
-        }
-        # 国家统计局需要爬取的版块有: 
-        # 最新发布 ... 
-        if MYSQL_TABLE == "gov_stats_zxfb":
-            self.first_url = 'http://www.stats.gov.cn/tjsj/zxfb/index.html'
-            self.format_url = 'http://www.stats.gov.cn/tjsj/zxfb/index_{}.html'
-
-        else:
-            raise RuntimeError("请检查数据起始 url")
-        
-        # 对于可以一次加载完成的部分 采用的方式: 
-        # self.browser = webdriver.Chrome()
-        # self.browser = webdriver.Remote(
-        #     command_executor="http://{}:4444/wd/hub".format(SELENIUM_HOST),
-        #     desired_capabilities=DesiredCapabilities.CHROME
-        # )
-        # self.browser.implicitly_wait(30)  # 隐性等待，最长等30秒
-
-        # 对于一次无法完全加载完整页面的情况 采用的方式: 
-        capa = DesiredCapabilities.CHROME
-        capa["pageLoadStrategy"] = "none"  # 懒加载模式，不等待页面加载完毕
-        self.browser = webdriver.Chrome(desired_capabilities=capa)  # 关键!记得添加
-        self.wait = WebDriverWait(self.browser, 5)  # 等待的最大时间 30 s
-
-        self.sql_client = MyPymysqlPool(
-            {
-                "host": MYSQL_HOST,
-                "port": MYSQL_PORT,
-                "user": MYSQL_USER,
-                "password": MYSQL_PASSWORD,
-            }
-        )
-        self.db = MYSQL_DB
-        self.table = MYSQL_TABLE
-
-        self.pages = ALL_PAGES
-
-        self.pool = MqlPipeline(self.sql_client, self.db, self.table)
-
-        # 出错的页面 
-        self.error_list = []
-
-        # 单独记录含有 table 的页面 方便单独更新和处理 
-        self.links_have_table = []
-
-    def crawl_list(self, offset):
-        if offset == 0: 
-            # print("要爬取的页面是{}".format(self.first_url))
-            item_list = self.parse_list_page(self.first_url)
-        else: 
-            item_list = self.parse_list_page(self.format_url.format(offset))
-        return item_list
-
-    def parse_list_page(self, url):
-        self.browser.get(url)
-        ret = self.wait.until(EC.presence_of_element_located((By.XPATH, "//div[@class='center_list']/ul[@class='center_list_contlist']")))   # 等待直到某个元素出现
-        # print(ret.tag_name)  # ul
-        lines = ret.find_elements_by_xpath("./li/a/*")
-        item_list = []
-        for line in lines: 
-            item = {}
-            link = line.find_element_by_xpath("./..").get_attribute("href")
-            item['link'] = link 
-            item['title'] = line.find_element_by_xpath("./font[@class='cont_tit03']").text
-            item['pub_date'] = line.find_element_by_xpath("./font[@class='cont_tit02']").text
-            # item['article'] = self.parse_detail_page(link)
-            item_list.append(item)
-            # print("在当前页面获取的数据是:" , item) 
-        return item_list
-
-    def parse_detail_page(self, url):
-        # 在解析详情页的时间 遇到表格要避开 
-        # 表格 for example:  http://www.stats.gov.cn/tjsj/zxfb/201910/t20191021_1704063.html 
-        while True: 
-            try: 
-                self.browser.get(url)
-                ret = self.wait.until(EC.presence_of_element_located((By.XPATH, "//div[@class='TRS_PreAppend']")))   # 等待直到某个元素出现
-                # print(ret.text)
-
-                contents = []
-                nodes = ret.find_elements_by_xpath("./*")
-
-                for node in nodes: 
-                    if not node.find_elements_by_xpath(".//table"): 
-                        c = node.text 
-                        if c: 
-                            contents.append(c)
-                    else: 
-                        print("去掉 table 中的内容 ... ")
-                # print("\n".join(contents))
+# 测试数据库连接工具的使用
 
 
-                # self.browser.get(url)
-                # ret = self.wait.until(EC.presence_of_element_located((By.XPATH, "//div[@class='center_xilan']")))   # 等待直到某个元素出现
-                # # print(ret.text)
-                # # 判断页面正文中是否含有表格 
+def mysql_test():
+    # 创建连接对象
+    from chinabank.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD
+    mysql = MyPymysqlPool({
+            "host": MYSQL_HOST,
+            "port": MYSQL_PORT,
+            "user": MYSQL_USER,
+            "password": MYSQL_PASSWORD,
+        })
 
-                # tables = ret.find_elements_by_xpath(".//table")
-                # if tables: 
-                #     self.links_have_table.append(url)
+    # # 获取全部数据
+    # sqlAll = "select * from test_furuiyang.chinabank_shujujiedu"
+    # result = mysql.getAll(sqlAll)
+    # # print(pprint.pformat(result))
+    # print(len(result))
+
+    # # 根据参数查询出其中的某条数据
+    # sql2 = "select * from test_furuiyang.chinabank_shujujiedu where id=%s"
+    # param2 = ["39"]
+    # result = mysql.getOne(sql2, param2)
+    # print(pprint.pformat(result))
+
+    # # 根据输入参数查询出其中的某几条数据
+    # param3 = []
+    # param3.append(89)
+    # param3.append(39)
+    # sql3 = "select * from test_furuiyang.chinabank_shujujiedu where id in (%s,%s)"
+    # result2 = mysql.getMany(sql3, 2, param3)
+    # print(pprint.pformat(result2))
+
+    # # 根据输入参数插入多个数据
+    # sql4 = "insert into data_spider.testscore(q_a, q_b, score) values (%s,%s,%s)"
+    # values4 = [(22, 33, 0.336222), (22, 33, 0.336222), (22, 33, 0.336222)]
+    # result4 = mysql.insertMany(sql4, values4)
+    # print(result4)
+
+    # # 根据输入更新数据
+    # sql5 = "update data_spider.testscore set score=%s where id=%s"
+    # param5 = ["0.22222222", "6"]
+    # result5 = mysql.update(sql5, param5)
+    # print(result5)
+
+    # # 根据输入参数插入数据
+    # sql6 = "insert into data_spider.testscore(q_a, q_b, score) values (%s,%s,%s)"
+    # param6 = ['55', '77', '0.225566']
+    # result6 = mysql.insert(sql6, param6)
+    # print(result6)
+
+    # # 删除数据
+    # sql7 = "delete from data_spider.testscore where id=%s "
+    # param7 = ["5"]
+    # result7 = mysql.delete(sql7, param7)
+    # print(result7)
+
+    # 最后要释放资源释放资源
+    mysql.dispose()
 
 
-
-            except: 
-                print("{} 出错重试 ... ".format(url))
-            else: 
-                break 
-        
-        # return ret.text
-        return "\n".join(contents)
-
-    def save_to_mysql(self, item):
-        # 单个保存 
-        self.pool.save_to_database(item)
-
-    # def save_page(self, items: list):
-    #     for item in items:
-    #         self.save_to_mysql(item)
-
-    def start(self):
-        for page in range(0, self.pages):
-            while True: 
-                try:
-                    # 总的来说 是先爬取到列表页 再根据列表页里面的链接去爬取详情页 
-                    items = self.crawl_list(page)
-                    # print(pprint.pformat(items)) 
-
-                    for item in items: 
-                        item['article'] = self.parse_detail_page(item['link'])
-                        # print(pprint.pformat(item))
-                        print()
-                        print()
-                        # time.sleep(3)
-                        # self.save_to_mysql(item)
-                        # print("保存成功 {}".format(item['link']))
-
-                    # 按页保存
-                    # self.save_page(page_list)
-                    # print(pprint.pformat(page_list))
-                except Exception as e:
-                    logger.warning("加载出错了,重试, the page is {}".format(page))
-                    # traceback.print_exc()
-                else:
-                    print("本页保存成功 {}".format(page))
-                    break 
-
-        self.browser.close()
-
-
-if __name__ == "__main__":
-    t1 = time.time()
-    runner = GovStats()
-    runner.start() 
-    # print(runner.error_list) 
-    # print(runner.links_have_table)
-    t2 = time.time()
-    print("花费的时间是 {} s".format(t2-t1))
+if __name__ == '__main__':
+    mysql_test()
