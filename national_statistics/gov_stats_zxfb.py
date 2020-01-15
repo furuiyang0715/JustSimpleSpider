@@ -86,6 +86,18 @@ class GovStats(object):
         # 上次爬取文章的最新发布时间
         self.last_dt = None
 
+    def get_urls(self):
+        """
+        从当前的 mysql 数据库中获取到全部的文章链接
+        :return:
+        """
+        sl = """select link from {}.{};""".format(self.db, self.table)
+        rets = self.sql_client.getAll(sl)
+        urls = [r.get("link") for r in rets]
+        return urls
+
+
+
     def crawl_list(self, offset):
         if offset == 0: 
             logger.info("要爬取的页面是第一页 {}".format(self.first_url))
@@ -331,6 +343,11 @@ class GovStats(object):
 if __name__ == "__main__":
     t1 = time.time()
     runner = GovStats()
+    ret = runner.get_urls()
+    runner.close()
+    print(ret)
+
+    sys.exit(0)
     runner.start() 
     logger.info("列表页爬取失败 {}".format(runner.error_list))
     logger.info("详情页爬取失败 {}".format(runner.detail_error_list))
