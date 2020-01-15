@@ -239,7 +239,7 @@ class ChinaBank(object):
                         self.error_list.append(page)
                         break
                 else:
-                    logger("本页保存成功 {}".format(page))
+                    logger.info("本页保存成功 {}".format(page))
                     break
 
         self.record.insert(*this_info)
