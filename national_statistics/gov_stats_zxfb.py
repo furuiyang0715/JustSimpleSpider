@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
-
+import datetime
+import os
+import sys
 import time
 import traceback
 
+import redis
 from selenium import webdriver
 from selenium.webdriver import DesiredCapabilities
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
+from national_statistics.common.redistools.bloom_filter_service import RedisBloomFilter
 from national_statistics.common.sqltools.mysql_pool import MyPymysqlPool, MqlPipeline
-from national_statistics.configs import MYSQL_TABLE, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
+from national_statistics.configs import MYSQL_TABLE, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, \
+    REDIS_HOST, REDIS_PORT, REDIS_DATABASE_NAME
 from national_statistics.my_log import logger
 
 
@@ -63,6 +68,9 @@ class GovStats(object):
         self.db = MYSQL_DB
         self.table = MYSQL_TABLE
         self.pool = MqlPipeline(self.sql_client, self.db, self.table)
+        self.redis_cli = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DATABASE_NAME)
+        # redis 中的键名定义规则是 表名 + "_bloom_filter"
+        self.bloom = RedisBloomFilter(self.redis_cli, self.table+"_bloom_filter")
 
         # 出错的列表页面
         self.error_list = []
@@ -152,31 +160,42 @@ class GovStats(object):
         self.sql_client.dispose()
         self.browser.close()
 
-    # def parse_page_info(self):
-    #     """
-    #     解析首页 在增量爬取时获取到文章总个数、每页文章数等信息
-    #     :return:
-    #     """
-    #     url = self.first_url
-    #     self.browser.get(url)
-    #     # 国家统计局的页面很难完全加载完毕
-    #     # ret = self.wait.until()
-    #     #
-    #     # pass
+    def parse_page_info(self):
+        """
+        解析首页 在增量爬取时获取到文章总个数、每页文章数等信息
+        :return:
+        """
+        # TODO 将该捕获机制封装为装饰器
+        while True:
+            retry = 2
+            try:
+                items = self.parse_list_page(self.first_url)
+            except Exception:
+                logger.info("获取首页讯息 失败重试 ")
+                retry -= 1
+                if retry < 0:
+                    raise RuntimeError("获取不到首页的讯息")
+            else:
+                break
+        max_dt = max([item.get("pub_date") for item in items])
+        # max_dt = datetime.datetime.strptime(max_dt, "%Y-%m-%d")
+        # logger.info(type(max_dt))
+        logger.info("当前的最大发布时间是{}".format(max_dt))
+        return max_dt
 
     def start(self):
-        # 只显示了页数 不够准确 不使用该方法进行增量了
-        # this_info = self.parse_page_info()
-        # TODO
-        for page in range(0, 5):
+        for page in range(0, 500):
             retry = 3
             while True: 
                 try:
                     # 总的来说 是先爬取到列表页 再根据列表页里面的链接去爬取详情页 
                     items = self.crawl_list(page)
                     for item in items:
-                        item['article'] = self.parse_detail_page(item['link'])
-                        self.save_to_mysql(item)
+                        link = item['link']
+                        if not self.bloom.is_contains(link):
+                            item['article'] = self.parse_detail_page(link)
+                            self.save_to_mysql(item)
+                            self.bloom.insert(link)
                 except Exception:
                     retry -= 1
                     logger.warning("加载出错了,重试, the page is {}".format(page))
@@ -190,6 +209,9 @@ class GovStats(object):
                     break 
 
         self.close()
+        this_max_dt = self.parse_page_info()
+        # TODO 保存本次的时间
+        # os.environ.setdefault("LAST_DT", this_max_dt)
 
 
 if __name__ == "__main__":

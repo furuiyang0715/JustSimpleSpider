@@ -2,6 +2,8 @@ import redis
 from redis import StrictRedis
 
 from national_statistics.configs import REDIS_HOST, REDIS_PORT, REDIS_DATABASE_NAME
+from national_statistics.my_log import logger
+
 redis_cli = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DATABASE_NAME)
 
 
@@ -23,10 +25,14 @@ class RedisBloomFilter(object):
         self.bit_size = 1 << 25
         self.seeds = [5, 7, 11, 13, 31, 37, 61]
         self.redis = redis_client
+        self.key = key
+        # 初始化时将之前可能存在的数据清空
+        logger.info("bloom 初始化 将之前可能存在的数据清空")
+        self.restart()
+
         self.hash_dict = []
         for i in range(self.seeds.__len__()):
             self.hash_dict.append(SimpleHash(self.bit_size, self.seeds[i]))
-        self.key = key
 
     def is_contains(self, value):
         if value is None:
