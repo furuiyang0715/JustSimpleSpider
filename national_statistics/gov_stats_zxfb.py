@@ -86,7 +86,7 @@ class GovStats(object):
         # 上次爬取文章的最新发布时间
         self.last_dt = None
 
-    def get_urls(self):
+    def _get_urls(self):
         """
         从当前的 mysql 数据库中获取到全部的文章链接
         :return:
@@ -96,7 +96,18 @@ class GovStats(object):
         urls = [r.get("link") for r in rets]
         return urls
 
+    def insert_urls(self):
+        urls = self._get_urls()
+        logger.info("要插入的链接个数是 {}".format(len(urls)))
 
+        for url in urls:
+            self.bloom.insert(url)
+
+        # # 测试已经全部插入了
+        # for url in urls:
+        #     if not self.bloom.is_contains(url):
+        #         print(url)
+        # print("测试完毕")
 
     def crawl_list(self, offset):
         if offset == 0: 
@@ -268,6 +279,9 @@ class GovStats(object):
                 break
 
     def start(self):
+        logger.info("首先 将已经爬取的链接 insert 到 bloom 过滤器中")
+        self.insert_urls()
+
         last_max = self.recorder.get()
 
         if not last_max:
@@ -291,6 +305,8 @@ class GovStats(object):
                                 item['article'] = self.parse_detail_page(link)
                                 self.save_to_mysql(item)
                                 self.bloom.insert(link)
+                            else:
+                                logger.info("bloom pass")
                     except Exception:
                         retry -= 1
                         logger.warning("加载出错了,重试, the page is {}".format(page))
@@ -302,7 +318,7 @@ class GovStats(object):
                             break
                     else:
                         logger.info("本页保存成功 {}".format(page))
-                    break
+                        break
             else:
                 while True:
                     try:
@@ -335,7 +351,7 @@ class GovStats(object):
                             break
                     else:
                         logger.info("本页保存成功 {}".format(page))
-                    break
+                        break
 
         self.close()
 
@@ -343,11 +359,12 @@ class GovStats(object):
 if __name__ == "__main__":
     t1 = time.time()
     runner = GovStats()
-    ret = runner.get_urls()
-    runner.close()
-    print(ret)
 
-    sys.exit(0)
+    # ret = runner.get_urls()
+    # runner.insert_urls()
+    # runner.close()
+    # print(ret)
+
     runner.start() 
     logger.info("列表页爬取失败 {}".format(runner.error_list))
     logger.info("详情页爬取失败 {}".format(runner.detail_error_list))
