@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
+
 import datetime
-import logging
 import math
 import pprint
 import re
@@ -11,11 +11,10 @@ from lxml import html
 from selenium import webdriver
 from selenium.webdriver import DesiredCapabilities
 
+from chinabank.my_log import logger
 from chinabank.sys_info import Recorder
 from chinabank.configs import MYSQL_TABLE, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
 from chinabank.common.sqltools.mysql_pool import MyPymysqlPool, MqlPipeline
-
-logger = logging.getLogger()
 
 
 class ChinaBank(object):
@@ -123,7 +122,7 @@ class ChinaBank(object):
 
         for news_title_part in news_title_parts:
             item = {}
-            # 应对 105, 109, 112 等不太符合规范的列表页 ...
+            # TODO 应对 105, 109, 112 等不太符合规范的列表页
             try:
                 news_date_part = news_title_part.xpath("./following-sibling::span[@class='hui12']")[0].text_content()
             except:
@@ -191,58 +190,58 @@ class ChinaBank(object):
 
         return dt_int, nums, per_page_num
 
+    def close(self):
+        logger.info("爬虫关闭 ")
+        self.browser.close()
+        self.sql_client.dispose()
+
     def start(self):
-        print("休息 30 s")
-        time.sleep(30)
-        print("休息结束 ")
         # 从数据库中取出上一次的更新情况
         last_info = self.record.get_last()
         this_info = self.parse_info()
-        print(last_info)
-        print(this_info)   # (20200114, 3897, 15)
+
+        logger.info("上次的记录是{}".format(last_info))
+        logger.info("本次爬取的记录是{}".format(this_info))
 
         if (last_info[0] == this_info[0]) or (last_info[1] == this_info[1]):
-            print("无需继续爬取 ...")
-            self.browser.close()
-            self.record.insert(*this_info)
-            return
-        else:
-            # 计算需要爬取的页数
-            self.pages = math.ceil((this_info[1] - last_info[1]) / this_info[2])
-            print("需要爬取的页数是 {}".format(self.pages))
+            if last_info[0] == this_info[0]:
+                logger.info("时间是同一天 {}, 不再爬取".format(last_info[0]))
+            elif last_info[1] == this_info[1]:
+                logger.info("文章个数无新增 {}, 不再爬取".format(last_info[1]))
 
-        # 中国银行的爬虫是从第 1 页开始的
+            self.record.insert(*this_info)
+            logger.info("刷新记录{}".format(this_info))
+            self.close()
+            return
+
+        else:
+            self.pages = math.ceil((this_info[1] - last_info[1]) / this_info[2])
+            logger.info("ceil[({} - {}) / {}]".format(this_info[1], last_info[1], this_info[2]))
+            logger.info("计算得到需要爬取的页数是 {}".format(self.pages))
+
         for page in range(1, self.pages + 1):
-            retry = 5
+            retry = 3
             while True:
                 try:
                     # 总的来说 是先爬取到列表页 再根据列表页里面的链接去爬取详情页
                     items = self.crawl_list(page)
-                    # print(pprint.pformat(items))
 
                     for item in items:
                         detail_page = self.get_page(item["article_link"])
                         item['article_content'] = self.parse_detail_page(detail_page)
-                        print(pprint.pformat(item))
                         self.save_to_mysql(item)
-
                 except Exception as e:
                     logger.warning("加载出错了,重试, the page is {}".format(page))
-                    time.sleep(3)    # 休息 3 s
+                    time.sleep(3)    # 休息 3 s 再次请求
                     traceback.print_exc()
                     retry -= 1
                     if retry < 0:
                         self.error_list.append(page)
                         break
-                    time.sleep(3)
                 else:
-                    print("本页保存成功 {}".format(page))
+                    logger("本页保存成功 {}".format(page))
                     break
-
-        self.browser.close()
-
-        self.sql_client.dispose()
 
         self.record.insert(*this_info)
 
-
+        self.close()

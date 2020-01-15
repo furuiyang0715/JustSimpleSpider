@@ -46,7 +46,7 @@ def task():
 
     runner = ChinaBank()
     runner.start()
-    logger.info(runner.error_list)
+    logger.info("本次未成功爬取的页面是 {} ".format(runner.error_list))
 
 
 def main():
