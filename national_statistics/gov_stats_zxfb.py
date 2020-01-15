@@ -44,13 +44,13 @@ class GovStats(object):
         # 对于一次无法完全加载完整页面的情况 采用的方式: 
         capa = DesiredCapabilities.CHROME
         capa["pageLoadStrategy"] = "none"  # 懒加载模式，不等待页面加载完毕
-        # self.browser = webdriver.Chrome(desired_capabilities=capa)  # 关键!记得添加 （本地）
-        self.browser = webdriver.Remote(
-            command_executor="http://chrome:4444/wd/hub",
-            desired_capabilities=capa
-        )
+        self.browser = webdriver.Chrome(desired_capabilities=capa)  # 关键!记得添加 （本地）
+        # self.browser = webdriver.Remote(
+        #     command_executor="http://chrome:4444/wd/hub",
+        #     desired_capabilities=capa
+        # )
 
-        self.wait = WebDriverWait(self.browser, 10)
+        self.wait = WebDriverWait(self.browser, 5)
 
         self.sql_client = MyPymysqlPool(
             {
@@ -152,9 +152,23 @@ class GovStats(object):
         self.sql_client.dispose()
         self.browser.close()
 
+    # def parse_page_info(self):
+    #     """
+    #     解析首页 在增量爬取时获取到文章总个数、每页文章数等信息
+    #     :return:
+    #     """
+    #     url = self.first_url
+    #     self.browser.get(url)
+    #     # 国家统计局的页面很难完全加载完毕
+    #     # ret = self.wait.until()
+    #     #
+    #     # pass
+
     def start(self):
+        # 只显示了页数 不够准确 不使用该方法进行增量了
+        # this_info = self.parse_page_info()
         # TODO
-        for page in range(0, 10):
+        for page in range(0, 5):
             retry = 3
             while True: 
                 try:
