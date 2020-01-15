@@ -13,10 +13,9 @@ MYSQL_USER = env.get("MYSQL_USER", cf.get('mysql', 'MYSQL_USER'))
 MYSQL_PASSWORD = env.get("MYSQL_PASSWORD", cf.get('mysql', 'MYSQL_PASSWORD'))
 MYSQL_DB = env.get("MYSQL_DB", cf.get('mysql', 'MYSQL_DB'))
 MYSQL_TABLE = env.get("MYSQL_TABLE", cf.get('mysql', 'MYSQL_TABLE'))
-DB_FILE = os.path.join(os.path.dirname(__file__), 'gov_stats.db')
 
 # 关于 redis 的配置
-# 但是如果是使用 compose 的话 就不需要使用这里的配置
+# # 但是如果是使用 compose 的话 就不需要使用这里的配置
 REDIS_HOST = env.get("REDIS_HOST", cf.get('redis', 'REDIS_HOST'))
 REDIS_PORT = int(env.get("REDIS_PORT", cf.get('redis', 'REDIS_PORT')))
 REDIS_DATABASE_NAME = int(env.get("REDIS_DATABASE_NAME", cf.get('redis', 'REDIS_DATABASE_NAME')))
