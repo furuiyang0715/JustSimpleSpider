@@ -1,5 +1,7 @@
 import logging
+import pprint
 import re
+import sys
 import traceback
 
 import pymysql
@@ -260,3 +262,68 @@ class MyPymysqlPool(BasePymysqlPool):
             self.end('rollback')
         self._cursor.close()
         self._conn.close()
+
+
+# 测试数据库连接工具的使用
+
+
+def mysql_test():
+    # 创建连接对象
+    from chinabank.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD
+    mysql = MyPymysqlPool({
+            "host": MYSQL_HOST,
+            "port": MYSQL_PORT,
+            "user": MYSQL_USER,
+            "password": MYSQL_PASSWORD,
+        })
+
+    # # 获取全部数据
+    # sqlAll = "select * from test_furuiyang.chinabank_shujujiedu"
+    # result = mysql.getAll(sqlAll)
+    # # print(pprint.pformat(result))
+    # print(len(result))
+
+    # # 根据参数查询出其中的某条数据
+    # sql2 = "select * from test_furuiyang.chinabank_shujujiedu where id=%s"
+    # param2 = ["39"]
+    # result = mysql.getOne(sql2, param2)
+    # print(pprint.pformat(result))
+
+    # # 根据输入参数查询出其中的某几条数据
+    # param3 = []
+    # param3.append(89)
+    # param3.append(39)
+    # sql3 = "select * from test_furuiyang.chinabank_shujujiedu where id in (%s,%s)"
+    # result2 = mysql.getMany(sql3, 2, param3)
+    # print(pprint.pformat(result2))
+
+    # # 根据输入参数插入多个数据
+    # sql4 = "insert into data_spider.testscore(q_a, q_b, score) values (%s,%s,%s)"
+    # values4 = [(22, 33, 0.336222), (22, 33, 0.336222), (22, 33, 0.336222)]
+    # result4 = mysql.insertMany(sql4, values4)
+    # print(result4)
+
+    # # 根据输入更新数据
+    # sql5 = "update data_spider.testscore set score=%s where id=%s"
+    # param5 = ["0.22222222", "6"]
+    # result5 = mysql.update(sql5, param5)
+    # print(result5)
+
+    # # 根据输入参数插入数据
+    # sql6 = "insert into data_spider.testscore(q_a, q_b, score) values (%s,%s,%s)"
+    # param6 = ['55', '77', '0.225566']
+    # result6 = mysql.insert(sql6, param6)
+    # print(result6)
+
+    # # 删除数据
+    # sql7 = "delete from data_spider.testscore where id=%s "
+    # param7 = ["5"]
+    # result7 = mysql.delete(sql7, param7)
+    # print(result7)
+
+    # 最后要释放资源释放资源
+    mysql.dispose()
+
+
+if __name__ == '__main__':
+    mysql_test()

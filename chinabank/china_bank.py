@@ -7,7 +7,6 @@ import re
 import time
 import traceback
 
-import selenium
 from lxml import html
 from selenium import webdriver
 from selenium.webdriver import DesiredCapabilities
@@ -20,11 +19,15 @@ logger = logging.getLogger()
 
 
 class ChinaBank(object):
-    # 中国银行爬虫
+    """
+    中国银行爬虫
+        爬取两个模块：
+        （1） 数据解读
+        （2） 新闻发布
+    """
     def __init__(self):
         self.headers = {
-            'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
-            'Referer': 'https://m.douban.com/movie/nowintheater?loc_id=108288',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
         }
         if MYSQL_TABLE == "chinabank_shujujiedu":
             self.url = 'http://www.pbc.gov.cn/diaochatongjisi/116219/116225/11871/index{}.html'
@@ -35,16 +38,18 @@ class ChinaBank(object):
         else:
             raise RuntimeError("请检查数据起始 url")
 
-        # self.browser = webdriver.Chrome()
-        # 可能还没有启动 就会出现 refused 的问题
-        print("休息 30 s")
+        # self.browser = webdriver.Chrome()    # local
+
+        # TODO 可能还没有启动 就会出现 refused 的问题
+        # TODO 暂时是使用了一个比较 ugly 的方法 强制在这里暂停 30 s
+        # TODO 应该有办法去 ping 一下服务端 返回一个服务是否已经就绪的状态
         time.sleep(30)
-        print("休息结束 ")
         self.browser = webdriver.Remote(
-            # command_executor="http://{}:4444/wd/hub".format(SELENIUM_HOST),
-            command_executor="http://chrome:4444/wd/hub",
+            # command_executor="http://{}:4444/wd/hub".format(SELENIUM_HOST),    # docker
+            command_executor="http://chrome:4444/wd/hub",   # compose
             desired_capabilities=DesiredCapabilities.CHROME
         )
+
         self.browser.implicitly_wait(30)  # 隐性等待，最长等30秒
 
         self.sql_client = MyPymysqlPool(
@@ -55,11 +60,13 @@ class ChinaBank(object):
                 "password": MYSQL_PASSWORD,
             }
         )
+
         self.db = MYSQL_DB
         self.table = MYSQL_TABLE
-        # self.pages = ALL_PAGES
         self.pool = MqlPipeline(self.sql_client, self.db, self.table)
+
         self.record = Recorder(False)   # sqlite 数据库记录爬取情况
+
         self.error_list = []
 
     def save_to_mysql(self, item):
@@ -233,5 +240,9 @@ class ChinaBank(object):
                     break
 
         self.browser.close()
+
+        self.sql_client.dispose()
+
         self.record.insert(*this_info)
+
 
