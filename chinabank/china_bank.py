@@ -45,7 +45,7 @@ class ChinaBank(object):
         time.sleep(30)
         self.browser = webdriver.Remote(
             # command_executor="http://{}:4444/wd/hub".format(SELENIUM_HOST),    # docker
-            command_executor="http://chrome:4444/wd/hub",   # compose
+            command_executor="http://chrome:4444/wd/hub",                        # docker compose
             desired_capabilities=DesiredCapabilities.CHROME
         )
 

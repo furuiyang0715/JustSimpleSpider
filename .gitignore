@@ -111,3 +111,4 @@ notes.MD
 *.vscode/
 *.conf
 *.yml
+*.log.*

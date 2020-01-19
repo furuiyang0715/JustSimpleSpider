@@ -168,7 +168,8 @@ class GovStats(object):
                         if c: 
                             contents.append(c)
                     else: 
-                        logger.warning("去掉 table 中的内容")
+                        # logger.warning("去掉 table 中的内容")
+                        pass
             except: 
                 logger.warning("{} 出错重试".format(url))
                 time.sleep(3)
@@ -210,7 +211,10 @@ class GovStats(object):
                 time.sleep(5)
                 retry -= 1
                 if retry < 0:
-                    raise RuntimeError("获取不到首页的讯息")
+                    # raise RuntimeError("获取不到首页的讯息")
+                    # break
+                    logger.warning("获取不到首页的讯息 ")
+                    return
             else:
                 break
         max_dt = max([datetime.datetime.strptime(item.get("pub_date"), "%Y-%m-%d") for item in items])
@@ -309,7 +313,8 @@ class GovStats(object):
                                 self.save_to_mysql(item)
                                 self.bloom.insert(link)
                             else:
-                                logger.info("bloom pass")
+                                # logger.info("bloom pass")
+                                pass
                     except Exception:
                         retry -= 1
                         logger.warning("加载出错了,重试, the page is {}".format(page))
@@ -342,7 +347,8 @@ class GovStats(object):
                                 self.save_to_mysql(item)
                                 self.bloom.insert(link)
                             else:
-                                logger.info("bloom pass")
+                                # logger.info("bloom pass")
+                                pass
                     except Exception:
                         retry -= 1
                         logger.warning("加载出错了,重试, the page is {}".format(page))

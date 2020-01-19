@@ -42,7 +42,7 @@ class Recorder(object):
         :return:
         """
         sql = r'insert into chinabank values ({}, {}, {});'.format(dt, nums, per_num)
-        logger.info("插入本次的信息: ", sql)
+        logger.info("插入本次的信息: {}".format(sql))
         try:
             self.cursor.execute(sql)
         except:
@@ -63,12 +63,12 @@ class Recorder(object):
 
 
 
-# d = Recorder(True)
 
-d = Recorder(False)
+# d = Recorder(False)
 
+d = Recorder(True)
 d._create_table()
-# d.insert(*(20200101, 0, 15))
+d.insert(*(20200101, 0, 15))
 
 print(d.get_all())
 print(d.get_last())
