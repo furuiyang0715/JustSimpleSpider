@@ -84,8 +84,8 @@ class GovStats(object):
         self.links_have_table = []
         # 爬虫的一个记录器 简单来说就是一个文件
         self.recorder = Recorder()
-        # 上次爬取文章的最新发布时间
-        self.last_dt = None
+        # # 上次爬取文章的最新发布时间
+        # self.last_dt = None
 
     def _check_selenium_status(self):
         """
@@ -242,20 +242,11 @@ class GovStats(object):
         max_dt_str = max_dt.strftime("%Y-%m-%d")
         return max_dt_str
 
-    def start(self):
-        logger.info("首先 将已经爬取的链接 insert 到 bloom 过滤器中")
-        self.insert_urls()
-        last_max = self.recorder.get()
-
-        if not last_max:
-            logger.info("首次爬取 ")
-            first = True
-
-        else:
-            logger.info("增量爬取")
-            self.last_dt = datetime.datetime.strptime(last_max, "%Y-%m-%d")
-            first = False
-
+    def first_run(self):
+        """
+        当前项目是首次进行爬取
+        :return:
+        """
         for page in range(0, 24):
             retry = 3
             while True:
@@ -268,7 +259,6 @@ class GovStats(object):
                             self.save_to_mysql(item)
                             self.bloom.insert(link)
                         else:
-                            # logger.info("bloom pass")
                             pass
                 except Exception:
                     retry -= 1
@@ -282,20 +272,81 @@ class GovStats(object):
                 else:
                     logger.info("本页保存成功 {}".format(page))
                     break
-
         self.close()
+
+    def second_run(self, last_max):
+        """
+        当前项目是增量进行爬取
+        :return:
+        """
+        for page in range(0, 24):
+            retry = 3
+            while True:
+                try:
+                    items = self.crawl_list(page)
+                    # 找出这一页中的最大时间
+                    times = [item.get("pub_date") for item in items]
+                    # print(times)  # '2020-02-03', '2020-02-03', '2020-01-31',
+                    # print(type(times[0]))   # str
+
+                    times = [datetime.datetime.strptime(t, "%Y-%m-%d") for t in times]
+                    # print(times)
+                    # print(type(times[0]))  # <class 'datetime.datetime'>
+
+                    # 求出当前页的最大时间 如果该时间都小于上一次的最大时间 说明这一页不用再爬取了 已经爬取过了
+                    page_max = max(times)
+                    logger.info("当前页的最大时间是{}".format(page_max))
+                    logger.info("上次爬取的最大时间是{}".format(last_max))
+
+                    if page_max < last_max:
+                        logger.info("增量爬取结束了")
+                        return
+                    else:
+                        for item in items:
+                            link = item['link']
+                            if not self.bloom.is_contains(link):
+                                item['article'] = self.parse_detail_page(link)
+                                self.save_to_mysql(item)
+                                self.bloom.insert(link)
+                            else:
+                                pass
+                except Exception:
+                    retry -= 1
+                    logger.warning("加载出错了,重试, the page is {}".format(page))
+                    time.sleep(3)
+                    if retry < 0:
+                        self.error_list.append(page)
+                        break
+                else:
+                    logger.info("本页保存成功 {}".format(page))
+                    break
+
+    def start(self):
+        logger.info("首先 将已经爬取的链接 insert 到 bloom 过滤器中")
+        self.insert_urls()
+        last_max = self.recorder.get()
+
+        if not last_max:
+            logger.info("首次爬取 ")
+            first = True
+
+        else:
+            logger.info("增量爬取")
+            last_max = datetime.datetime.strptime(last_max, "%Y-%m-%d")
+            first = False
+
+        self.second_run(last_max)
+
+        # if first:
+        #     self.first_run()
+        # else:
+        #     self.second_run()
 
 
 if __name__ == "__main__":
     t1 = time.time()
     runner = GovStats()
-
-    # ret = runner.get_urls()
-    # runner.insert_urls()
-    # runner.close()
-    # print(ret)
-
-    runner.start() 
+    runner.start()
     logger.info("列表页爬取失败 {}".format(runner.error_list))
     logger.info("详情页爬取失败 {}".format(runner.detail_error_list))
     t2 = time.time()
