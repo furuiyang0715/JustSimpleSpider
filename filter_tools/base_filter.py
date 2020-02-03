@@ -12,6 +12,15 @@ class BaseFilter(object):
     """基于信息摘要算法进行数据的去重以及判断"""
     def __init__(self, hash_func_name='md5'):
         self.hash_func = getattr(hashlib, hash_func_name)
+        self.storage = self._get_storage()
+
+    def _get_storage(self):
+        """
+        获取去重容器对象
+        在具体的子类中实现
+        :return:
+        """
+        pass
 
     def _safe_date(self, data):
         """
@@ -74,6 +83,7 @@ class BaseFilter(object):
     def _is_exist(self, hash_value):
         """
         交给对应的子类去实现
+        判断的结果是 True 或者是 False
         :param hash_value:
         :return:
         """
