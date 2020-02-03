@@ -14,7 +14,8 @@ class BaseFilter(object):
                  redis_host='localhost',
                  redis_port=6379,
                  redis_db=15,
-                 redis_key='filter'
+                 redis_key='filter',
+                 mysql_url=None,
 
                  ):
         self.hash_func = getattr(hashlib, hash_func_name)
@@ -22,6 +23,7 @@ class BaseFilter(object):
         self.redis_port = redis_port
         self.redis_db = redis_db
         self.redis_key = redis_key
+        self.mysql_url = mysql_url
         self.storage = self._get_storage()
 
     def _get_storage(self):
