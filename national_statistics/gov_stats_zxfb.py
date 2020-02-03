@@ -273,6 +273,7 @@ class GovStats(object):
                 else:
                     logger.info("本页保存成功 {}".format(page))
                     break
+
         self.close()
 
     def second_run(self, last_max):
@@ -321,6 +322,7 @@ class GovStats(object):
                 else:
                     logger.info("本页保存成功 {}".format(page))
                     break
+        self.close()
 
     def start(self):
         logger.info("首先 将已经爬取的链接 insert 到 bloom 过滤器中")
@@ -330,6 +332,8 @@ class GovStats(object):
         if not last_max:
             logger.info("首次爬取 ")
             first = True
+            # logger.info("首先 将已经爬取的链接 insert 到 bloom 过滤器中")
+            # self.insert_urls()
 
         else:
             logger.info("增量爬取")
@@ -344,11 +348,11 @@ class GovStats(object):
             self.second_run(last_max)
 
 
-if __name__ == "__main__":
-    t1 = time.time()
-    runner = GovStats()
-    runner.start()
-    logger.info("列表页爬取失败 {}".format(runner.error_list))
-    logger.info("详情页爬取失败 {}".format(runner.detail_error_list))
-    t2 = time.time()
-    logger.info("花费的时间是 {} s".format(t2-t1))
+# if __name__ == "__main__":
+#     t1 = time.time()
+#     runner = GovStats()
+#     runner.start()
+#     logger.info("列表页爬取失败 {}".format(runner.error_list))
+#     logger.info("详情页爬取失败 {}".format(runner.detail_error_list))
+#     t2 = time.time()
+#     logger.info("花费的时间是 {} s".format(t2-t1))
