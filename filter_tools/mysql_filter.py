@@ -53,3 +53,15 @@ class MqlFilter(BaseFilter):
             return False
         else:
             return True
+
+
+if __name__ == "__main__":
+    f = MqlFilter(mysql_url="mysql+pymysql://root:password@localhost:3306/db_name?charset=utf8")
+    datas = ['ruiyang', 'Ruiyang', '33', 'pwd', "11", "22", "33", "ruiyang"]
+    for d in datas:
+        if f.is_exist(d):
+            print("{} 数据已经存在".format(d))
+            # print(f.storage)
+        else:
+            f.save(d)
+            print("添加数据 {}".format(d))
