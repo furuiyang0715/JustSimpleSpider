@@ -37,10 +37,11 @@ class RedisFilter(BaseFilter):
         :param hash_value:
         :return:
         """
-        if self.storage.sismember(self.redis_key, hash_value):
-            return True
-        else:
-            return False
+        # if self.storage.sismember(self.redis_key, hash_value):
+        #     return True
+        # else:
+        #     return False
+        return self.storage.sismember(self.redis_key, hash_value)
 
 
 if __name__ == "__main__":
