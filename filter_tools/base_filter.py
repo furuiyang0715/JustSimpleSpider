@@ -14,12 +14,14 @@ class BaseFilter(object):
                  redis_host='localhost',
                  redis_port=6379,
                  redis_db=15,
+                 redis_key='filter'
 
                  ):
         self.hash_func = getattr(hashlib, hash_func_name)
         self.redis_host = redis_host
         self.redis_port = redis_port
         self.redis_db = redis_db
+        self.redis_key = redis_key
         self.storage = self._get_storage()
 
     def _get_storage(self):
