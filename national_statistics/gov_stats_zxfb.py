@@ -43,21 +43,21 @@ class GovStats(object):
             raise RuntimeError("请检查数据起始 url")
 
         # 首先检查 selenium 状态是否准备完毕
-        # self._check_selenium_status()
-        time.sleep(3)
+        self._check_selenium_status()
+        # time.sleep(3)
         logger.info("selenoium 服务已就绪")
 
         # 对于一次无法完全加载完整页面的情况 采用的方式: 
         capa = DesiredCapabilities.CHROME
         capa["pageLoadStrategy"] = "none"  # 懒加载模式，不等待页面加载完毕
 
-        self.browser = webdriver.Chrome(desired_capabilities=capa)  # 关键!记得添加 （本地）
+        # self.browser = webdriver.Chrome(desired_capabilities=capa)  # 关键!记得添加 （本地）
 
         # 线上部署
-        # self.browser = webdriver.Remote(
-        #     command_executor="http://chrome:4444/wd/hub",
-        #     desired_capabilities=capa
-        # )
+        self.browser = webdriver.Remote(
+            command_executor="http://chrome:4444/wd/hub",
+            desired_capabilities=capa
+        )
 
         self.wait = WebDriverWait(self.browser, 10)
         self.sql_client = MyPymysqlPool(
@@ -71,8 +71,8 @@ class GovStats(object):
         self.db = MYSQL_DB
         self.table = MYSQL_TABLE
         self.pool = MqlPipeline(self.sql_client, self.db, self.table)
-        # self.redis_cli = redis.StrictRedis(host="redis", port=REDIS_PORT, db=REDIS_DATABASE_NAME)
-        self.redis_cli = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DATABASE_NAME)
+        self.redis_cli = redis.StrictRedis(host="redis", port=REDIS_PORT, db=REDIS_DATABASE_NAME)
+        # self.redis_cli = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DATABASE_NAME)
         # redis 中的键名定义规则是 表名 + "_bloom_filter"
         self.bloom = RedisBloomFilter(self.redis_cli, self.table+"_bloom_filter")
 
@@ -99,7 +99,8 @@ class GovStats(object):
                 # resp = requests.get("http://127.0.0.1:4444/wd/hub/status", timeout=0.5)  # 本地测试用
                 resp = requests.get("http://chrome:4444/wd/hub/status", timeout=0.5)
             except Exception as e:
-                print(traceback.print_exc())
+                # print(traceback.print_exc())
+                time.sleep(0.01)
                 i += 1
                 if i > 10:
                     raise
@@ -335,12 +336,12 @@ class GovStats(object):
             last_max = datetime.datetime.strptime(last_max, "%Y-%m-%d")
             first = False
 
-        self.second_run(last_max)
+        # self.second_run(last_max)
 
-        # if first:
-        #     self.first_run()
-        # else:
-        #     self.second_run()
+        if first:
+            self.first_run()
+        else:
+            self.second_run(last_max)
 
 
 if __name__ == "__main__":
