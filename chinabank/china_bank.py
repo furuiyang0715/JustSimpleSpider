@@ -42,14 +42,14 @@ class ChinaBank(object):
         self._check_selenium_status()
 
         # 创建出一个本地 selenium 客户端
-        self.browser = webdriver.Chrome()
+        # self.browser = webdriver.Chrome()
 
         # 创建出一个基于 docker 的远程 selenium 服务的客户端
-        # self.browser = webdriver.Remote(
-        #     # command_executor="http://{}:4444/wd/hub".format(SELENIUM_HOST),    # docker
-        #     command_executor="http://chrome:4444/wd/hub",                        # docker compose
-        #     desired_capabilities=DesiredCapabilities.CHROME
-        # )
+        self.browser = webdriver.Remote(
+            # command_executor="http://{}:4444/wd/hub".format(SELENIUM_HOST),    # docker
+            command_executor="http://chrome:4444/wd/hub",                        # docker compose
+            desired_capabilities=DesiredCapabilities.CHROME
+        )
 
         self.browser.implicitly_wait(30)  # 隐性等待，最长等30秒
 
@@ -78,8 +78,8 @@ class ChinaBank(object):
         while True:
             i = 0
             try:
-                resp = requests.get("http://127.0.0.1:4444/wd/hub/status", timeout=0.5)  # 本地测试用
-                # resp = requests.get("http://chrome:4444/wd/hub/status", timeout=0.5)
+                # resp = requests.get("http://127.0.0.1:4444/wd/hub/status", timeout=0.5)  # 本地测试用
+                resp = requests.get("http://chrome:4444/wd/hub/status", timeout=0.5)
             except:
                 i += 1
                 if i > 10:
