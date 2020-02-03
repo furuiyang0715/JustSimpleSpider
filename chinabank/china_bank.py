@@ -81,6 +81,7 @@ class ChinaBank(object):
                 # resp = requests.get("http://127.0.0.1:4444/wd/hub/status", timeout=0.5)  # 本地测试用
                 resp = requests.get("http://chrome:4444/wd/hub/status", timeout=0.5)
             except:
+                # logger.info("error")
                 i += 1
                 if i > 10:
                     raise

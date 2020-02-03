@@ -6,6 +6,7 @@ import time
 import traceback
 
 import redis
+import requests
 from selenium import webdriver
 from selenium.webdriver import DesiredCapabilities
 from selenium.webdriver.support.wait import WebDriverWait
@@ -16,8 +17,8 @@ from national_statistics.common.redistools.bloom_filter_service import RedisBloo
 from national_statistics.common.sqltools.mysql_pool import MyPymysqlPool, MqlPipeline
 from national_statistics.configs import (
     MYSQL_TABLE, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, REDIS_PORT,
-    REDIS_DATABASE_NAME
-)
+    REDIS_DATABASE_NAME,
+    REDIS_HOST)
 from national_statistics.my_log import logger
 from national_statistics.sys_info import Recorder
 
@@ -33,36 +34,32 @@ class GovStats(object):
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
         }
+        # 根据传入的数据表的名称判断出需要爬取的起始 url 数据
         if MYSQL_TABLE == "gov_stats_zxfb":
             self.first_url = 'http://www.stats.gov.cn/tjsj/zxfb/index.html'
             self.format_url = 'http://www.stats.gov.cn/tjsj/zxfb/index_{}.html'
 
         else:
             raise RuntimeError("请检查数据起始 url")
-        
-        # 对于可以一次加载完成的部分 采用的方式: 
-        # self.browser = webdriver.Chrome()
-        # 或
-        # self.browser = webdriver.Remote(
-        #     command_executor="http://{}:4444/wd/hub".format(SELENIUM_HOST),
-        #     desired_capabilities=DesiredCapabilities.CHROME
-        # )
-        # self.browser.implicitly_wait(30)  # 隐性等待，最长等30秒
+
+        # 首先检查 selenium 状态是否准备完毕
+        # self._check_selenium_status()
+        time.sleep(3)
+        logger.info("selenoium 服务已就绪")
 
         # 对于一次无法完全加载完整页面的情况 采用的方式: 
         capa = DesiredCapabilities.CHROME
         capa["pageLoadStrategy"] = "none"  # 懒加载模式，不等待页面加载完毕
-        # self.browser = webdriver.Chrome(desired_capabilities=capa)  # 关键!记得添加 （本地）
-        logger.info("等待 selenium 服务连接 ")
-        time.sleep(30)
-        logger.info("等待结束 ")
-        self.browser = webdriver.Remote(
-            command_executor="http://chrome:4444/wd/hub",
-            desired_capabilities=capa
-        )
+
+        self.browser = webdriver.Chrome(desired_capabilities=capa)  # 关键!记得添加 （本地）
+
+        # 线上部署
+        # self.browser = webdriver.Remote(
+        #     command_executor="http://chrome:4444/wd/hub",
+        #     desired_capabilities=capa
+        # )
 
         self.wait = WebDriverWait(self.browser, 10)
-
         self.sql_client = MyPymysqlPool(
             {
                 "host": MYSQL_HOST,
@@ -74,7 +71,8 @@ class GovStats(object):
         self.db = MYSQL_DB
         self.table = MYSQL_TABLE
         self.pool = MqlPipeline(self.sql_client, self.db, self.table)
-        self.redis_cli = redis.StrictRedis(host="redis", port=REDIS_PORT, db=REDIS_DATABASE_NAME)
+        # self.redis_cli = redis.StrictRedis(host="redis", port=REDIS_PORT, db=REDIS_DATABASE_NAME)
+        self.redis_cli = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DATABASE_NAME)
         # redis 中的键名定义规则是 表名 + "_bloom_filter"
         self.bloom = RedisBloomFilter(self.redis_cli, self.table+"_bloom_filter")
 
@@ -88,6 +86,26 @@ class GovStats(object):
         self.recorder = Recorder()
         # 上次爬取文章的最新发布时间
         self.last_dt = None
+
+    def _check_selenium_status(self):
+        """
+        检查 selenium 服务端的状态
+        :return:
+        """
+        logger.info("检查 selenium 服务器的状态 ")
+        while True:
+            i = 0
+            try:
+                # resp = requests.get("http://127.0.0.1:4444/wd/hub/status", timeout=0.5)  # 本地测试用
+                resp = requests.get("http://chrome:4444/wd/hub/status", timeout=0.5)
+            except Exception as e:
+                print(traceback.print_exc())
+                i += 1
+                if i > 10:
+                    raise
+            else:
+                logger.info(resp.text)
+                break
 
     def _get_urls(self):
         """
@@ -224,71 +242,9 @@ class GovStats(object):
         max_dt_str = max_dt.strftime("%Y-%m-%d")
         return max_dt_str
 
-    def _crawl_page(self, page, first=True):
-        retry = 3
-        if first:
-            while True:
-                try:
-                    items = self.crawl_list(page)
-                    for item in items:
-                        link = item['link']
-                        if not self.bloom.is_contains(link):
-                            item['article'] = self.parse_detail_page(link)
-                            self.save_to_mysql(item)
-                            self.bloom.insert(link)
-                except Exception:
-                    retry -= 1
-                    logger.warning("加载出错了,重试, the page is {}".format(page))
-                    time.sleep(3)
-                    traceback.print_exc()
-
-                    if retry < 0:
-                        self.error_list.append(page)
-                        break
-                else:
-                    logger.info("本页保存成功 {}".format(page))
-                break
-        else:
-            page_maxs = []
-            while True:
-                try:
-                    items = self.crawl_list(page)
-                    for item in items:
-                        page_max = max([datetime.datetime.strptime(item.get("pub_date"),
-                                                                   "%Y-%m-%d") for item in items])
-                        logger.info("本页 {} 的最大时间是{}".format(page, page_max))
-                        if page_max < self.last_dt:
-                            logger.info("增量爬取结束")
-                            return
-                        else:
-                            page_maxs.append(page_max)
-                            logger.info("page max: {}".format(page_maxs))
-                            self.recorder.insert(max(page_maxs).strftime("%Y-%m-%d"))
-                        link = item['link']
-                        if not self.bloom.is_contains(link):
-                            item['article'] = self.parse_detail_page(link)
-                            self.save_to_mysql(item)
-                            self.bloom.insert(link)
-                        else:
-                            logger.info("bloom pass")
-                            pass
-                except Exception:
-                    retry -= 1
-                    logger.warning("加载出错了,重试, the page is {}".format(page))
-                    time.sleep(3)
-                    traceback.print_exc()
-
-                    if retry < 0:
-                        self.error_list.append(page)
-                        break
-                else:
-                    logger.info("本页保存成功 {}".format(page))
-                break
-
     def start(self):
         logger.info("首先 将已经爬取的链接 insert 到 bloom 过滤器中")
         self.insert_urls()
-
         last_max = self.recorder.get()
 
         if not last_max:
@@ -300,67 +256,32 @@ class GovStats(object):
             self.last_dt = datetime.datetime.strptime(last_max, "%Y-%m-%d")
             first = False
 
-        for page in range(0, 500):
+        for page in range(0, 24):
             retry = 3
-            if first:
-                while True:
-                    try:
-                        items = self.crawl_list(page)
-                        for item in items:
-                            link = item['link']
-                            if not self.bloom.is_contains(link):
-                                item['article'] = self.parse_detail_page(link)
-                                self.save_to_mysql(item)
-                                self.bloom.insert(link)
-                            else:
-                                # logger.info("bloom pass")
-                                pass
-                    except Exception:
-                        retry -= 1
-                        logger.warning("加载出错了,重试, the page is {}".format(page))
-                        time.sleep(3)
-                        traceback.print_exc()
+            while True:
+                try:
+                    items = self.crawl_list(page)
+                    for item in items:
+                        link = item['link']
+                        if not self.bloom.is_contains(link):
+                            item['article'] = self.parse_detail_page(link)
+                            self.save_to_mysql(item)
+                            self.bloom.insert(link)
+                        else:
+                            # logger.info("bloom pass")
+                            pass
+                except Exception:
+                    retry -= 1
+                    logger.warning("加载出错了,重试, the page is {}".format(page))
+                    time.sleep(3)
+                    # traceback.print_exc()
 
-                        if retry < 0:
-                            self.error_list.append(page)
-                            break
-                    else:
-                        logger.info("本页保存成功 {}".format(page))
+                    if retry < 0:
+                        self.error_list.append(page)
                         break
-            else:
-                while True:
-                    try:
-                        items = self.crawl_list(page)
-                        page_max = max([datetime.datetime.strptime(item.get("pub_date"),
-                                                                   "%Y-%m-%d") for item in items])
-                        logger.info("本页 {} 的最大时间是{}".format(page, page_max))
-
-                        for item in items:
-                            if page_max < self.last_dt:
-                                logger.info("增量爬取结束")
-                                self.close()
-                                return
-
-                            link = item['link']
-                            if not self.bloom.is_contains(link):
-                                item['article'] = self.parse_detail_page(link)
-                                self.save_to_mysql(item)
-                                self.bloom.insert(link)
-                            else:
-                                # logger.info("bloom pass")
-                                pass
-                    except Exception:
-                        retry -= 1
-                        logger.warning("加载出错了,重试, the page is {}".format(page))
-                        time.sleep(3)
-                        traceback.print_exc()
-
-                        if retry < 0:
-                            self.error_list.append(page)
-                            break
-                    else:
-                        logger.info("本页保存成功 {}".format(page))
-                        break
+                else:
+                    logger.info("本页保存成功 {}".format(page))
+                    break
 
         self.close()
 
