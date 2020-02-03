@@ -64,11 +64,11 @@ class Recorder(object):
 
 
 
-# d = Recorder(False)
+d = Recorder(False)
 
-d = Recorder(True)
-d._create_table()
-d.insert(*(20200101, 0, 15))
+# d = Recorder(True)
+# d._create_table()
+# d.insert(*(20200101, 0, 15))
 
 print(d.get_all())
 print(d.get_last())

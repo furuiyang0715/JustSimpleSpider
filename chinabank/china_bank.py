@@ -37,17 +37,18 @@ class ChinaBank(object):
         else:
             raise RuntimeError("请检查数据起始 url")
 
-        # self.browser = webdriver.Chrome()    # local
+        self.browser = webdriver.Chrome()    # local
 
         # TODO 可能还没有启动 就会出现 refused 的问题
         # TODO 暂时是使用了一个比较 ugly 的方法 强制在这里暂停 30 s
         # TODO 应该有办法去 ping 一下服务端 返回一个服务是否已经就绪的状态
-        time.sleep(30)
-        self.browser = webdriver.Remote(
-            # command_executor="http://{}:4444/wd/hub".format(SELENIUM_HOST),    # docker
-            command_executor="http://chrome:4444/wd/hub",                        # docker compose
-            desired_capabilities=DesiredCapabilities.CHROME
-        )
+
+        # time.sleep(30)
+        # self.browser = webdriver.Remote(
+        #     # command_executor="http://{}:4444/wd/hub".format(SELENIUM_HOST),    # docker
+        #     command_executor="http://chrome:4444/wd/hub",                        # docker compose
+        #     desired_capabilities=DesiredCapabilities.CHROME
+        # )
 
         self.browser.implicitly_wait(30)  # 隐性等待，最长等30秒
 
@@ -196,12 +197,33 @@ class ChinaBank(object):
         self.sql_client.dispose()
 
     def start(self):
+        for j in range(3):
+            try:
+                self._start()
+            except Exception:
+                self.close()
+                raise
+            else:
+                break
+
+    def _start(self):
         # 从数据库中取出上一次的更新情况
         last_info = self.record.get_last()
-        this_info = self.parse_info()
-
         logger.info("上次的记录是{}".format(last_info))
-        logger.info("本次爬取的记录是{}".format(this_info))
+
+        # 从页面解析出当前的爬取信息
+        this_info = None
+        for retry in range(3):
+            try:
+                this_info = self.parse_info()
+            except:
+                logger.info("解析当前信息失败 ")
+            else:
+                logger.info("本次爬取的记录是{}".format(this_info))
+                break
+
+        if not this_info:
+            raise RuntimeError("解析页面失败 ")
 
         if (last_info[0] == this_info[0]) or (last_info[1] == this_info[1]):
             if last_info[0] == this_info[0]:
