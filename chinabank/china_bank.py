@@ -7,6 +7,7 @@ import re
 import time
 import traceback
 
+import requests
 from lxml import html
 from selenium import webdriver
 from selenium.webdriver import DesiredCapabilities
@@ -37,13 +38,13 @@ class ChinaBank(object):
         else:
             raise RuntimeError("请检查数据起始 url")
 
-        self.browser = webdriver.Chrome()    # local
+        # 检查 selenium 的启动状态
+        self._check_selenium_status()
 
-        # TODO 可能还没有启动 就会出现 refused 的问题
-        # TODO 暂时是使用了一个比较 ugly 的方法 强制在这里暂停 30 s
-        # TODO 应该有办法去 ping 一下服务端 返回一个服务是否已经就绪的状态
+        # 创建出一个本地 selenium 客户端
+        self.browser = webdriver.Chrome()
 
-        # time.sleep(30)
+        # 创建出一个基于 docker 的远程 selenium 服务的客户端
         # self.browser = webdriver.Remote(
         #     # command_executor="http://{}:4444/wd/hub".format(SELENIUM_HOST),    # docker
         #     command_executor="http://chrome:4444/wd/hub",                        # docker compose
@@ -68,6 +69,24 @@ class ChinaBank(object):
         self.record = Recorder(False)   # sqlite 数据库记录爬取情况
 
         self.error_list = []
+
+    def _check_selenium_status(self):
+        """
+        检查 selenium 服务端的状态
+        :return:
+        """
+        while True:
+            i = 0
+            try:
+                resp = requests.get("http://127.0.0.1:4444/wd/hub/status", timeout=0.5)  # 本地测试用
+                # resp = requests.get("http://chrome:4444/wd/hub/status", timeout=0.5)
+            except:
+                i += 1
+                if i > 10:
+                    raise
+            else:
+                logger.info(resp.text)
+                break
 
     def save_to_mysql(self, item):
         self.pool.save_to_database(item)
