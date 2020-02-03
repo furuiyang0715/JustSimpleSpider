@@ -280,7 +280,7 @@ class GovStats(object):
         当前项目是增量进行爬取
         :return:
         """
-        for page in range(0, 24):
+        for page in range(0, 25):
             retry = 3
             while True:
                 try:
