@@ -1,6 +1,8 @@
 # 实现请求去重的逻辑
+import sys
 import urllib.parse
 
+from filter_tools import get_filter_class
 from request_tools.my_requests import Request
 
 
@@ -54,7 +56,8 @@ class RequestFilter(object):
         :return:
         """
         data = self.get_request_filter_data(request_obj)
-        self.filter_obj.is_exist(data)
+        print(data)
+        return self.filter_obj.is_exist(data)
 
     def mark_request(self, request_obj):
         """
@@ -72,3 +75,25 @@ if __name__ == "__main__":
     q.get_request_filter_data(Request("https://www.baidu.com/s?wd=python", query={"name": "ruiyang"}))
     q.get_request_filter_data(Request("https://www.baidu.com/s", query={"name": "ruiyang"}))
     q.get_request_filter_data(Request("https://www.baidu.com/s"))
+
+    # 创建一个基于内存的过滤器
+    filter_obj = get_filter_class("memory")()
+
+    # 基于该过滤器创建一个请求过滤器
+    request_filter = RequestFilter(filter_obj)
+
+    # 创建一些示例请求
+    r1 = Request(name="r1", url="https://www.baidu.com/s?wd=python")
+    r2 = Request(name="r2", url="https://www.baidu.com/s?wd=python", query={"name": "ruiyang"})
+    r3 = Request(name="r3", url="https://www.baidu.com/s", query={"name": "ruiyang", "wd": 'python'})
+    r4 = Request(name="r4", url="HTTPS://www.baidu.com/s?wd=python")
+    r5 = Request(name="r5", url="HTTPS://www.baidu.com/s?wd=python", query={"name": "kailun"})
+
+    rs = [r1, r2, r3, r4, r5]
+
+    for r in rs:
+        if request_filter.is_exist(r):
+            print("重复请求{}".format(r))
+        else:
+            request_filter.mark_request(r)
+            print("标记请求{}".format(r))
