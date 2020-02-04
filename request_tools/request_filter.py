@@ -56,7 +56,7 @@ class RequestFilter(object):
         :return:
         """
         data = self.get_request_filter_data(request_obj)
-        print(data)
+        # print(data)
         return self.filter_obj.is_exist(data)
 
     def mark_request(self, request_obj):
