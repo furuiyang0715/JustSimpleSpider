@@ -12,6 +12,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 
+import sys
+sys.path.append("./..")
+
 from national_statistics.common.sqltools.mysql_pool import MyPymysqlPool, MqlPipeline
 from national_statistics.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD
 
@@ -20,8 +23,16 @@ def _gen_unhit_items(lst):
     items = []
     capa = DesiredCapabilities.CHROME
     capa["pageLoadStrategy"] = "none"  # 懒加载模式，不等待页面加载完毕
-    browser = webdriver.Chrome(desired_capabilities=capa)
-    wait = WebDriverWait(browser, 5)  # 等待的最大时间20s
+
+    # browser = webdriver.Chrome(desired_capabilities=capa)
+    # wait = WebDriverWait(browser, 10)  # 等待的最大时间20s
+
+    browser = webdriver.Remote(
+        command_executor="http://chrome:4444/wd/hub",
+        desired_capabilities=capa
+    )
+
+    wait = WebDriverWait(browser, 10)
 
     for url in lst:
         # print(url)
