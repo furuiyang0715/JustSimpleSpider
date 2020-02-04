@@ -5,6 +5,8 @@
 
 import hashlib
 
+import redis
+
 
 class MultipleHash(object):
     def __init__(self, salts, hash_func_name='md5'):
@@ -50,6 +52,74 @@ class MultipleHash(object):
         return hash_values
 
 
+class BloomFilter(object):
+    def __init__(self,
+                 redis_host='localhost',
+                 redis_port=6379,
+                 redis_db=0,
+                 redis_key="bloomfilter",
+                 salts=('1','2','3'),
+                 ):
+
+        self.redis_host = redis_host
+        self.redis_port = redis_port
+        self.redis_db = redis_db
+        self.redis_key = redis_key
+        self.client = self.get_redis_client()
+        self.multihash = MultipleHash(salts)
+
+
+    def get_redis_client(self):
+        """
+        获取一个redis连接对象
+        :return:
+        """
+        pool = redis.ConnectionPool(host=self.redis_host, port=self.redis_port, db=self.redis_db)
+        client = redis.StrictRedis(connection_pool=pool)
+        return client
+
+    def _get_offset(self, hash_value):
+        return hash_value % (512*1024*1024*8)
+
+    def save(self, data):
+        """
+        将值存入布隆过滤器
+        :param data:
+        :return:
+        """
+        hash_values = self.multihash.get_hash_value(data)
+        for hash_value in hash_values:
+            offset = self._get_offset(hash_value)
+            self.client.setbit(self.redis_key, offset, 1)
+        return True
+
+    def is_exist(self, data):
+        """
+        判断某个值在布隆过滤器中是否存在
+        :param data:
+        :return:
+        """
+        hash_values = self.multihash.get_hash_value(data)
+        for hash_value in hash_values:
+            offset = self._get_offset(hash_value)
+            ret = self.client.getbit(self.redis_key, offset)
+            if not ret:
+                return False
+        return True
+
+        pass
+
+
 if __name__ == "__main__":
     h = MultipleHash(salts=['1', '2', '3'])
-    print(h.get_hash_value("ruiyang"))
+    # print(h.get_hash_value("ruiyang"))
+    bloom = BloomFilter(redis_host='192.168.0.101')
+    # print(bloom)
+    datas = ['ruiyang', 'uuu', 'ooo', 'ruiyang', '1', 'ooo']
+    for data in datas:
+        if bloom.is_exist(data):
+            print("{} 已经存在".format(data))
+        else:
+            bloom.save(data)
+            print("{} 存储成功".format(data))
+
