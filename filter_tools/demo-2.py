@@ -21,3 +21,9 @@ def get_features(s):
 print('%x' % Simhash(get_features('How are you? I am fine. Thanks.')).value)
 print('%x' % Simhash(get_features('How are u? I am fine.     Thanks.')).value)
 print('%x' % Simhash(get_features('How r you?I    am fine. Thanks.')).value)
+
+
+# 测试获取两个 simhash 值之间的距离
+print(Simhash('furuiyang').distance(Simhash('yaokailun')))
+print(Simhash('furuiyang').distance(Simhash('ruanyifeng')))
+print(Simhash('ruiyang').distance(Simhash('ruiyang')))
