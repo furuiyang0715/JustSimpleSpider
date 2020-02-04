@@ -24,6 +24,7 @@ class BaseFilter(object):
         self.redis_db = redis_db
         self.redis_key = redis_key
         self.mysql_url = mysql_url
+        self.mysql_table_name = mysql_table_name
         self.storage = self._get_storage()
 
     def _get_storage(self):
