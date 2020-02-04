@@ -16,7 +16,7 @@ class BaseFilter(object):
                  redis_db=15,
                  redis_key='filter',
                  mysql_url=None,
-
+                 mysql_table_name='filter'
                  ):
         self.hash_func = getattr(hashlib, hash_func_name)
         self.redis_host = redis_host
