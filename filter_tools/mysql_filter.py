@@ -81,8 +81,7 @@ class MqlFilter(BaseFilter):
 
 if __name__ == "__main__":
     f = MqlFilter(
-        # mysql_url="mysql+pymysql://root:password@localhost:3306/db_name?charset=utf8",
-        mysql_url="mysql+pymysql://rootb:3x870OV649AMSn*@14.152.49.155:8998/test_furuiyang?charset=utf8",
+        mysql_url="mysql+pymysql://root:password@localhost:3306/db_name?charset=utf8",
         mysql_table_name="test_filter"
                   )
 
