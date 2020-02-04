@@ -75,6 +75,25 @@ class MqlPipeline(object):
                     string += c
             return string
 
+    def update_datas(self, items):
+        """
+        更新数据
+        :param items: [{"link": ... , "article": ... }, {} ...]
+        :return:
+        """
+        _sql = f"update {self.db}.{self.table} set article=%s where link=%s"
+        for item in items:
+            try:
+                param = [self.transferContent(item['article']), item['link']]
+                self.mysql_pool.update(_sql, param)
+            except:
+                logger.warning("更新数据失败")
+                self.mysql_pool._conn.rollback()
+                traceback.print_exc()
+
+        # 仅在清洗时使用 使用后立即销毁
+        self.mysql_pool.dispose()
+
     def save_to_database(self, to_insert: dict):
         sql_w, vs = self.contract_sql(to_insert)
         # 预处理

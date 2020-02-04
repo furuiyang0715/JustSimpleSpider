@@ -57,8 +57,8 @@ def main():
     task()
 
     logger.info("当前时间是{}, 开始增量爬取 ".format(datetime.datetime.now()))
-    schedule.every(180).seconds.do(task)
-    # schedule.every().day.at("05:00").do(task)
+    # schedule.every(180).seconds.do(task)
+    schedule.every().day.at("03:00").do(task)
     # schedule.every(5).days.at("05:00").do(task)
 
     while True:
