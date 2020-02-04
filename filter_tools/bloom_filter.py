@@ -107,8 +107,6 @@ class BloomFilter(object):
                 return False
         return True
 
-        pass
-
 
 if __name__ == "__main__":
     h = MultipleHash(salts=['1', '2', '3'])
