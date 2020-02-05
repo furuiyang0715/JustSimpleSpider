@@ -5,8 +5,6 @@ import re
 import sys
 import time
 import traceback
-
-import redis
 import requests
 import selenium
 from selenium import webdriver
@@ -15,12 +13,9 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
-from national_statistics.common.redistools.bloom_filter_service import RedisBloomFilter
 from national_statistics.common.sqltools.mysql_pool import MyPymysqlPool, MqlPipeline
 from national_statistics.configs import (
-    MYSQL_TABLE, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, REDIS_PORT,
-    REDIS_DATABASE_NAME,
-    REDIS_HOST)
+    MYSQL_TABLE, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB)
 from national_statistics.my_log import logger
 from national_statistics.sys_info import Recorder
 
@@ -49,21 +44,21 @@ class GovStats(object):
             raise RuntimeError("请检查数据起始 url")
 
         # 首先检查 selenium 状态是否准备完毕
-        # self._check_selenium_status()
-        time.sleep(3)
-        logger.info("selenoium 服务已就绪")
+        self._check_selenium_status()
+        # time.sleep(3)
+        # logger.info("selenoium 服务已就绪")
 
         # 对于一次无法完全加载完整页面的情况 采用的方式:
         capa = DesiredCapabilities.CHROME
         capa["pageLoadStrategy"] = "none"  # 懒加载模式，不等待页面加载完毕
 
-        self.browser = webdriver.Chrome(desired_capabilities=capa)  # 关键!记得添加 （本地）
+        # self.browser = webdriver.Chrome(desired_capabilities=capa)  # 关键!记得添加 （本地）
 
         # 线上部署
-        # self.browser = webdriver.Remote(
-        #     command_executor="http://chrome:4444/wd/hub",
-        #     desired_capabilities=capa
-        # )
+        self.browser = webdriver.Remote(
+            command_executor="http://chrome:4444/wd/hub",
+            desired_capabilities=capa
+        )
 
         self.wait = WebDriverWait(self.browser, 10)
         self.sql_client = MyPymysqlPool(
@@ -77,11 +72,6 @@ class GovStats(object):
         self.db = MYSQL_DB
         self.table = MYSQL_TABLE
         self.pool = MqlPipeline(self.sql_client, self.db, self.table)
-        # self.redis_cli = redis.StrictRedis(host="redis", port=REDIS_PORT, db=REDIS_DATABASE_NAME)
-        # self.redis_cli = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DATABASE_NAME)
-        # redis 中的键名定义规则是 表名 + "_bloom_filter"
-        # self.bloom = RedisBloomFilter(self.redis_cli, self.table+"_bloom_filter")
-
         # 出错的列表页面
         self.error_list = []
         # 出错的详情页面
@@ -100,7 +90,6 @@ class GovStats(object):
         while True:
             i = 0
             try:
-                # resp = requests.get("http://127.0.0.1:4444/wd/hub/status", timeout=0.5)  # 本地测试用
                 resp = requests.get("http://chrome:4444/wd/hub/status", timeout=0.5)
             except Exception as e:
                 time.sleep(0.01)
@@ -120,13 +109,6 @@ class GovStats(object):
         rets = self.sql_client.getAll(sl)
         urls = [r.get("link") for r in rets]
         return urls
-
-    def insert_urls(self):
-        urls = self._get_urls()
-        logger.info("要插入的链接个数是 {}".format(len(urls)))
-
-        for url in urls:
-            self.bloom.insert(url)
 
     def crawl_list(self, offset):
         if offset == 0:
@@ -169,9 +151,13 @@ class GovStats(object):
                 try:
                     ret = self.wait.until(EC.presence_of_element_located(
                         (By.XPATH, "//div[@class='TRS_PreAppend']")))
-                except selenium.common.exceptions.TimeoutException:
-                    ret = self.wait.until(EC.presence_of_element_located(
-                        (By.XPATH, "//div[@class='TRS_Editor']")))
+                except:
+                    try:
+                        ret = self.wait.until(EC.presence_of_element_located(
+                            (By.XPATH, "//div[@class='TRS_Editor']")))
+                    except:
+                        ret = self.wait.until(EC.presence_of_element_located(
+                            (By.XPATH, "//div[@class='center_xilan']")))
 
                 ret2 = self.wait.until(EC.presence_of_element_located(
                     # (By.XPATH, "//font[@style='float:left;width:620px;text-align:right;margin-right:60px;']")))
@@ -233,7 +219,8 @@ class GovStats(object):
                         link = item['link']
                         item['article'], item['pub_date'] = self.parse_detail_page(link)
                         logger.info(item)
-                        self.save_to_mysql(item)
+                        if item['article']:
+                            self.save_to_mysql(item)
                         # self.bloom.insert(link)
                 except Exception:
                     traceback.print_exc()
@@ -253,11 +240,11 @@ class GovStats(object):
         self.first_run()
 
 
-if __name__ == "__main__":
-    t1 = time.time()
-    runner = GovStats()
-    runner.start()
-    logger.info("列表页爬取失败 {}".format(runner.error_list))
-    logger.info("详情页爬取失败 {}".format(runner.detail_error_list))
-    t2 = time.time()
-    logger.info("花费的时间是 {} s".format(t2-t1))
+# if __name__ == "__main__":
+#     t1 = time.time()
+#     runner = GovStats()
+#     runner.start()
+#     logger.info("列表页爬取失败 {}".format(runner.error_list))
+#     logger.info("详情页爬取失败 {}".format(runner.detail_error_list))
+#     t2 = time.time()
+#     logger.info("花费的时间是 {} s".format(t2-t1))
