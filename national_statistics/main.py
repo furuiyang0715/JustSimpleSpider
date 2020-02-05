@@ -15,7 +15,7 @@ import schedule
 
 sys.path.append("./..")
 
-from national_statistics.gov_stats_zxfb import GovStats
+from national_statistics.configs import MYSQL_TABLE
 from national_statistics.my_log import logger
 
 
@@ -44,6 +44,11 @@ def catch_exceptions(cancel_on_failure=False):
 @catch_exceptions(cancel_on_failure=True)
 def task():
     t1 = time.time()
+    if MYSQL_TABLE == "gov_stats_zxfb":
+        from national_statistics.gov_stats_zxfb import GovStats
+    elif MYSQL_TABLE == "gov_stats_xwfbh":
+        from national_statistics.gov_stats_xwfbh import GovStats
+
     runner = GovStats()
     runner.start()
     logger.info("列表页爬取失败 {}".format(runner.error_list))
