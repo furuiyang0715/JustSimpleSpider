@@ -5,6 +5,7 @@ import sys
 import time
 
 import requests as req
+import selenium
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import DesiredCapabilities
@@ -82,28 +83,40 @@ wait = WebDriverWait(browser, 20)  # 等待的最大时间20s
     <input type="button" value="打印本页" onclick="javascript:window.print()">
 </font>
 """
-# browser.get("http://www.stats.gov.cn/tjsj/zxfb/201805/t20180515_1599268.html")
-browser.get("http://www.stats.gov.cn/tjsj/zxfb/202001/t20200117_1723383.html")
-ret = wait.until(EC.presence_of_element_located(
-    (By.XPATH, "//div[@class='TRS_PreAppend']")))
+lst = ['http://www.stats.gov.cn/tjsj/zxfb/201304/t20130415_12960.html',
+       'http://www.stats.gov.cn/tjsj/zxfb/201301/t20130118_12924.html',
+       'http://www.stats.gov.cn/tjsj/zxfb/201210/t20121018_12887.html',
+       'http://www.stats.gov.cn/tjsj/zxfb/201207/t20120713_12847.html',
+       'http://www.stats.gov.cn/tjsj/zxfb/201204/t20120413_12808.html',
+       'http://www.stats.gov.cn/tjsj/zxfb/201201/t20120117_12777.html',
+       'http://www.stats.gov.cn/tjsj/zxfb/201110/t20111018_12749.html', 'http://www.stats.gov.cn/tjsj/zxfb/201107/t20110713_12725.html', 'http://www.stats.gov.cn/tjsj/zxfb/201104/t20110415_12702.html', 'http://www.stats.gov.cn/tjsj/zxfb/201101/t20110120_12689.html', 'http://www.stats.gov.cn/tjsj/zxfb/201010/t20101021_12675.html', 'http://www.stats.gov.cn/tjsj/zxfb/201007/t20100715_12658.html', 'http://www.stats.gov.cn/tjsj/zxfb/201004/t20100415_12646.html', 'http://www.stats.gov.cn/tjsj/zxfb/201001/t20100121_12629.html', 'http://www.stats.gov.cn/tjsj/zxfb/200910/t20091022_12613.html', 'http://www.stats.gov.cn/tjsj/zxfb/200907/t20090716_12586.html', 'http://www.stats.gov.cn/tjsj/zxfb/200904/t20090416_12553.html', 'http://www.stats.gov.cn/tjsj/zxfb/200901/t20090122_12538.html', 'http://www.stats.gov.cn/tjsj/zxfb/200810/t20081020_12507.html', 'http://www.stats.gov.cn/tjsj/zxfb/200807/t20080717_12476.html', 'http://www.stats.gov.cn/tjsj/zxfb/200804/t20080416_12445.html', 'http://www.stats.gov.cn/tjsj/zxfb/200801/t20080124_12431.html', 'http://www.stats.gov.cn/tjsj/zxfb/200710/t20071025_12402.html', 'http://www.stats.gov.cn/tjsj/zxfb/200707/t20070719_12372.html', 'http://www.stats.gov.cn/tjsj/zxfb/200704/t20070419_12342.html', 'http://www.stats.gov.cn/tjsj/zxfb/200701/t20070125_12329.html', 'http://www.stats.gov.cn/tjsj/zxfb/200610/t20061019_12293.html', 'http://www.stats.gov.cn/tjsj/zxfb/200607/t20060718_12248.html', 'http://www.stats.gov.cn/tjsj/zxfb/200604/t20060420_12208.html', 'http://www.stats.gov.cn/tjsj/zxfb/200601/t20060125_12185.html', 'http://www.stats.gov.cn/tjsj/zxfb/200510/t20051020_12137.html', 'http://www.stats.gov.cn/tjsj/zxfb/200507/t20050720_12093.html', 'http://www.stats.gov.cn/tjsj/zxfb/200504/t20050420_12042.html', 'http://www.stats.gov.cn/tjsj/zxfb/200501/t20050125_12014.html', 'http://www.stats.gov.cn/tjsj/zxfb/200410/t20041022_11970.html', 'http://www.stats.gov.cn/tjsj/zxfb/200407/t20040716_11916.html', 'http://www.stats.gov.cn/tjsj/zxfb/200404/t20040415_11853.html', 'http://www.stats.gov.cn/tjsj/zxfb/200310/t20031017_11771.html', 'http://www.stats.gov.cn/tjsj/zxfb/200307/t20030717_11716.html', 'http://www.stats.gov.cn/tjsj/zxfb/200304/t20030417_11687.html', 'http://www.stats.gov.cn/tjsj/zxfb/200210/t20021016_11635.html', 'http://www.stats.gov.cn/tjsj/zxfb/200207/t20020715_11605.html', 'http://www.stats.gov.cn/tjsj/zxfb/200204/t20020417_11558.html', 'http://www.stats.gov.cn/tjsj/zxfb/200203/t20020328_11527.html', 'http://www.stats.gov.cn/tjsj/zxfb/200203/t20020328_11504.html', 'http://www.stats.gov.cn/tjsj/zxfb/200203/t20020328_11479.html']
+print(len(lst))
+for url in lst:
+    browser.get(url)
+    try:
+        ret = wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//div[@class='TRS_PreAppend']")))
+    except selenium.common.exceptions.TimeoutException:
+        ret = wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//div[@class='TRS_Editor']")))
+    contents = []
+    nodes = ret.find_elements_by_xpath("./*")
+    for node in nodes:
+        if (not node.find_elements_by_xpath(".//table")) and (node.tag_name != 'table'):
+            c = node.text
+            if c:
+                contents.append(c)
+        else:
+            print("去掉 table 中的内容")
+            pass
 
-ret2 = wait.until(EC.presence_of_element_located(
-    # (By.XPATH, "//font[@style='float:left;width:620px;text-align:right;margin-right:60px;']")))
-    (By.XPATH, "//font[@class='xilan_titf']")))
+    ret2 = wait.until(EC.presence_of_element_located(
+        # (By.XPATH, "//font[@style='float:left;width:620px;text-align:right;margin-right:60px;']")))
+        (By.XPATH, "//font[@class='xilan_titf']")))
 
-contents = []
-nodes = ret.find_elements_by_xpath("./*")
-for node in nodes:
-    if not node.find_elements_by_xpath(".//table"):
-        c = node.text
-        if c:
-            contents.append(c)
-    else:
-        # print("去掉 table 中的内容")
-        pass
-
-print("\n".join(contents))
-# print(ret2.text)   # 来源：国家统计局发布时间：2018-05-15 10:00
-pub_date = datetime.datetime.strptime(re.findall("发布时间：(\d{4}-\d{2}-\d{2})", ret2.text)[0], "%Y-%m-%d")
-print(pub_date)
+    print("\n".join(contents))
+    pub_date = datetime.datetime.strptime(re.findall("发布时间：(\d{4}-\d{2}-\d{2})", ret2.text)[0], "%Y-%m-%d")
+    print(pub_date)
+    print()
+    time.sleep(10)
 browser.close()

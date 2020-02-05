@@ -8,6 +8,7 @@ import traceback
 
 import redis
 import requests
+import selenium
 from selenium import webdriver
 from selenium.webdriver import DesiredCapabilities
 from selenium.webdriver.support.wait import WebDriverWait
@@ -172,13 +173,17 @@ class GovStats(object):
         # 文章页面中含有表格的要单独进行处理:
         # for example:  http://www.stats.gov.cn/tjsj/zxfb/201910/t20191021_1704063.html
 
-        retry = 3
+        retry = 1
         while True:
             try:
                 self.browser.get(url)
                 # 等待直到某个元素出现
-                ret = self.wait.until(EC.presence_of_element_located(
-                    (By.XPATH, "//div[@class='TRS_PreAppend']")))
+                try:
+                    ret = self.wait.until(EC.presence_of_element_located(
+                        (By.XPATH, "//div[@class='TRS_PreAppend']")))
+                except selenium.common.exceptions.TimeoutException:
+                    ret = self.wait.until(EC.presence_of_element_located(
+                        (By.XPATH, "//div[@class='TRS_Editor']")))
 
                 ret2 = self.wait.until(EC.presence_of_element_located(
                     # (By.XPATH, "//font[@style='float:left;width:620px;text-align:right;margin-right:60px;']")))
@@ -192,7 +197,7 @@ class GovStats(object):
                 nodes = ret.find_elements_by_xpath("./*")
 
                 for node in nodes:
-                    if not node.find_elements_by_xpath(".//table"):
+                    if not node.find_elements_by_xpath(".//table") and (node.tag_name != 'table'):
                         c = node.text
                         if c:
                             contents.append(c)
@@ -201,13 +206,14 @@ class GovStats(object):
                         pass
             except:
                 logger.warning("{} 出错重试".format(url))
-                traceback.print_exc()
+                # traceback.print_exc()
                 time.sleep(3)
                 retry -= 1
                 if retry < 0:
                     self.detail_error_list.append(url)
+                    print("解析详情页 {} 始终不成功 ".format(url))
                     # raise RuntimeError("解析详情页始终不成功 ")
-                    return
+                    return '', '2020-01-01'
             else:
                 break
         return "\n".join(contents), pub_date
@@ -278,7 +284,7 @@ class GovStats(object):
                     retry -= 1
                     logger.warning("加载出错了,重试, the page is {}".format(page))
                     time.sleep(3)
-                    traceback.print_exc()
+                    # traceback.print_exc()
 
                     if retry < 0:
                         self.error_list.append(page)
@@ -355,6 +361,7 @@ class GovStats(object):
 
         # self.second_run(last_max)
         self.first_run()   # 测试进行一次首次爬取
+        print(self.detail_error_list)
 
         # if first:
         #     self.first_run()
