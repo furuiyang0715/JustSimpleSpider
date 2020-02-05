@@ -209,7 +209,8 @@ class GovStats(object):
         当前项目是首次进行爬取
         :return:
         """
-        for page in range(0, 5):
+        # for page in range(0, 5):
+        for page in range(0, 1):
             retry = 3
             while True:
                 try:
