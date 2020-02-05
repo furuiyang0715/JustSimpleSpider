@@ -30,6 +30,8 @@ class GovStats(object):
     国家统计局爬虫
     需要爬取的版块有:
         最新发布
+        新闻发布会
+
         ...
     """
     def __init__(self):
@@ -76,9 +78,9 @@ class GovStats(object):
         self.table = MYSQL_TABLE
         self.pool = MqlPipeline(self.sql_client, self.db, self.table)
         # self.redis_cli = redis.StrictRedis(host="redis", port=REDIS_PORT, db=REDIS_DATABASE_NAME)
-        self.redis_cli = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DATABASE_NAME)
+        # self.redis_cli = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DATABASE_NAME)
         # redis 中的键名定义规则是 表名 + "_bloom_filter"
-        self.bloom = RedisBloomFilter(self.redis_cli, self.table+"_bloom_filter")
+        # self.bloom = RedisBloomFilter(self.redis_cli, self.table+"_bloom_filter")
 
         # 出错的列表页面
         self.error_list = []
@@ -88,8 +90,6 @@ class GovStats(object):
         self.links_have_table = []
         # 爬虫的一个记录器 简单来说就是一个文件
         self.recorder = Recorder()
-        # # 上次爬取文章的最新发布时间
-        # self.last_dt = None
 
     def _check_selenium_status(self):
         """
@@ -103,7 +103,6 @@ class GovStats(object):
                 # resp = requests.get("http://127.0.0.1:4444/wd/hub/status", timeout=0.5)  # 本地测试用
                 resp = requests.get("http://chrome:4444/wd/hub/status", timeout=0.5)
             except Exception as e:
-                # print(traceback.print_exc())
                 time.sleep(0.01)
                 i += 1
                 if i > 10:
@@ -129,12 +128,6 @@ class GovStats(object):
         for url in urls:
             self.bloom.insert(url)
 
-        # # 测试已经全部插入了
-        # for url in urls:
-        #     if not self.bloom.is_contains(url):
-        #         print(url)
-        # print("测试完毕")
-
     def crawl_list(self, offset):
         if offset == 0:
             logger.info("要爬取的页面是第一页 {}".format(self.first_url))
@@ -152,7 +145,6 @@ class GovStats(object):
         self.browser.get(url)
         ret = self.wait.until(EC.presence_of_element_located(
             (By.XPATH, "//div[@class='center_list']/ul[@class='center_list_contlist']")))
-        # print(ret.tag_name)  # ul
         lines = ret.find_elements_by_xpath("./li/span[@class='cont_tit']//font[@class='cont_tit03']/*")
         item_list = []
         for line in lines:
@@ -161,7 +153,6 @@ class GovStats(object):
             item['link'] = link
             item['title'] = line.text
             item_list.append(item)
-            # print("在当前页面获取的数据是:" , item)
         return item_list
 
     def parse_detail_page(self, url):
@@ -170,9 +161,6 @@ class GovStats(object):
         :param url:
         :return:
         """
-        # 文章页面中含有表格的要单独进行处理:
-        # for example:  http://www.stats.gov.cn/tjsj/zxfb/201910/t20191021_1704063.html
-
         retry = 1
         while True:
             try:
@@ -191,7 +179,7 @@ class GovStats(object):
 
                 # pub_date = datetime.datetime.strptime(re.findall("发布时间：(\d{4}-\d{2}-\d{2})", ret2.text)[0], "%Y-%m-%d")
                 pub_date = re.findall("发布时间：(\d{4}-\d{2}-\d{2})", ret2.text)[0]
-                print(pub_date)
+                logger.debug(pub_date)
 
                 contents = []
                 nodes = ret.find_elements_by_xpath("./*")
@@ -211,7 +199,7 @@ class GovStats(object):
                 retry -= 1
                 if retry < 0:
                     self.detail_error_list.append(url)
-                    print("解析详情页 {} 始终不成功 ".format(url))
+                    logger.warning("解析详情页 {} 始终不成功 ".format(url))
                     # raise RuntimeError("解析详情页始终不成功 ")
                     return '', '2020-01-01'
             else:
@@ -226,39 +214,9 @@ class GovStats(object):
         爬虫程序关闭
         :return:
         """
-        # this_max_str = self.parse_page_info()
-        # self.recorder.insert(this_max_str)
         logger.info("爬虫程序已关闭")
         self.sql_client.dispose()
         self.browser.close()
-
-    def parse_page_info(self):
-        """
-        解析首页 在增量爬取时获取到文章总个数、每页文章数等信息
-        :return:
-        """
-        # TODO 将该捕获机制封装为装饰器
-        while True:
-            retry = 2
-            try:
-                items = self.parse_list_page(self.first_url)
-            except Exception:
-                logger.info("获取首页讯息 失败重试 ")
-                time.sleep(5)
-                retry -= 1
-                if retry < 0:
-                    # raise RuntimeError("获取不到首页的讯息")
-                    # break
-                    logger.warning("获取不到首页的讯息 ")
-                    return
-            else:
-                break
-        max_dt = max([datetime.datetime.strptime(item.get("pub_date"), "%Y-%m-%d") for item in items])
-        # max_dt = datetime.datetime.strptime(max_dt, "%Y-%m-%d")
-        # logger.info(type(max_dt))
-        logger.info("当前的最大发布时间是{}".format(max_dt))
-        max_dt_str = max_dt.strftime("%Y-%m-%d")
-        return max_dt_str
 
     def first_run(self):
         """
@@ -270,68 +228,15 @@ class GovStats(object):
             while True:
                 try:
                     items = self.crawl_list(page)
-                    print("爬取到的列表页信息是 {}".format(items))
+                    logger.debug("爬取到的列表页信息是 {}".format(items))
                     for item in items:
                         link = item['link']
-                        if not self.bloom.is_contains(link):
-                            item['article'], item['pub_date'] = self.parse_detail_page(link)
-                            print(item)
-                            self.save_to_mysql(item)
-                            self.bloom.insert(link)
-                        else:
-                            pass
+                        item['article'], item['pub_date'] = self.parse_detail_page(link)
+                        logger.info(item)
+                        self.save_to_mysql(item)
+                        # self.bloom.insert(link)
                 except Exception:
-                    retry -= 1
-                    logger.warning("加载出错了,重试, the page is {}".format(page))
-                    time.sleep(3)
-                    # traceback.print_exc()
-
-                    if retry < 0:
-                        self.error_list.append(page)
-                        break
-                else:
-                    logger.info("本页保存成功 {}".format(page))
-                    break
-
-        self.close()
-
-    def second_run(self, last_max):
-        """
-        当前项目是增量进行爬取
-        :return:
-        """
-        for page in range(0, 5):
-            retry = 3
-            while True:
-                try:
-                    items = self.crawl_list(page)
-                    # 找出这一页中的最大时间
-                    times = [item.get("pub_date") for item in items]
-                    # print(times)  # '2020-02-03', '2020-02-03', '2020-01-31',
-                    # print(type(times[0]))   # str
-
-                    times = [datetime.datetime.strptime(t, "%Y-%m-%d") for t in times]
-                    # print(times)
-                    # print(type(times[0]))  # <class 'datetime.datetime'>
-
-                    # 求出当前页的最大时间 如果该时间都小于上一次的最大时间 说明这一页不用再爬取了 已经爬取过了
-                    page_max = max(times)
-                    logger.info("当前页的最大时间是{}".format(page_max))
-                    logger.info("上次爬取的最大时间是{}".format(last_max))
-
-                    if page_max < last_max:
-                        logger.info("增量爬取结束了")
-                        return
-                    else:
-                        for item in items:
-                            link = item['link']
-                            if not self.bloom.is_contains(link):
-                                item['article'], item['pub_date'] = self.parse_detail_page(link)
-                                self.save_to_mysql(item)
-                                self.bloom.insert(link)
-                            else:
-                                pass
-                except Exception:
+                    traceback.print_exc()
                     retry -= 1
                     logger.warning("加载出错了,重试, the page is {}".format(page))
                     time.sleep(3)
@@ -341,32 +246,11 @@ class GovStats(object):
                 else:
                     logger.info("本页保存成功 {}".format(page))
                     break
+
         self.close()
 
     def start(self):
-        logger.info("首先 将已经爬取的链接 insert 到 bloom 过滤器中")
-        self.insert_urls()
-        # last_max = self.recorder.get()
-
-        # if not last_max:
-        #     logger.info("首次爬取 ")
-        #     first = True
-        #     # logger.info("首先 将已经爬取的链接 insert 到 bloom 过滤器中")
-        #     # self.insert_urls()
-        #
-        # else:
-        #     logger.info("增量爬取")
-        #     last_max = datetime.datetime.strptime(last_max, "%Y-%m-%d")
-        #     first = False
-
-        # self.second_run(last_max)
-        self.first_run()   # 测试进行一次首次爬取
-        print(self.detail_error_list)
-
-        # if first:
-        #     self.first_run()
-        # else:
-        #     self.second_run(last_max)
+        self.first_run()
 
 
 if __name__ == "__main__":
