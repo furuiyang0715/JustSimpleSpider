@@ -1,107 +1,32 @@
 import json
 import logging
 import re
-import sys
 import time
 import traceback
 from urllib.parse import urlencode
-
 import pymongo
-import pymysql
 import requests
 from bs4 import BeautifulSoup
 from lxml import html
-
 import sys
 
-from taoguba.common.proxy_tools.proxy_pool import QueueProxyPool
-
 sys.path.append("./../")
-
-from taoguba.configs import DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB
+from taoguba.dc_base import DCSpider
+from taoguba.proxy_spider import ProxySpider
+from taoguba.common.proxy_tools.proxy_pool import QueueProxyPool
 
 logger = logging.getLogger()
 
 
-class BaseSpider(object):
-    """
-    主要是与抓取逻辑无关的配置项以及与数据库交互的操作
-    """
-    HEADERS = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) \
-        Chrome/38.0.2125.122 Safari/537.36',
-        'Connection': 'keep-alive',
-        'Content-Encoding': 'gzip',
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        "referer": "https://www.taoguba.com.cn/quotes/sz300223",
-    }
-
-    @property
-    def keys(self):   # {'300150.XSHE': '世纪瑞尔',
-        """
-        从 datacanter.const_secumain 数据库中获取当天需要爬取的股票信息
-        返回的是 股票代码: 中文名简称 的字典的形式
-        """
-        try:
-            conn = pymysql.connect(host=DC_HOST, port=DC_PORT, user=DC_USER,
-                                   passwd=DC_PASSWD, db=DC_DB)
-        except Exception as e:
-            logger.warning(f"connect [datacenter.const_secumain] to get secucode info today fail, {e}")
-            raise
-
-        cur = conn.cursor()
-        cur.execute("USE datacenter;")
-        cur.execute("""select SecuCode, ChiNameAbbr from const_secumain where SecuCode \
-        in (select distinct SecuCode from const_secumain);""")
-        keys = {r[0]: r[1] for r in cur.fetchall()}
-        cur.close()
-        conn.close()
-        return keys
-
-    def convert_lower(self, order_book_id: str):
-        """
-        转换合约代码为前缀模式 并且前缀字母小写
-        :param order_book_id:
-        :return:
-        """
-        EXCHANGE_DICT = {
-            "XSHG": "SH",
-            "XSHE": "SZ",
-            "INDX": "IX",
-
-            "XSGE": "SF",
-            "XDCE": "DF",
-            "XZCE": "ZF",
-            "CCFX": "CF",
-            "XINE": "IF",
-        }
-
-        code, exchange = order_book_id.split('.')
-        ex = EXCHANGE_DICT.get(exchange)
-        return ''.join((ex, code)).lower()
-
-    @property
-    def lowerkeys(self):  # {sz000651: "格力电器", ...}
-        """
-        将数据库中查询出的股票代码转换为可用于 url 查询的小写前缀模式
-        :return:
-        """
-        try:
-            conn = pymysql.connect(host=DC_HOST, port=DC_PORT, user=DC_USER,
-                                   passwd=DC_PASSWD, db=DC_DB)
-        except Exception as e:
-            logger.warning(f"connect [datacenter.const_secumain] to get secucode info today fail, {e}")
-            raise
-
-        cur = conn.cursor()
-        cur.execute("USE datacenter;")
-        cur.execute("""select SecuCode, ChiNameAbbr from const_secumain where SecuCode \
-                   in (select distinct SecuCode from const_secumain);""")
-
-        keys = {self.convert_lower(r[0]): r[1] for r in cur.fetchall()}
-        cur.close()
-        conn.close()
-        return keys
+class TaogubaSpider(DCSpider, ProxySpider):
+    def __init__(self):
+        # 淘股吧的起始爬取的列表页
+        self.list_url = "https://www.taoguba.com.cn/quotes/getStockUpToDate?"
+        # 每次请求返回的个数 不要设置太大 对对方服务器造成太大压力
+        self.perPageNum = 100
+        # 因数据量比较大 将数据存入 mongo 数据库中 或者是在测试时使用
+        self.mon = pymongo.MongoClient("127.0.0.1:27018").pach.taoguba
+        self.ip_pool = QueueProxyPool()
 
     def make_query_params(self, code, timestamp):
         """
@@ -117,71 +42,6 @@ class BaseSpider(object):
             "isOpen": "false",  # 不知道干嘛的一个参数 w(ﾟДﾟ)w
         }
         return query_params
-
-    def get(self, url):
-        # 代理服务器
-        # proxyHost = "http-dyn.abuyun.com"
-        proxyHost = "http-cla.abuyun.com"
-        # proxyPort = 9020
-        proxyPort = 9030
-        # 代理隧道验证信息
-        # proxyUser = "HI3A82G0357W5O5D"
-        proxyUser = "H74JU520TZ0I2SFC"
-        # proxyPass = "FEF4967BF6F9BD8A"
-        proxyPass = "7F5B56602A1E53B2"
-        proxyMeta = "http://%(user)s:%(pass)s@%(host)s:%(port)s" % {
-            "host": proxyHost,
-            "port": proxyPort,
-            "user": proxyUser,
-            "pass": proxyPass,
-        }
-
-        proxies = {
-            "http": proxyMeta,
-            "https": proxyMeta,
-        }
-        while True:
-            resp = requests.get(url, proxies=proxies, headers=self.HEADERS)
-            if resp.status_code == 200:
-                # print(resp)
-                # print(resp.text)
-                return resp
-            else:
-                time.sleep(0.1)
-
-        # while True:
-        #     ip = self.ip_pool.get_one()
-        #     print(ip)
-        #     proxies = {"http": "http://{}".format(ip)}
-        #     ret = requests.get(url, proxies=proxies, headers=self.HEADERS, timeout=3)
-        #     if ret.status_code == "200":
-        #         return ret
-        #     else:
-        #         print(ret.status_code)
-        #         print("更换 ip")
-        #         self.ip_pool.delete_ip(ip)
-        #         time.sleep(0.1)
-
-
-# if __name__ == "__main__":
-#     b = BaseSpider()
-#     print(b.keys)
-#
-#     print()
-#
-#     print(b.lowerkeys)
-#     sys.exit(0)
-
-
-class TaogubaSpider(BaseSpider):
-    def __init__(self):
-        # 淘股吧的起始爬取的列表页
-        self.list_url = "https://www.taoguba.com.cn/quotes/getStockUpToDate?"
-        # 每次请求返回的个数 不要设置太大 对对方服务器造成太大压力
-        self.perPageNum = 100
-        # 因数据量比较大 将数据存入 mongo 数据库中 或者是在测试时使用
-        self.mon = pymongo.MongoClient("127.0.0.1:27018").pach.taoguba
-        self.ip_pool = QueueProxyPool()
 
     def select_topic_from_mongo(self, code):
         """
@@ -200,8 +60,6 @@ class TaogubaSpider(BaseSpider):
                     print()
                 except:
                     print("解析详情页失败 ")
-
-                    pass
 
     def _parse_page(self, url):
         """
@@ -352,8 +210,4 @@ if __name__ == "__main__":
     # ret2 = t._parse_page(url)
     # print(ret2)
 
-    try:
-        t.select_topic_from_mongo("sz002059")
-    except:
-        pass
-    pass
+    t.select_topic_from_mongo("sz002059")
