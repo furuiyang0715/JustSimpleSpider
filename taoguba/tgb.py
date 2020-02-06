@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+import sys
 import time
 import traceback
 from urllib.parse import urlencode
@@ -11,7 +12,45 @@ import requests
 from bs4 import BeautifulSoup
 from lxml import html
 
+import sys
+sys.path.append("./../")
+
+from taoguba.configs import DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB
+
 logger = logging.getLogger()
+
+
+class BaseSpider(object):
+    """
+    主要是与抓取逻辑无关的配置项以及与数据库交互的操作
+    """
+    @property
+    def keys(self):   # {'300150.XSHE': '世纪瑞尔',
+        """
+        从 datacanter.const_secumain 数据库中获取当天需要爬取的股票信息
+        返回的是 股票代码: 中文名简称 的字典的形式
+        """
+        try:
+            conn = pymysql.connect(host=DC_HOST, port=DC_PORT, user=DC_USER,
+                                   passwd=DC_PASSWD, db=DC_DB)
+        except Exception as e:
+            logger.warning(f"connect [datacenter.const_secumain] to get secucode info today fail, {e}")
+            raise
+
+        cur = conn.cursor()
+        cur.execute("USE datacenter;")
+        cur.execute("""select SecuCode, ChiNameAbbr from const_secumain where SecuCode \
+        in (select distinct SecuCode from const_secumain);""")
+        keys = {r[0]: r[1] for r in cur.fetchall()}
+        cur.close()
+        conn.close()
+        return keys
+
+
+if __name__ == "__main__":
+    b = BaseSpider()
+    print(b.keys)
+    sys.exit(0)
 
 
 class TaogubaSpider(object):
