@@ -58,6 +58,7 @@ class TaogubaSpider(DCSpider, ProxySpider, ParseSpider):
 
     def save_to_mysql(self, item):
         self.pool.save_to_database(item)
+        logger.info("插入成功 ")
 
     def insert_list_info(self, item):
         try:

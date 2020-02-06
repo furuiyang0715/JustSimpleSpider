@@ -13,7 +13,7 @@ class ProxySpider(object):
         'Connection': 'keep-alive',
         'Content-Encoding': 'gzip',
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        "referer": "https://www.taoguba.com.cn/quotes/sz300223",
+        # "referer": "https://www.taoguba.com.cn/quotes/sz300223",
     }
 
     def get(self, url):
@@ -39,12 +39,18 @@ class ProxySpider(object):
             "https": proxyMeta,
         }
         while True:
-            resp = requests.get(url, proxies=proxies, headers=self.HEADERS)
+            resp = requests.get(url,
+                                proxies=proxies,
+                                headers=self.HEADERS,
+                                timeout=3,
+                                )
             if resp.status_code == 200:
                 # print(resp)
                 # print(resp.text)
+                time.sleep(0.1)
                 return resp
             else:
+                print("代理无效 ...")
                 time.sleep(0.1)
 
         # # 自建的 ip 代理模块
@@ -60,3 +66,12 @@ class ProxySpider(object):
         #         print("更换 ip")
         #         self.ip_pool.delete_ip(ip)
         #         time.sleep(0.1)
+
+
+if __name__ == "__main__":
+    d = ProxySpider()
+    ret = d.get("https://www.taoguba.com.cn/Article/2672273/1")
+    # ret = d.get("https://www.taoguba.com.cn/quotes/sz300223")
+    # ret = d.get("https://blog.csdn.net/Enjolras_fuu/article/details/104175487")
+    # ret = d.get("https://github.com/binux/pyspider/blob/master/pyspider/message_queue/redis_queue.py")
+    print(ret.text)
