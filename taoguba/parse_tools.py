@@ -112,7 +112,22 @@ class ParseSpider(object):
                     item['subject'] = record.get("subject")  # 文章标题
                     item['userName'] = record.get("userName")  # 用户名 即消息来源
                     item['gnName'] = record.get("gnName")   # 文章谈及概念   TODO list 和 dict 在入库之前再处理
-                    item['stockAttr'] = record.get("stockAttr")   # 文章谈及股票
+                    codes = record.get("stockAttr")   # 文章谈及股票
+                    if codes:
+                        codes_str = ",".join([j.get("stockName") for j in codes])
+                    else:
+                        codes_str = ''
+                    item['stockAttr'] = codes_str
+                    """
+                    [{'stockCode': 'sz000651', 'stockName': '格力电器'},
+                     {'stockCode': 'sz000858', 'stockName': '五粮液'},
+                     {'stockCode': 'sh600158', 'stockName': '中体产业'},
+                     {'stockCode': 'sh600585', 'stockName': '海螺水泥'},
+                     {'stockCode': 'sh601000', 'stockName': '唐山港'},
+                     {'stockCode': 'sh601318', 'stockName': '中国平安'},
+                     {'stockCode': 'hk02318', 'stockName': '中国平安'}]
+
+                    """
                     # article_url = "https://www.taoguba.com.cn/Article/" + str(record.get("rID")) + "/1"
                     item['articleUrl'] = article_url
                     # 增加一个方便翻页的参数

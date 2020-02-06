@@ -1,3 +1,4 @@
+import datetime
 import logging
 import pprint
 import time
@@ -14,7 +15,7 @@ sys.path.append("./../")
 from taoguba.parse_tools import ParseSpider
 from taoguba.dc_base import DCSpider
 from taoguba.proxy_spider import ProxySpider
-from taoguba.common.proxy_tools.proxy_pool import QueueProxyPool
+# from taoguba.common.proxy_tools.proxy_pool import QueueProxyPool
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ class TaogubaSpider(DCSpider, ProxySpider, ParseSpider):
         self.perPageNum = 100
         # 因数据量比较大 将数据存入 mongo 数据库中 或者是在测试时使用
         self.mon = pymongo.MongoClient("127.0.0.1:27018").pach.taoguba
-        self.ip_pool = QueueProxyPool()
+        # self.ip_pool = QueueProxyPool()
 
         self.sql_client = MyPymysqlPool(
             {
@@ -66,6 +67,45 @@ class TaogubaSpider(DCSpider, ProxySpider, ParseSpider):
         except Exception:
             traceback.print_exc()
 
+    def transferContent(self, content):
+        if content is None:
+            return None
+        else:
+            string = ""
+            for c in content:
+                if c == '"':
+                    string += '\\\"'
+                elif c == "'":
+                    string += "\\\'"
+                elif c == "\\":
+                    string += "\\\\"
+                else:
+                    string += c
+            return string
+
+    def get_strategy_model(self, item):
+        taoguba_model = {}
+
+        # 对时间类型的数据进行处理
+        acdt = item.get("actionDate")
+        new_acdt = datetime.datetime.fromtimestamp(float(acdt)/1000).strftime("%Y-%m-%d %H:%M:%S")
+        taoguba_model.update({"actionDate": new_acdt})
+
+        # 对 stockAttr 进行处理
+        stoa = item.get("stockAttr")
+        new_stoa = ",".join([r.get("stockCode") for r in stoa])
+        taoguba_model.update({"stockAttr": new_stoa})
+
+        # 对字符串以及文本类型的数据进行处理
+        # for field in ("stockCode", "ChiNameAbbr", "body", "subject", "userName", "gnName",  "articleUrl", "articleContent"):
+        for field in ("body", "subject", "articleContent"):
+            new_value = self.transferContent(item.get(field))
+            if new_value:
+                new_value = new_value.replace("&nbsp;", " ")
+            taoguba_model.update({field: new_value})
+
+        return taoguba_model
+
     def select_topic_from_mongo(self, code):
         """
         从 mongo 数据库中获取指定股票的待爬取详情
@@ -80,12 +120,8 @@ class TaogubaSpider(DCSpider, ProxySpider, ParseSpider):
                     logger.debug("开始解析详情页 {}".format(detail_link))
                     content = self.parse_detail(item)
                     item['articleContent'] = content
-
-                    print(pprint.pformat(item))
-
-                    sys.exit(0)
-
-                    self.save_to_mysql(item)
+                    to_insert = self.get_strategy_model(item)
+                    self.save_to_mysql(to_insert)
                     logger.info("{} --> {}".format(item['stockCode'], content[:100]))
                 except:
                     traceback.print_exc()
