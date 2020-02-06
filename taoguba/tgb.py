@@ -92,17 +92,17 @@ class BaseSpider(object):
         return keys
 
 
-if __name__ == "__main__":
-    b = BaseSpider()
-    print(b.keys)
+# if __name__ == "__main__":
+#     b = BaseSpider()
+#     print(b.keys)
+#
+#     print()
+#
+#     print(b.lowerkeys)
+#     sys.exit(0)
 
-    print()
 
-    print(b.lowerkeys)
-    sys.exit(0)
-
-
-class TaogubaSpider(object):
+class TaogubaSpider(BaseSpider):
     def __init__(self):
         # 淘股吧的起始爬取的列表页
         self.list_url = "https://www.taoguba.com.cn/quotes/getStockUpToDate?"
@@ -126,11 +126,94 @@ class TaogubaSpider(object):
         }
         return query_params
 
+    def select_topic_from_mongo(self, code):
+        """
+        从 mongo 数据库中获取指定股票的待爬取详情
+        :param code:
+        :return:
+        """
+        cursor = self.mon.find({"stockCode": code})
+        for item in cursor:
+            detail_link = item.get("articleUrl")
+            # print(item)
+            # print(detail_link)
+            if detail_link:
+                # print("开始解析详情页 {}".format(detail_link))
+                content = self.parse_detail(item)
+                print(content)
+                # print(item['stockCode'], "------> ", item['articleContent'][:100])
+                print()
+
+    def _parse_page(self, url):
+        """
+        对文章详情页面进行解析
+        """
+        body = requests.get(url).text
+        # TODO 详情页的页数 1-n
+        s_html = re.findall(r"<!-- 主贴内容开始 -->(.*?)<!-- 主贴内容结束 -->", body, re.S | re.M)[0]
+        soup = BeautifulSoup(s_html, 'lxml')
+        # 因为是要求文章中的图片被替换为链接放在相对应的位置所以这样子搞了w(ﾟДﾟ)w 之后看看有啥更好的办法
+        imgs = soup.find_all(attrs={'data-type': 'contentImage'})
+        if imgs:
+            urls = [img['data-original'] for img in imgs]
+            s_imgs = re.findall(r"<img.*?/>", s_html)  # 非贪婪匹配
+            match_info = dict(zip(s_imgs, urls))
+            for s_img in s_imgs:
+                s_html = s_html.replace(s_img, match_info.get(s_img))
+            # 替换之后再重新构建一次 这时候用 text 就直接拿到了 url ^_^
+            soup = BeautifulSoup(s_html, 'lxml')
+        text = soup.div.text.strip()
+        return text
+
+    def _parse_page_num(self, url):
+        """
+        判断当前的文章详情页文章一共分几页
+        :param page:
+        :return:
+        """
+        print(url)
+        page = requests.get(url).text
+        print(page)
+        doc = html.fromstring(page)
+        page_num = doc.xpath("//div[@class='t_page right fy_pd3']/div[@class='left t_page01']")
+        page_str = page_num[0].text_content()  # 末页下一页上一页首页共1/1页
+        page_now, page_all = re.findall("共(.+)/(.+)页", page_str)[0]
+        return page_now, page_all
+
+    def parse_detail(self, item):
+        durl = item['articleUrl']
+        print("------> ", durl)
+        response = requests.get(durl)
+        if response.status_code == 200:
+            print("200")
+            page_now, page_all = self._parse_page_num(durl)
+            print(page_now, "===> ", page_all)
+
+            # 文章仅一页
+            if page_all == "1" and page_now == page_all:
+                print("文章仅一页")
+                content = self._parse_page(durl)
+                logger.info(f"已经获取到当前页面的内容啦: --> {content[:10]}")
+                return content
+
+            # 一次爬取每一页再拼接起来
+            else:
+                content_dict = {}
+                while int(page_now) <= int(page_all):
+                    print(f"开始爬取文章的第 {page_now} / {page_all} 页")
+                    url = "https://www.taoguba.com.cn/Article/" + str(item["rID"]) + "/" + page_now
+                    content_dict[page_now] = self._parse_page(url)
+                    page_now = str(int(page_now) + 1)
+                return "\r\n".join(content_dict.values())
+
     def start_requests(self):
         demo_keys = {
             # 'sz000651': '格力电器', 'sz002051': '中工国际', 'sz002052': '同洲电子',
-            'sh601001': '大同煤业', 'sh601988': '中国银行', 'sz002054': '德美化工',
-                     }
+            # 'sh601001': '大同煤业', 'sh601988': '中国银行', 'sz002054': '德美化工',
+            # 'sz002055': '得润电子', 'sz002056': '横店东磁', 'sh600048': '保利发展',
+            'sz002057': '中钢天源', 'sz002058': '威尔泰', 'sz002059': '云南旅游',
+
+        }
 
         for code, name in demo_keys.items():
         # for code, name in self.lowerkeys.items():
@@ -185,9 +268,13 @@ class TaogubaSpider(object):
                 more_timestamp = records[-1].get("actionDate")
                 more_url = self.list_url + urlencode(self.make_query_params(code, more_timestamp))
                 self.parse_list(code, name, more_url)
+            else:   # 说明该数据已经爬取完毕了
+                print('结束的url是{}'.format(url))
+                print("股票{}的列表页已经全部入库了".format(name))
         else:
-            print(url)
-            print("股票{}的列表页已经全部入库了".format(name))
+            # 请求结果的状态码不是 200 记录一下
+            print("{} 请求异常， 异常 url 是{}".format(code, url))
+
 
 
 if __name__ == "__main__":
@@ -207,7 +294,8 @@ if __name__ == "__main__":
     # docker exec -it 5034b446  mongo admin
 
 
-    t.start_requests()
+    # t.start_requests()
+    t.select_topic_from_mongo("sz002059")
     pass
 
     # def _parse_page(self, body):
