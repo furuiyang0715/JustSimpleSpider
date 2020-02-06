@@ -1,10 +1,15 @@
 import logging
+import pprint
 import time
 import traceback
 from urllib.parse import urlencode
 import pymongo
 
 import sys
+
+from taoguba.common.sqltools.mysql_pool import MyPymysqlPool, MqlPipeline
+from taoguba.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, MYSQL_TABLE
+
 sys.path.append("./../")
 from taoguba.parse_tools import ParseSpider
 from taoguba.dc_base import DCSpider
@@ -16,6 +21,15 @@ logger = logging.getLogger(__name__)
 
 
 class TaogubaSpider(DCSpider, ProxySpider, ParseSpider):
+    demo_keys = {
+        'sz000651': '格力电器', 'sz002051': '中工国际', 'sz002052': '同洲电子',
+        'sh601001': '大同煤业', 'sh601988': '中国银行', 'sz002054': '德美化工',
+        'sz002055': '得润电子', 'sz002056': '横店东磁', 'sh600048': '保利发展',
+        'sz002057': '中钢天源', 'sz002058': '威尔泰', 'sz002059': '云南旅游',
+        'sh601006': '大秦铁路', 'sz002060': '二局股份', 'sz002061': '浙江交科'
+
+    }
+
     def __init__(self):
         # 淘股吧的起始爬取的列表页
         self.list_url = "https://www.taoguba.com.cn/quotes/getStockUpToDate?"
@@ -24,8 +38,25 @@ class TaogubaSpider(DCSpider, ProxySpider, ParseSpider):
         # 因数据量比较大 将数据存入 mongo 数据库中 或者是在测试时使用
         self.mon = pymongo.MongoClient("127.0.0.1:27018").pach.taoguba
         self.ip_pool = QueueProxyPool()
+
+        self.sql_client = MyPymysqlPool(
+            {
+                "host": MYSQL_HOST,
+                "port": MYSQL_PORT,
+                "user": MYSQL_USER,
+                "password": MYSQL_PASSWORD,
+            }
+        )
+
+        self.db = MYSQL_DB
+        self.table = MYSQL_TABLE
+        self.pool = MqlPipeline(self.sql_client, self.db, self.table)
+
         self.error_detail = []
         self.error_list = []
+
+    def save_to_mysql(self, item):
+        self.pool.save_to_database(item)
 
     def insert_list_info(self, item):
         try:
@@ -41,29 +72,28 @@ class TaogubaSpider(DCSpider, ProxySpider, ParseSpider):
         :param code:
         :return:
         """
-        cursor = self.mon.find({"stockCode": code})
+        cursor = self.mon.find({"stockCode": code}, {"_id": 0})
         for item in cursor:
             detail_link = item.get("articleUrl")
             if detail_link:
                 try:
                     logger.debug("开始解析详情页 {}".format(detail_link))
                     content = self.parse_detail(item)
-                    logger.debug(item['stockCode'], "------> ", content[:100])
+                    item['articleContent'] = content
+
+                    print(pprint.pformat(item))
+
+                    sys.exit(0)
+
+                    self.save_to_mysql(item)
+                    logger.info("{} --> {}".format(item['stockCode'], content[:100]))
                 except:
+                    traceback.print_exc()
                     self.error_detail.append(detail_link)
                     logger.debug("解析详情页失败 ")
 
     def start_requests(self):
-        demo_keys = {
-            # 'sz000651': '格力电器', 'sz002051': '中工国际', 'sz002052': '同洲电子',
-            # 'sh601001': '大同煤业', 'sh601988': '中国银行', 'sz002054': '德美化工',
-            # 'sz002055': '得润电子', 'sz002056': '横店东磁', 'sh600048': '保利发展',
-            # 'sz002057': '中钢天源', 'sz002058': '威尔泰', 'sz002059': '云南旅游',
-            'sh601006': '大秦铁路', 'sz002060': '二局股份', 'sz002061': '浙江交科'
-
-        }
-
-        for code, name in demo_keys.items():
+        for code, name in self.demo_keys.items():
         # for code, name in self.lowerkeys.items():
             logger.info(f"code: {code}, name: {name}")
             item = {}
@@ -80,11 +110,12 @@ class TaogubaSpider(DCSpider, ProxySpider, ParseSpider):
 
 if __name__ == "__main__":
     t = TaogubaSpider()
-    # 将全部的列表页 url 采集到 mongodb 数据库中
-    t.start_requests()
-    # 查看采集是失败的页面
-    print('采集失败的详情页是'.format(t.error_detail))
-    print('采集失败的列表页是'.format(t.error_list))
+    # # 将全部的列表页 url 采集到 mongodb 数据库中
+    # t.start_requests()
+    # # 查看采集是失败的页面
+    # print('采集失败的详情页是'.format(t.error_detail))
+    # print('采集失败的列表页是'.format(t.error_list))
     # 采集全部的详情页页面 并将其插入到 mysql 数据库中
-
-    # t.select_topic_from_mongo("sz002059")
+    for code in t.demo_keys:
+        print(code)
+        t.select_topic_from_mongo(code)

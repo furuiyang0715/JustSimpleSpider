@@ -69,7 +69,7 @@ class ParseSpider(object):
         status_code = self.get(durl).status_code
         if status_code == 200:
             page_now, page_all = self._parse_page_num(durl)
-            logger.info(page_now, "===> ", page_all)
+            # logger.info(page_now, page_all)
             # 文章仅一页
             if page_all == "1" and page_now == page_all:
                 logger.info("文章仅一页")

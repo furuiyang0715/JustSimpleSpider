@@ -97,13 +97,20 @@ class MqlPipeline(object):
     def save_to_database(self, to_insert: dict):
         sql_w, vs = self.contract_sql(to_insert)
         # 预处理
-        vs = [self.transferContent(v) for v in vs]
+        # 应该区别哪些字段需要预处理 哪些不需要
+        new_vs = []
+        for v in vs:
+            if isinstance(v, str):
+                new_vs.append(self.transferContent(v))
+            else:
+                new_vs.append(v)
+        # vs = [self.transferContent(v) for v in vs]
         # vs = [self._process_content(v) for v in vs]
 
         try:
-            self.mysql_pool.insert(sql_w, vs)
+            self.mysql_pool.insert(sql_w, new_vs)
             # print("正在插入 {} 到 mysql 数据库 ".format(vs))
-            logger.info("正在插入 {} 到 mysql 数据库 ".format(vs))
+            logger.info("正在插入 {} 到 mysql 数据库 ".format(new_vs))
             self.mysql_pool._conn.commit()
         except pymysql.err.IntegrityError:
             logger.warning("重复", to_insert)
@@ -111,7 +118,7 @@ class MqlPipeline(object):
         except Exception:
             logger.warning("mysql 插入出错, 请检查\n {}".format(to_insert))
             logger.warning("{}".format(sql_w))
-            logger.warning("{}".format(vs))
+            logger.warning("{}".format(new_vs))
             self.mysql_pool._conn.rollback()
             traceback.print_exc()
 
