@@ -82,6 +82,9 @@ if __name__ == "__main__":
     t = TaogubaSpider()
     # 将全部的列表页 url 采集到 mongodb 数据库中
     t.start_requests()
+    # 查看采集是失败的页面
+    print('采集失败的详情页是'.format(t.error_detail))
+    print('采集失败的列表页是'.format(t.error_list))
     # 采集全部的详情页页面 并将其插入到 mysql 数据库中
 
     # t.select_topic_from_mongo("sz002059")
