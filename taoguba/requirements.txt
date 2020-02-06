@@ -1,0 +1,7 @@
+lxml==4.4.2
+PyMySQL==0.9.3
+requests==2.22.0
+pymongo==3.10.1
+redis==3.3.11
+beautifulsoup4==4.8.2
+DBUtils==1.3
