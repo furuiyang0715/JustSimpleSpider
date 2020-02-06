@@ -47,7 +47,7 @@ class ProxySpider(object):
             else:
                 time.sleep(0.1)
 
-        # 自建的 ip 代理模块
+        # # 自建的 ip 代理模块
         # while True:
         #     ip = self.ip_pool.get_one()
         #     print(ip)

@@ -78,3 +78,8 @@ class DCSpider(object):
         cur.close()
         conn.close()
         return keys
+
+
+if __name__ == "__main__":
+    d = DCSpider()
+    print(d.lowerkeys)
