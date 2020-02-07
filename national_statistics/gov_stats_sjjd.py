@@ -19,7 +19,6 @@ from national_statistics.common.sqltools.mysql_pool import MyPymysqlPool, MqlPip
 from national_statistics.configs import (
     MYSQL_TABLE, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB)
 from national_statistics.my_log import logger
-from national_statistics.sys_info import Recorder
 
 ua = UserAgent()
 
@@ -226,12 +225,10 @@ class GovStats(object):
                     logger.debug("爬取到的列表页信息是 {}".format(items))
                     for item in items:
                         link = item['link']
-                        item['article'], item['pub_date'] = self.parse_detail_page(link)
+                        item['article'] = self.parse_detail_page(link)
                         logger.info(item)
-                        if item['article']:
-                            # print(item)
-                            self.save_to_mysql(item)
-                        # self.bloom.insert(link)
+                        # if item['article']:
+                        #     self.save_to_mysql(item)
                 except Exception:
                     traceback.print_exc()
                     retry -= 1
@@ -255,17 +252,17 @@ if __name__ == "__main__":
     runner = GovStats()
     # # 测试爬取列表页
     # demo_list_url = "http://www.stats.gov.cn/tjsj/sjjd/index_1.html"
-    # runner.parse_list_page(demo_list_url)
+    # ret = runner.parse_list_page(demo_list_url)
+    # print(ret)
     # runner.close()
 
-    # 测试爬取详情页
-    demo_detail_url = "http://www.stats.gov.cn/tjsj/sjjd/202001/t20200119_1723889.html"
-    ret = runner.parse_detail_page(demo_detail_url)
-    print(ret)
-    runner.close()
+    # # 测试爬取详情页
+    # demo_detail_url = "http://www.stats.gov.cn/tjsj/sjjd/202001/t20200119_1723889.html"
+    # ret = runner.parse_detail_page(demo_detail_url)
+    # print(ret)
+    # runner.close()
+    # sys.exit(0)
 
-
-    sys.exit(0)
     runner.start()
     logger.info("列表页爬取失败 {}".format(runner.error_list))
     logger.info("详情页爬取失败 {}".format(runner.detail_error_list))
