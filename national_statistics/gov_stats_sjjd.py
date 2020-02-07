@@ -31,7 +31,7 @@ class GovStats(object):
         ...
     """
     def __init__(self):
-        self.local = True
+        self.local = False
         self.headers = ua.random
         # 根据传入的数据表的名称判断出需要爬取的起始 url 数据
         if MYSQL_TABLE == "gov_stats_zxfb":   # 国家统计局--最新发布
@@ -213,8 +213,8 @@ class GovStats(object):
         当前项目是首次进行爬取
         :return:
         """
-        for page in range(0, 5):
-        # for page in range(0, 1):
+        # for page in range(0, 5):
+        for page in range(0, 1):
             retry = 3
             while True:
                 try:

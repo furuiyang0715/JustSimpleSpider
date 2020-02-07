@@ -6,6 +6,9 @@ docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/gov_stats:v0.0.1
 
 sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/gov_stats:v0.0.1
 sudo /usr/local/bin/docker-compose up -d
+
+sudo docker image prune
+
 use little_crawler
 redis = Redis(host='redis', port=6379)
 
