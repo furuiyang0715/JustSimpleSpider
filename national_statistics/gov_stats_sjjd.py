@@ -85,10 +85,7 @@ class GovStats(object):
         self.links_have_table = []
 
     def _check_selenium_status(self):
-        """
-        检查 selenium 服务端的状态
-        :return:
-        """
+        """检查 selenium 服务端的状态"""
         logger.info("检查 selenium 服务器的状态 ")
         while True:
             i = 0
@@ -129,14 +126,31 @@ class GovStats(object):
         """
         self.browser.get(url)
         ret = self.wait.until(EC.presence_of_element_located(
-            (By.XPATH, "//div[@class='center_list']/ul[@class='center_list_contlist']")))
-        lines = ret.find_elements_by_xpath("./li/span[@class='cont_tit']//font[@class='cont_tit03']/*")
+            (By.XPATH, "//ul[@class='center_list_cont']")))
+        lines = ret.find_elements_by_xpath("./*")
         item_list = []
         for line in lines:
             item = {}
-            link = line.get_attribute("href")
-            item['link'] = link
-            item['title'] = line.text
+            pub_date = line.find_elements_by_xpath(".//font[@class='cont_tit02']")
+            if not pub_date:
+                continue
+            pub_date = pub_date[0].text
+            item['pub_date'] = pub_date
+
+            title = line.find_elements_by_xpath(".//font[@class='cont_tit01']")
+            if not title:
+                continue
+            title = title[0].text
+            item['title'] = title
+
+            link = line.find_elements_by_xpath(".//p[@class='cont_n']/a")
+            if not link:
+                continue
+            if link:
+                link = link[0].get_attribute("href")
+                item['link'] = link
+
+            # print(item)
             item_list.append(item)
         return item_list
 
@@ -212,8 +226,8 @@ class GovStats(object):
         当前项目是首次进行爬取
         :return:
         """
-        # for page in range(0, 5):
-        for page in range(0, 1):
+        for page in range(0, 5):
+        # for page in range(0, 1):
             retry = 3
             while True:
                 try:
@@ -224,6 +238,7 @@ class GovStats(object):
                         item['article'], item['pub_date'] = self.parse_detail_page(link)
                         logger.info(item)
                         if item['article']:
+                            # print(item)
                             self.save_to_mysql(item)
                         # self.bloom.insert(link)
                 except Exception:
@@ -244,11 +259,18 @@ class GovStats(object):
         self.first_run()
 
 
-# if __name__ == "__main__":
-#     t1 = time.time()
-#     runner = GovStats()
-#     runner.start()
-#     logger.info("列表页爬取失败 {}".format(runner.error_list))
-#     logger.info("详情页爬取失败 {}".format(runner.detail_error_list))
-#     t2 = time.time()
-#     logger.info("花费的时间是 {} s".format(t2-t1))
+if __name__ == "__main__":
+    t1 = time.time()
+    runner = GovStats()
+    # 测试爬取列表页
+    demo_list_url = "http://www.stats.gov.cn/tjsj/sjjd/index_1.html"
+    runner.parse_list_page(demo_list_url)
+
+    runner.close()
+
+    sys.exit(0)
+    runner.start()
+    logger.info("列表页爬取失败 {}".format(runner.error_list))
+    logger.info("详情页爬取失败 {}".format(runner.detail_error_list))
+    t2 = time.time()
+    logger.info("花费的时间是 {} s".format(t2-t1))
