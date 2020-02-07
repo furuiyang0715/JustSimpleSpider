@@ -1,165 +1,201 @@
 import json
 import pprint
+import random
+import sys
 import time
-
 import requests
+from fake_useragent import UserAgent
 from bs4 import BeautifulSoup
 
 
+ua = UserAgent()
+
+
 class ProxySpider(object):
-    """
-    与代理相关
-    """
-    HEADERS = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) \
-        Chrome/38.0.2125.122 Safari/537.36',
-        'Connection': 'keep-alive',
-        'Content-Encoding': 'gzip',
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-    }
-
-    def _proxy_get(self, url, proxies):
-        """
-        使用某种生成的代理去访问
-        :param url:
-        :param proxies:
-        :return:
-        """
-        while True:
-            if proxies:
-                proxy = proxies[-1]
-                proxy = {"http": "http://" + proxy}
-                try:
-                    ret = requests.get(url, proxies=proxy, headers=self.HEADERS,
-                                       timeout=1
-                                       )
-                except:
-                    print("连接超时 {}".format(proxies.pop()))
-                else:
-                    if ret.status_code == 200:
-                        return ret
-                    else:
-                        ret2 = requests.get("https://www.douban.com/", proxies=proxy, headers=self.HEADERS, timeout=1)
-                        # ret2 = requests.get("https://www.taoguba.com.cn/quotes/sz300223", proxies=proxy, headers=self.HEADERS, timeout=3)
-                        print("访问测试网站的结果 {}".format(ret2))
-                        print('因为{} 删除{}'.format(ret.status_code, proxies.pop()))
-                        time.sleep(0.1)
-            else:
-                print("需要重新爬取一批代理")
-
-    def sm_proxy(self):
-        """
-        线上的私密代理 (高匿)
-        :return:
-        """
-        url = 'https://dps.kdlapi.com/api/getdps/?orderid=934751511166930&num=20&pt=1&sep=1'
-        proxies = requests.get(url).text.split("\r\n")
-        # print(proxies)   # ['119.102.8.221:23460', '182.34.34.85:19322'
-        return proxies
-
-    def kuai_proxy(self):
-        """
-        爬取的开放代理
-        :return:
-        """
-        url = "http://ent.kdlapi.com/api/getproxy/?orderid=924829619838717&num=100&protocol=1&method=2&an_an=1&an_ha=1&sep=1"
-        proxies = requests.get(url).text.split("\r\n")
-        print(proxies)
-        return proxies
-        # base_url = 'https://www.kuaidaili.com/free/inha/{}/'
-        # for i in range(1, 5):
-        #     time.sleep(1)
-        #     res = requests.get(base_url.format(i),
-        #                        headers=self.HEADERS,
-        #                        )
-        #     soup = BeautifulSoup(res.text, 'lxml')
-        #     trs = soup.find_all('tr')
-        #     for tr in trs[1:]:
-        #         tds = tr.find_all('td')
-        #         # lst.append({str(tds[3].text).lower(): str(tds[0].text) + ':' + str(tds[1].text)})
-        #         lst.append(str(tds[0].text) + ':' + str(tds[1].text))
-        #     # print(lst)
-        #     return lst
-
-    def kuai_get(self, url):
-        """
-        使用自己爬取的开放快代理去访问
-        :param url:
-        :return:
-        """
-        proxies = self.kuai_proxy()
-        # ['110.243.2.57:9999', '60.167.82.55:9999',
-        return self._proxy_get(url, proxies)
-
-    def sm_get(self, url):
-        """
-        私密代理访问 仅限于线上使用
-        :param url:
-        :return:
-        """
-        proxies = self.sm_proxy()
-        # ['183.164.238.250:22628', '125.112.175.205:19861'
-        return self._proxy_get(url, proxies)
-
     def abu_get(self, url):
-        """使用阿布云代理"""
-        proxyHost = "http-cla.abuyun.com"
-        proxyPort = 9030
+        """使用阿布云代理 默认失败后重新发起请求"""
+        proxy_host = "http-cla.abuyun.com"
+        proxy_port = 9030
         # 代理隧道验证信息
-        proxyUser = "H74JU520TZ0I2SFC"
-        proxyPass = "7F5B56602A1E53B2"
-        proxyMeta = "http://%(user)s:%(pass)s@%(host)s:%(port)s" % {
-            "host": proxyHost,
-            "port": proxyPort,
-            "user": proxyUser,
-            "pass": proxyPass,
+        proxy_user = "H74JU520TZ0I2SFC"
+        proxy_pass = "7F5B56602A1E53B2"
+        proxy_meta = "http://%(user)s:%(pass)s@%(host)s:%(port)s" % {
+            "host": proxy_host,
+            "port": proxy_port,
+            "user": proxy_user,
+            "pass": proxy_pass,
         }
         proxies = {
-            "http": proxyMeta,
-            "https": proxyMeta,
+            "http": proxy_meta,
+            "https": proxy_meta,
         }
+        retry = 3
         while True:
-            resp = requests.get(url,
-                                proxies=proxies,
-                                headers=self.HEADERS,
-                                timeout=3,
-                                )
-            if resp.status_code == 200:
-                return resp
-            else:
-                time.sleep(0.1)
+            try:
+                resp = requests.get(url,
+                                    proxies=proxies,
+                                    headers={"User-Agent": ua.random},
+                                    timeout=3,
+                                    )
+                if resp.status_code == 200:
+                    return True
+                else:
+                    retry -= 1
+                    time.sleep(1)
+                    if retry <= 0:
+                        break
+            except:
+                retry -= 1
+                time.sleep(1)
+                if retry <= 0:
+                    break
+        return False
+
+    def _get(self, url: str, proxy: str):
+        """
+        底层委托给 requests 库访问
+        :param url:
+        :param proxy: host:port 格式
+        :return:
+        """
+        retry = 3
+        while True:
+            try:
+                resp = requests.get(url,
+                                    proxies={"http": "http://{}".format(proxy)},
+                                    headers={"User-Agent": ua.random},
+                                    timeout=3,
+                                    )
+                if resp.status_code == 200:
+                    return True
+                else:
+                    retry -= 1
+                    time.sleep(1)
+                    if retry <= 0:
+                        break
+            except:
+                retry -= 1
+                time.sleep(1)
+                if retry <= 0:
+                    break
+        return False
+
+    def _safe_proxy(self, proxy):
+        """
+        规范从不同的代理源获取的代理字符串的格式
+        :param proxy:
+        :return: proxy: host:port 格式
+        """
+
+    def _crawl_from(self, origin: str):
+        """
+        根据 origin 字段判断爬取源 获取规范化之后的代理
+        :param origin:
+        :return:
+        """
+        if origin == "OPEN_KUAI":
+            url = "http://ent.kdlapi.com/api/getproxy/?orderid=924829619838717&num=20&protocol=1&method=2&an_an=1&an_ha=1&sep=1"
+            proxies = requests.get(url).text.split("\r\n")
+            return proxies
+        elif origin == "PRIVATE_KUAI":
+            url = 'https://dps.kdlapi.com/api/getdps/?orderid=934751511166930&num=20&pt=1&sep=1'
+            proxies = requests.get(url).text.split("\r\n")
+            return proxies
+        elif origin == "FREE_KUAI":
+            proxies = []
+            url = 'https://www.kuaidaili.com/free/inha/{}/'
+            for i in range(1, 20):
+                res = requests.get(url.format(i), headers={"User-Agent": ua.random})
+                soup = BeautifulSoup(res.text, 'lxml')
+                trs = soup.find_all('tr')
+                for tr in trs[1:]:
+                    tds = tr.find_all('td')
+                proxies.append(str(tds[0].text) + ':' + str(tds[1].text))
+            return proxies
+        elif origin == "XICIDAILI":
+            proxies = []
+            url = "http://www.xicidaili.com/nn/"
+            web_html = requests.get(url, headers={"User-Agent": ua.random}).text
+            soup = BeautifulSoup(web_html, 'lxml')
+            ip_list = soup.find(id='ip_list').find_all('tr')
+            for ip_info in ip_list:
+                td_list = ip_info.find_all('td')
+                if len(td_list) > 0:
+                    ip_address = td_list[1].text
+                    ip_port = td_list[2].text
+                    proxies.append(ip_address+":"+ip_port)
+            return proxies
+
+    def _check_available_ip(self, proxy):
+        """检测IP地址是否可用"""
+        header = {'User-Agent': ua.random}
+        proxies = {'http': 'http://{}'.format(proxy), 'https': 'https://{}'.format(proxy)}
+        try:
+            r = requests.get("http://httpbin.org/ip", headers=header, proxies=proxies, timeout=3)
+            # html = r.text
+        except:
+            print('fail-{}'.format(proxy))
+            return False
+        else:
+            print('success-{}'.format(proxy))
+            return True
+            # soup = BeautifulSoup(html, 'lxml')
+            # div = soup.find(class_='well')
+            # if div:
+            #     print(div.text)
+            # ip_info = {'address': ip_address, 'port': ip_port}
+            # self.ip_list.append(ip_info)
+
+    def _save_to_file(self, ip_list):
+        """将可用 ip 存入文件中"""
+        print("保存可用 ip")
+        with open('ip.txt', 'w') as file:
+            json.dump(ip_list, file)
+
+    def save(self, proxies):
+        ip_list = []
+        for proxy in proxies:
+            if self._check_available_ip(proxy):
+                ip_list.append(proxy)
+        if ip_list:
+            self._save_to_file(ip_list)
+
+    def get_proxy(self, random_number):
+        with open('ip.txt', 'r') as file:
+            ip_list = json.load(file)
+            if random_number == -1:
+                random_number = random.randint(0, len(ip_list) - 1)
+            proxy = ip_list[random_number]
+            return proxy
 
     def get(self, url):
-        # 不使用代理
+        """
+        对外暴露端口
+        :param url:  请求的 url
+        :return:
+        """
+
         # return requests.get(url)
 
         # 使用阿布云代理
         # return self.abu_get(url)
 
         # 开放快代理(两种)
-        return self.kuai_get(url)
-
-        # 线上私密代理访问
-        # return self.sm_get(url)
+        # proxies = self._crawl_from("OPEN_KUAI")
+        # proxies = self._crawl_from("PRIVATE_KUAI")
+        # proxies = self._crawl_from("FREE_KUAI")
+        proxies = self._crawl_from("XICIDAILI")
+        # print(proxies)
+        # self.save(proxies)
+        proxy = self.get_proxy(1)
+        print(proxy)
+        return self._get(url, proxy)
 
 
 if __name__ == "__main__":
     d = ProxySpider()
-
-    # ret = d.get("https://www.taoguba.com.cn/Article/2672273/1")
-    ret = d.get("https://www.taoguba.com.cn/quotes/sz300223")
-    # ret = d.get("https://blog.csdn.net/Enjolras_fuu/article/details/104175487")
-    # ret = d.get("http://httpbin.org/headers")
-    # ret = d.get("http://httpbin.org/ip")
-    # ret = d.get("https://github.com/binux/pyspider/blob/master/pyspider/message_queue/redis_queue.py")
-
-    print("=======")
-    print(ret.text)
-
-
-
-"""
-{
-  "origin": "119.130.70.97"
-}
-"""
+    # demo_url = "https://www.taoguba.com.cn/quotes/sz300223"
+    # demo_url = "https://www.taoguba.com.cn/Article/2672273/1"
+    demo_url = "https://blog.csdn.net/Enjolras_fuu/article/details/104175487"
+    ret = d.get(demo_url)
+    print(ret)
