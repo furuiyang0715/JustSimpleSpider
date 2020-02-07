@@ -35,6 +35,7 @@ class GovStats(object):
         ...
     """
     def __init__(self):
+        self.local = True
         self.headers = ua.random
         # 根据传入的数据表的名称判断出需要爬取的起始 url 数据
         if MYSQL_TABLE == "gov_stats_zxfb":   # 国家统计局--最新发布
@@ -49,24 +50,22 @@ class GovStats(object):
         else:
             raise RuntimeError("请检查数据起始 url")
 
-        # 首先检查 selenium 状态是否准备完毕
-        self._check_selenium_status()
-        # time.sleep(3)
-        # logger.info("selenoium 服务已就绪")
-
         # 对于一次无法完全加载完整页面的情况 采用的方式:
         capa = DesiredCapabilities.CHROME
         capa["pageLoadStrategy"] = "none"  # 懒加载模式，不等待页面加载完毕
 
-        # self.browser = webdriver.Chrome(desired_capabilities=capa)  # 关键!记得添加 （本地）
+        if self.local:  # 本地测试的
+            time.sleep(3)
+            logger.info("selenoium 服务已就绪")
+            self.browser = webdriver.Chrome(desired_capabilities=capa)
+        else:   # 线上部署
+            self._check_selenium_status()
+            self.browser = webdriver.Remote(
+                command_executor="http://chrome:4444/wd/hub",
+                desired_capabilities=capa
+            )
 
-        # 线上部署
-        self.browser = webdriver.Remote(
-            command_executor="http://chrome:4444/wd/hub",
-            desired_capabilities=capa
-        )
-
-        self.wait = WebDriverWait(self.browser, 10)
+        self.wait = WebDriverWait(self.browser, 5)
         self.sql_client = MyPymysqlPool(
             {
                 "host": MYSQL_HOST,
@@ -84,8 +83,6 @@ class GovStats(object):
         self.detail_error_list = []
         # 单独记录含有 table 的页面 方便单独更新和处理
         self.links_have_table = []
-        # 爬虫的一个记录器 简单来说就是一个文件
-        self.recorder = Recorder()
 
     def _check_selenium_status(self):
         """
