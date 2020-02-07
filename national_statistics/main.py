@@ -53,6 +53,10 @@ def task():
         from national_statistics.gov_stats_zxfb import GovStats
     elif MYSQL_TABLE == "gov_stats_xwfbh":
         from national_statistics.gov_stats_xwfbh import GovStats
+    elif MYSQL_TABLE == "gov_stats_sjjd":
+        from national_statistics.gov_stats_sjjd import GovStats
+    else:
+        raise Exception("请检查数据表名")
 
     runner = GovStats()
     runner.start()
@@ -72,10 +76,10 @@ def main():
     # schedule.every(5).days.at("05:00").do(task)
 
     while True:
-        logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
+        # logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
         schedule.run_pending()
-        time.sleep(300)
-        logger.info("No work to do, waiting")
+        time.sleep(180)
+        # logger.info("No work to do, waiting")
 
 
 main()
