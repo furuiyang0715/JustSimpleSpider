@@ -176,14 +176,6 @@ class GovStats(object):
                         ret = self.wait.until(EC.presence_of_element_located(
                             (By.XPATH, "//div[@class='center_xilan']")))
 
-                ret2 = self.wait.until(EC.presence_of_element_located(
-                    # (By.XPATH, "//font[@style='float:left;width:620px;text-align:right;margin-right:60px;']")))
-                    (By.XPATH, "//font[@class='xilan_titf']")))
-
-                # pub_date = datetime.datetime.strptime(re.findall("发布时间：(\d{4}-\d{2}-\d{2})", ret2.text)[0], "%Y-%m-%d")
-                pub_date = re.findall("发布时间：(\d{4}-\d{2}-\d{2})", ret2.text)[0]
-                logger.debug(pub_date)
-
                 contents = []
                 nodes = ret.find_elements_by_xpath("./*")
 
@@ -203,11 +195,10 @@ class GovStats(object):
                 if retry < 0:
                     self.detail_error_list.append(url)
                     logger.warning("解析详情页 {} 始终不成功 ".format(url))
-                    # raise RuntimeError("解析详情页始终不成功 ")
-                    return '', '2020-01-01'
+                    return ''
             else:
                 break
-        return "\n".join(contents), pub_date
+        return "\n".join(contents)
 
     def save_to_mysql(self, item):
         self.pool.save_to_database(item)
@@ -262,11 +253,17 @@ class GovStats(object):
 if __name__ == "__main__":
     t1 = time.time()
     runner = GovStats()
-    # 测试爬取列表页
-    demo_list_url = "http://www.stats.gov.cn/tjsj/sjjd/index_1.html"
-    runner.parse_list_page(demo_list_url)
+    # # 测试爬取列表页
+    # demo_list_url = "http://www.stats.gov.cn/tjsj/sjjd/index_1.html"
+    # runner.parse_list_page(demo_list_url)
+    # runner.close()
 
+    # 测试爬取详情页
+    demo_detail_url = "http://www.stats.gov.cn/tjsj/sjjd/202001/t20200119_1723889.html"
+    ret = runner.parse_detail_page(demo_detail_url)
+    print(ret)
     runner.close()
+
 
     sys.exit(0)
     runner.start()
