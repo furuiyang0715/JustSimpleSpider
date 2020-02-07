@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
-import datetime
-import os
-import re
 import sys
+
 import time
 import traceback
 import requests
-import selenium
 
 from selenium import webdriver
 from selenium.webdriver import DesiredCapabilities
@@ -227,8 +224,8 @@ class GovStats(object):
                         link = item['link']
                         item['article'] = self.parse_detail_page(link)
                         logger.info(item)
-                        # if item['article']:
-                        #     self.save_to_mysql(item)
+                        if item['article']:
+                            self.save_to_mysql(item)
                 except Exception:
                     traceback.print_exc()
                     retry -= 1
