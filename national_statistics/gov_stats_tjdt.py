@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import pprint
 import sys
 
 import time
@@ -122,9 +123,19 @@ class GovStats(object):
         :param url:
         :return:
         """
+        """
+        <li>
+            <a href="./201912/t20191210_1716854.html" target="_blank">
+                <span class="cont_tit"><img src="../../images/01.jpg" style="float:left;margin-right:5px;margin-top:5px;">
+                    <font class="cont_tit03">国家统计局党组理论学习中心组集体学习党的十九届四中全会和中央政治局会议、国务院常务会议精神</font>
+                    <font class="cont_tit02">2019-12-10</font>
+                </span>
+            </a>
+        </li>
+        """
         self.browser.get(url)
         ret = self.wait.until(EC.presence_of_element_located(
-            (By.XPATH, "//ul[@class='center_list_cont']")))
+            (By.XPATH, "//ul[@class='center_list_contlist']")))
         lines = ret.find_elements_by_xpath("./*")
         item_list = []
         for line in lines:
@@ -135,13 +146,13 @@ class GovStats(object):
             pub_date = pub_date[0].text
             item['pub_date'] = pub_date
 
-            title = line.find_elements_by_xpath(".//font[@class='cont_tit01']")
+            title = line.find_elements_by_xpath(".//font[@class='cont_tit03']")
             if not title:
                 continue
             title = title[0].text
             item['title'] = title
 
-            link = line.find_elements_by_xpath(".//p[@class='cont_n']/a")
+            link = line.find_elements_by_xpath("./a")
             if not link:
                 continue
             if link:
@@ -250,17 +261,17 @@ if __name__ == "__main__":
     t1 = time.time()
     runner = GovStats()
     # # 测试爬取列表页
-    # demo_list_url = "http://www.stats.gov.cn/tjsj/sjjd/index_1.html"
-    # ret = runner.parse_list_page(demo_list_url)
-    # print(ret)
-    # runner.close()
+    demo_list_url = "http://www.stats.gov.cn/tjgz/tjdt/index_1.html"
+    ret = runner.parse_list_page(demo_list_url)
+    print(pprint.pformat(ret))
+    runner.close()
 
     # # 测试爬取详情页
     # demo_detail_url = "http://www.stats.gov.cn/tjsj/sjjd/202001/t20200119_1723889.html"
     # ret = runner.parse_detail_page(demo_detail_url)
     # print(ret)
     # runner.close()
-    # sys.exit(0)
+    sys.exit(0)
 
     runner.start()
     logger.info("列表页爬取失败 {}".format(runner.error_list))
