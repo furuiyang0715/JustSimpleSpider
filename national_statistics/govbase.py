@@ -17,7 +17,7 @@ ua = UserAgent()
 class BaseStats(object):
     """ 国家统计局爬虫 基类 """
     def __init__(self):
-        self.local = True
+        self.local = False
         self.headers = ua.random
 
         # 对于一次无法完全加载完整页面的情况 采用的方式:
@@ -81,14 +81,19 @@ class BaseStats(object):
     def save_to_mysql(self, item):
         self.pool.save_to_database(item)
 
+    def __del__(self):
+        logger.info("{} 连接已经销毁".format(self.name))
+        self.sql_client.dispose()
+        self.browser.close()
+
     def close(self):
         """
         爬虫程序关闭
         :return:
         """
-        logger.info("爬虫程序已关闭")
-        self.sql_client.dispose()
-        self.browser.close()
+        # logger.info("爬虫程序已关闭")
+        # self.sql_client.dispose()
+        # self.browser.close()
 
     def _get_urls(self):
         """

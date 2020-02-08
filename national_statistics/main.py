@@ -56,12 +56,9 @@ def catch_exceptions(cancel_on_failure=False):
 @catch_exceptions(cancel_on_failure=True)
 def task():
     if MYSQL_TABLE == "all":
-        g1 = G1()
-        g2 = G2()
-        g3 = G3()
-        g4 = G4()
-
-        for runner in [g1, g2, g3, g4]:
+        for G in [G4, G1, G2, G3]:
+        # for G in [G1, G2, ]:
+            runner = G()
             t1 = time.time()
             logger.info("{} 爬取任务开启".format(runner.name))
             runner.start()
@@ -98,7 +95,7 @@ def main():
     task()
 
     logger.info("当前时间是{}, 开始增量爬取 ".format(datetime.datetime.now()))
-    schedule.every().day.at("03:00").do(task)
+    schedule.every(3).days.at("03:00").do(task)
 
     while True:
         # logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
