@@ -30,7 +30,7 @@ logging.config.dictConfig({
             "filename": os.path.join(log_dir, "gov_stats.log"),
             "formatter": "simple",
             "when": "D",
-            "backupCount": 5
+            "backupCount": 2
         },
     },
     "loggers": {
