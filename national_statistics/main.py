@@ -25,6 +25,10 @@ sys.path.append("./..")
 
 from national_statistics.configs import MYSQL_TABLE
 from national_statistics.my_log import logger
+from national_statistics.gov_stats_zxfb import GovStats as G1
+from national_statistics.gov_stats_xwfbh import GovStats as G2
+from national_statistics.gov_stats_sjjd import GovStats as G3
+from national_statistics.gov_stats_tjdt import GovStats as G4
 
 
 def catch_exceptions(cancel_on_failure=False):
@@ -52,18 +56,22 @@ def catch_exceptions(cancel_on_failure=False):
 @catch_exceptions(cancel_on_failure=True)
 def task():
     if MYSQL_TABLE == "all":
-        from national_statistics.gov_stats_zxfb import GovStats as G1
-        from national_statistics.gov_stats_xwfbh import GovStats as G2
-        from national_statistics.gov_stats_sjjd import GovStats as G3
-        from national_statistics.gov_stats_tjdt import GovStats as G4
-    for runner in [G1(), G2(), G3(), G4()]:
-        t1 = time.time()
-        runner.start()
-        logger.info("{} 爬取任务开启".format(runner.name))
-        logger.info("列表页爬取失败 {}".format(runner.error_list))
-        logger.info("详情页爬取失败 {}".format(runner.detail_error_list))
-        t2 = time.time()
-        logger.info("花费的时间是 {} s".format(t2 - t1))
+        g1 = G1()
+        g2 = G2()
+        g3 = G3()
+        g4 = G4()
+
+        for runner in [g1, g2, g3, g4]:
+            t1 = time.time()
+            logger.info("{} 爬取任务开启".format(runner.name))
+            runner.start()
+            logger.info("列表页爬取失败 {}".format(runner.error_list))
+            logger.info("详情页爬取失败 {}".format(runner.detail_error_list))
+            t2 = time.time()
+            logger.info("花费的时间是 {} s".format(t2 - t1))
+            logger.info("")
+            logger.info("")
+            logger.info("")
 
     # t1 = time.time()
     # if MYSQL_TABLE == "gov_stats_zxfb":
