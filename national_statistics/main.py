@@ -51,24 +51,38 @@ def catch_exceptions(cancel_on_failure=False):
 
 @catch_exceptions(cancel_on_failure=True)
 def task():
-    t1 = time.time()
-    if MYSQL_TABLE == "gov_stats_zxfb":
-        from national_statistics.gov_stats_zxfb import GovStats
-    elif MYSQL_TABLE == "gov_stats_xwfbh":
-        from national_statistics.gov_stats_xwfbh import GovStats
-    elif MYSQL_TABLE == "gov_stats_sjjd":
-        from national_statistics.gov_stats_sjjd import GovStats
-    elif MYSQL_TABLE == "gov_stats_tjdt":   # 统计动态
-        from national_statistics.gov_stats_tjdt import GovStats
-    else:
-        raise Exception("请检查数据表名")
+    if MYSQL_TABLE == "all":
+        from national_statistics.gov_stats_zxfb import GovStats as G1
+        from national_statistics.gov_stats_xwfbh import GovStats as G2
+        from national_statistics.gov_stats_sjjd import GovStats as G3
+        from national_statistics.gov_stats_tjdt import GovStats as G4
+    for runner in [G1(), G2(), G3(), G4()]:
+        t1 = time.time()
+        runner.start()
+        logger.info("{} 爬取任务开启".format(runner.name))
+        logger.info("列表页爬取失败 {}".format(runner.error_list))
+        logger.info("详情页爬取失败 {}".format(runner.detail_error_list))
+        t2 = time.time()
+        logger.info("花费的时间是 {} s".format(t2 - t1))
 
-    runner = GovStats()
-    runner.start()
-    logger.info("列表页爬取失败 {}".format(runner.error_list))
-    logger.info("详情页爬取失败 {}".format(runner.detail_error_list))
-    t2 = time.time()
-    logger.info("花费的时间是 {} s".format(t2 - t1))
+    # t1 = time.time()
+    # if MYSQL_TABLE == "gov_stats_zxfb":
+    #     from national_statistics.gov_stats_zxfb import GovStats
+    # elif MYSQL_TABLE == "gov_stats_xwfbh":
+    #     from national_statistics.gov_stats_xwfbh import GovStats
+    # elif MYSQL_TABLE == "gov_stats_sjjd":
+    #     from national_statistics.gov_stats_sjjd import GovStats
+    # elif MYSQL_TABLE == "gov_stats_tjdt":   # 统计动态
+    #     from national_statistics.gov_stats_tjdt import GovStats
+    # else:
+    #     raise Exception("请检查数据表名")
+    #
+    # runner = GovStats()
+    # runner.start()
+    # logger.info("列表页爬取失败 {}".format(runner.error_list))
+    # logger.info("详情页爬取失败 {}".format(runner.detail_error_list))
+    # t2 = time.time()
+    # logger.info("花费的时间是 {} s".format(t2 - t1))
 
 
 def main():
@@ -76,9 +90,7 @@ def main():
     task()
 
     logger.info("当前时间是{}, 开始增量爬取 ".format(datetime.datetime.now()))
-    # schedule.every(180).seconds.do(task)
     schedule.every().day.at("03:00").do(task)
-    # schedule.every(5).days.at("05:00").do(task)
 
     while True:
         # logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
