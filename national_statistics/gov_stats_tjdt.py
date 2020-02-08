@@ -226,14 +226,16 @@ class GovStats(object):
         当前项目是首次进行爬取
         :return:
         """
-        # for page in range(0, 5):
-        for page in range(0, 1):
+        for page in range(0, 5):
+        # for page in range(0, 1):
+            time.sleep(3)
             retry = 3
             while True:
                 try:
                     items = self.crawl_list(page)
                     logger.debug("爬取到的列表页信息是 {}".format(items))
                     for item in items:
+                        time.sleep(1)
                         link = item['link']
                         item['article'] = self.parse_detail_page(link)
                         logger.info(item)
@@ -267,11 +269,11 @@ if __name__ == "__main__":
     # runner.close()
 
     # 测试爬取详情页
-    demo_detail_url = "http://www.stats.gov.cn/tjgz/tjdt/201912/t20191210_1716854.html"
-    ret = runner.parse_detail_page(demo_detail_url)
-    print(ret)
-    runner.close()
-    sys.exit(0)
+    # demo_detail_url = "http://www.stats.gov.cn/tjgz/tjdt/201912/t20191210_1716854.html"
+    # ret = runner.parse_detail_page(demo_detail_url)
+    # print(ret)
+    # runner.close()
+    # sys.exit(0)
 
     runner.start()
     logger.info("列表页爬取失败 {}".format(runner.error_list))

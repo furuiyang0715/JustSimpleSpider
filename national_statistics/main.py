@@ -58,6 +58,8 @@ def task():
         from national_statistics.gov_stats_xwfbh import GovStats
     elif MYSQL_TABLE == "gov_stats_sjjd":
         from national_statistics.gov_stats_sjjd import GovStats
+    elif MYSQL_TABLE == "gov_stats_tjdt":   # 统计动态
+        from national_statistics.gov_stats_tjdt import GovStats
     else:
         raise Exception("请检查数据表名")
 
