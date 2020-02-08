@@ -261,16 +261,16 @@ if __name__ == "__main__":
     t1 = time.time()
     runner = GovStats()
     # # 测试爬取列表页
-    demo_list_url = "http://www.stats.gov.cn/tjgz/tjdt/index_1.html"
-    ret = runner.parse_list_page(demo_list_url)
-    print(pprint.pformat(ret))
-    runner.close()
-
-    # # 测试爬取详情页
-    # demo_detail_url = "http://www.stats.gov.cn/tjsj/sjjd/202001/t20200119_1723889.html"
-    # ret = runner.parse_detail_page(demo_detail_url)
-    # print(ret)
+    # demo_list_url = "http://www.stats.gov.cn/tjgz/tjdt/index_1.html"
+    # ret = runner.parse_list_page(demo_list_url)
+    # print(pprint.pformat(ret))
     # runner.close()
+
+    # 测试爬取详情页
+    demo_detail_url = "http://www.stats.gov.cn/tjgz/tjdt/201912/t20191210_1716854.html"
+    ret = runner.parse_detail_page(demo_detail_url)
+    print(ret)
+    runner.close()
     sys.exit(0)
 
     runner.start()
