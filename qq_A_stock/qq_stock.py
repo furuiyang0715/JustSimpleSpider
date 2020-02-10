@@ -2,17 +2,25 @@ import json
 import pprint
 import sys
 import time
+import traceback
 from queue import Queue
 
+import jsonpath
 import requests
 from fake_useragent import UserAgent
 from gne import GeneralNewsExtractor
+from selenium import webdriver
+from selenium.webdriver import DesiredCapabilities
+
+from qq_A_stock.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
+from qq_A_stock.sql_base import StoreTool
 
 ua = UserAgent()
 
 
 class qqStock(object):
     def __init__(self):
+        self.local = True
         self.token = "8f6b50e1667f130c10f981309e1d8200"
         self.headers = ua.random
         self.list_url = "https://pacaio.match.qq.com/irs/rcd?cid=52&token={}" \
@@ -20,6 +28,23 @@ class qqStock(object):
         self.q = Queue()
         self.proxy = None
         self.extractor = GeneralNewsExtractor()
+        if self.local:
+            self.browser = webdriver.Chrome()
+        else:
+            self.browser = webdriver.Remote(
+                command_executor="http://chrome:4444/wd/hub",
+                desired_capabilities=DesiredCapabilities.CHROME
+            )
+
+        self.browser.implicitly_wait(5)  # 隐性等待，最长等30秒
+        conf = {
+            "host": MYSQL_HOST,
+            "port": MYSQL_PORT,
+            "user": MYSQL_USER,
+            "password": MYSQL_PASSWORD,
+            "db": MYSQL_DB,
+        }
+        self.storage = StoreTool(**conf)
 
     def update_proxies(self):
         # run()
@@ -28,12 +53,6 @@ class qqStock(object):
         proxies = [p.strip() for p in proxies]
         for proxy in proxies:
             self.q.put(proxy)
-
-        # 将代理一一添加到爬虫的队列存储对象中
-        # print(proxies)
-        # print(type(proxies))
-        # self.proxies = [p.strip() for p in proxies]
-        # print(self.proxies)
 
     def _get_proxy(self):
         if self.proxy:
@@ -51,21 +70,55 @@ class qqStock(object):
     def _get(self, url):
             proxy = self._get_proxy()
             print("获取到的代理是{}".format(proxy))
-            ret = requests.get(url, headers={"User-Agent": ua.random}, proxies={"http": proxy})
+            ret = requests.get(url, headers={"User-Agent": ua.random}, proxies={"http": proxy}, timeout=3)
             return ret
 
-    def _parse_article(self, item):
+    def _parse_article(self, item, special=False):
         vurl = item.get("link")
-        body = self._get(vurl).text
+        while True:
+            try:
+                self.browser.get(vurl)
+                body = self.browser.page_source
+            except:
+                traceback.print_exc()
+                self.proxy = None
+                time.sleep(3)
+            else:
+                break
+
         result = self.extractor.extract(body)
-        # print(pprint.pformat(result))
+        item['article'] = result.get("content")
+
+        if special:
+            item['pub_date'] = result.get("publish_time")
+            item['title'] = result.get("title")
+
+        print(item)
+        time.sleep(1)
+        return item
+
+    def _parse_article_by_requsets(self, item):
+        vurl = item.get("link")
+
+        while True:
+            try:
+                resp = self._get(vurl)
+            except:
+                # traceback.print_exc()
+                self.proxy = None
+                time.sleep(3)
+            else:
+                break
+
+        body = resp.text
+        result = self.extractor.extract(body)
         item['article'] = result.get("content")
         item['pub_date'] = result.get("publish_time")
         item['title'] = result.get("title")
-
+        print(item)
         return item
 
-    def _get_list(self):
+    def _parse_list(self):
         while True:
             try:
                 list_resp = self._get(self.list_url)
@@ -76,16 +129,16 @@ class qqStock(object):
                 break
 
         if list_resp.status_code == 200:
-            print("请求列表页成功 ")
+            print("请求主列表页成功 ")
             body = list_resp.text
             body = body.lstrip("__jp1(")
             body = body.rstrip(")")
             body = json.loads(body)
-            # print(body)
             datas = body.get("data")  # list 数据列表
-            # 有两种类型的文章 一种是直接的文章列表页 一种是专题
+
             specials = []
             articles = []
+
             for data in datas:
                 if data.get("article_type") == 120:
                     specials.append(data)
@@ -93,42 +146,57 @@ class qqStock(object):
                     articles.append(data)
                 else:
                     raise Exception("请检查数据")
-            for article in articles:
-                yield article
+            return specials, articles
 
-            # for special in specials:
-            #     # 获取到专题的详情页
-            #     special_detail = special.get("vurl")
-            #     # print(special_detail)
+    def start(self):
+        specials, articles = self._parse_list()
 
-            # print(specials)
-            # print(articles)
-
-
-            pass
-        pass
-
-    def items_gener(self):
-        article_gener = self._get_list()
-        for article in article_gener:
-            # 检查详情页面是否爬取过
-
-            # 创建一个数据对象
+        for article in articles:
+            time.sleep(1)
             item = {}
             vurl = article.get("vurl")
             item['link'] = vurl
-            item = self._parse_article(item)
-            yield item
+            item['pub_date'] = article.get("publish_time")
+            item['title'] = article.get("title")
 
-    def start(self):
-        for item in self.items_gener():
-            # 保存到数据库
-            print("{} 已入库".format(item['title']))
+            item = self._parse_article(item)
+            self.storage.save(item)
+            # print("{} 已入库".format(item['title']))
+
+        print("开始处理专题页")
+
+        # for special in specials:
+        #     special_id = special.get("app_id")
+        #     special_url = "https://pacaio.match.qq.com/openapi/getQQNewsSpecialListItems?id={}&callback=getSpecialNews".format(special_id)
+        #     ret = self._get(special_url).text
+        #     ret = ret.lstrip("""('getSpecialNews(""")
+        #     ret = ret.rstrip(""")')""")
+        #     jsonobj = json.loads(ret)
+        #
+        #     # topics = jsonpath.jsonpath(jsonobj, '$..ids')
+        #     # print(topics)
+        #     # sys.exit(0)
+        #
+        #     topics = jsonpath.jsonpath(jsonobj, '$..ids..id')
+        #     topic_url = "https://new.qq.com/omn/FIN20200/{}.html"
+        #     for topic in topics:
+        #         item = {}
+        #         vurl = topic_url.format(topic)
+        #         item['link'] = vurl
+        #         item = self._parse_article(item, special=True)
+        #         self.storage.save(item)
+        #         # print("{} 已入库".format(item['title']))
+
+    def __del__(self):
+        print("selenium 连接关闭 ")
+        self.browser.close()
 
 
 if __name__ == "__main__":
+    now = lambda: time.time()
+    t1 = now()
     d = qqStock()
     # proxy = d._get_proxy()
     # print(proxy)
-
     d.start()
+    print(now() - t1)
