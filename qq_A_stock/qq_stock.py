@@ -22,7 +22,7 @@ ua = UserAgent()
 
 class qqStock(object):
     def __init__(self):
-        self.local = True
+        self.local = False
         self.token = "8f6b50e1667f130c10f981309e1d8200"
         self.headers = ua.random
         self.list_url = "https://pacaio.match.qq.com/irs/rcd?cid=52&token={}" \

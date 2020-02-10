@@ -1,9 +1,9 @@
 """
-docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/qq_Astock:v0.0.1 .
-docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/qq_Astock:v0.0.1
+docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/qq_astock:v0.0.1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/qq_astock:v0.0.1
 
 
-sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/qq_Astock:v0.0.1
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/qq_astock:v0.0.1
 sudo /usr/local/bin/docker-compose up -d
 sudo docker image prune
 
@@ -17,12 +17,13 @@ import sys
 import traceback
 import schedule
 
-from qq_A_stock.fetch_proxy import proxy_run
+
 
 sys.path.append("./..")
 
 from qq_A_stock.qq_stock import qqStock
 from qq_A_stock.my_log import logger
+from qq_A_stock.fetch_proxy import proxy_run
 
 
 def catch_exceptions(cancel_on_failure=False):
