@@ -165,27 +165,26 @@ class qqStock(object):
 
         print("开始处理专题页")
 
-        # for special in specials:
-        #     special_id = special.get("app_id")
-        #     special_url = "https://pacaio.match.qq.com/openapi/getQQNewsSpecialListItems?id={}&callback=getSpecialNews".format(special_id)
-        #     ret = self._get(special_url).text
-        #     ret = ret.lstrip("""('getSpecialNews(""")
-        #     ret = ret.rstrip(""")')""")
-        #     jsonobj = json.loads(ret)
-        #
-        #     # topics = jsonpath.jsonpath(jsonobj, '$..ids')
-        #     # print(topics)
-        #     # sys.exit(0)
-        #
-        #     topics = jsonpath.jsonpath(jsonobj, '$..ids..id')
-        #     topic_url = "https://new.qq.com/omn/FIN20200/{}.html"
-        #     for topic in topics:
-        #         item = {}
-        #         vurl = topic_url.format(topic)
-        #         item['link'] = vurl
-        #         item = self._parse_article(item, special=True)
-        #         self.storage.save(item)
-        #         # print("{} 已入库".format(item['title']))
+        for special in specials:
+            special_id = special.get("app_id")
+            special_url = "https://pacaio.match.qq.com/openapi/getQQNewsSpecialListItems?id={}&callback=getSpecialNews".format(special_id)
+            ret = self._get(special_url).text
+            ret = ret.lstrip("""('getSpecialNews(""")
+            ret = ret.rstrip(""")')""")
+            jsonobj = json.loads(ret)
+
+            # topics = jsonpath.jsonpath(jsonobj, '$..ids')
+            # print(topics)
+            # sys.exit(0)
+
+            topics = jsonpath.jsonpath(jsonobj, '$..ids..id')
+            topic_url = "https://new.qq.com/omn/FIN20200/{}.html"
+            for topic in topics:
+                item = {}
+                vurl = topic_url.format(topic)
+                item['link'] = vurl
+                item = self._parse_article(item, special=True)
+                self.storage.save(item)
 
     def __del__(self):
         print("selenium 连接关闭 ")
