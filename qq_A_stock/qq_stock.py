@@ -13,6 +13,8 @@ from selenium import webdriver
 from selenium.webdriver import DesiredCapabilities
 
 from qq_A_stock.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
+from qq_A_stock.fetch_proxy import proxy_run
+from qq_A_stock.my_log import logger
 from qq_A_stock.sql_base import StoreTool
 
 ua = UserAgent()
@@ -47,7 +49,7 @@ class qqStock(object):
         self.storage = StoreTool(**conf)
 
     def update_proxies(self):
-        # run()
+        proxy_run()
         with open("proxies.txt", "r") as f:
             proxies = f.readlines()
         proxies = [p.strip() for p in proxies]
@@ -69,7 +71,7 @@ class qqStock(object):
 
     def _get(self, url):
             proxy = self._get_proxy()
-            print("获取到的代理是{}".format(proxy))
+            logger.debug("获取到的代理是{}".format(proxy))
             ret = requests.get(url, headers={"User-Agent": ua.random}, proxies={"http": proxy}, timeout=3)
             return ret
 
@@ -93,7 +95,7 @@ class qqStock(object):
             item['pub_date'] = result.get("publish_time")
             item['title'] = result.get("title")
 
-        print(item)
+        logger.info(item)
         time.sleep(1)
         return item
 
@@ -115,7 +117,7 @@ class qqStock(object):
         item['article'] = result.get("content")
         item['pub_date'] = result.get("publish_time")
         item['title'] = result.get("title")
-        print(item)
+        logger.info(item)
         return item
 
     def _parse_list(self):
@@ -129,7 +131,7 @@ class qqStock(object):
                 break
 
         if list_resp.status_code == 200:
-            print("请求主列表页成功 ")
+            logger.info("请求主列表页成功 ")
             body = list_resp.text
             body = body.lstrip("__jp1(")
             body = body.rstrip(")")
@@ -161,9 +163,8 @@ class qqStock(object):
 
             item = self._parse_article(item)
             self.storage.save(item)
-            # print("{} 已入库".format(item['title']))
 
-        print("开始处理专题页")
+        logger.info("开始处理专题页")
 
         for special in specials:
             special_id = special.get("app_id")
@@ -172,11 +173,6 @@ class qqStock(object):
             ret = ret.lstrip("""('getSpecialNews(""")
             ret = ret.rstrip(""")')""")
             jsonobj = json.loads(ret)
-
-            # topics = jsonpath.jsonpath(jsonobj, '$..ids')
-            # print(topics)
-            # sys.exit(0)
-
             topics = jsonpath.jsonpath(jsonobj, '$..ids..id')
             topic_url = "https://new.qq.com/omn/FIN20200/{}.html"
             for topic in topics:
@@ -187,7 +183,7 @@ class qqStock(object):
                 self.storage.save(item)
 
     def __del__(self):
-        print("selenium 连接关闭 ")
+        logger.debug("selenium 连接关闭 ")
         self.browser.close()
 
 

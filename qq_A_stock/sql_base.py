@@ -3,6 +3,7 @@ import datetime
 import pymysql
 
 from qq_A_stock.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
+from qq_A_stock.my_log import logger
 
 
 class PyMysqBase(object):
@@ -24,7 +25,7 @@ class PyMysqBase(object):
             charset=charset,
             cursorclass=cursorclass
         )
-        print("已经成功建立数据库连接")
+        logger.debug("已经成功建立数据库连接")
 
     def _exec_sql(self, sql):
         with self.connection.cursor() as cursor:
@@ -56,7 +57,7 @@ class PyMysqBase(object):
 
     def __del__(self):
         self.connection.close()
-        print("已经断开数据库连接")
+        logger.debug("已经断开数据库连接")
 
 
 class StoreTool(PyMysqBase):
@@ -85,7 +86,6 @@ class StoreTool(PyMysqBase):
         pub_date = None
         try:
             pub_date = datetime.datetime.strptime(item.get("pub_date"), "%Y-%m-%d %H:%M:%S")
-            # pub_date = datetime.datetime.strptime(item.get("pub_date"), "%Y年%m月%d日")
         except:
             pass
 
@@ -109,7 +109,7 @@ class StoreTool(PyMysqBase):
                 pass
 
         if not pub_date:
-            print("未匹配到 pub_date: {} ".format(item.get("pub_date")))
+            logger.warning("未匹配到 pub_date: {} ".format(item.get("pub_date")))
             pub_date = datetime.datetime.today()
 
         insert_sql = """
@@ -122,9 +122,9 @@ class StoreTool(PyMysqBase):
                 article = self.transferContent(article)
                 self.insert(insert_sql, (pub_date, title, link, article))
         except pymysql.err.IntegrityError:
-            print("重复")
+            logger.warning("重复插入")
         else:
-            print("保存成功")
+            logger.info("保存成功")
 
 
 if __name__ == "__main__":

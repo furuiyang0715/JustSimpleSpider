@@ -42,4 +42,4 @@ logging.config.dictConfig({
 
 logger = logging.getLogger("qq_log")
 
-logger.info("hello world")
+# logger.info("hello world")
