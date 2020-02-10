@@ -57,7 +57,6 @@ class PyMysqBase(object):
 
     def __del__(self):
         self.connection.close()
-        logger.debug("已经断开数据库连接")
 
 
 class StoreTool(PyMysqBase):

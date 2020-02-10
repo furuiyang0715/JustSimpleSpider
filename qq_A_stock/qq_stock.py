@@ -49,7 +49,7 @@ class qqStock(object):
         self.storage = StoreTool(**conf)
 
     def update_proxies(self):
-        proxy_run()
+        # proxy_run()
         with open("proxies.txt", "r") as f:
             proxies = f.readlines()
         proxies = [p.strip() for p in proxies]
@@ -106,7 +106,7 @@ class qqStock(object):
             try:
                 resp = self._get(vurl)
             except:
-                # traceback.print_exc()
+                traceback.print_exc()
                 self.proxy = None
                 time.sleep(3)
             else:
@@ -125,6 +125,7 @@ class qqStock(object):
             try:
                 list_resp = self._get(self.list_url)
             except:
+                traceback.print_exc()
                 self.proxy = None
                 time.sleep(3)
             else:
