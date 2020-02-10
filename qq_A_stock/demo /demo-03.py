@@ -16,6 +16,13 @@ import requests as re
 
 # 主要是不知这个token是否是始终不变的
 # 8f6b50e1667f130c10f981309e1d8200
+# 2a92b3959fcb4b2f8cf6a7eb68c55ec3
+
+import os
+import uuid
+ret = uuid.uuid4().hex
+print(ret)
+
 
 
 # def generate_token(key, expire=3600):

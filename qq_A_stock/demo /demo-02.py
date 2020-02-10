@@ -10,12 +10,12 @@ import requests as re
 # durl = "https://pacaio.match.qq.com/irs/rcd?cid=52&token=8f6b50e1667f130c10f981309e1d8200" \
 #        "&ext=3911,3922,3923,3914,3913,3930,3915,3918,3908&page=0&isForce=1&expIds=&callback=__jp1"
 
-durl = "https://pacaio.match.qq.com/irs/rcd?cid=52&token=8f6b50e1667f130c10f981309e1d8200" \
-       "&ext=3911,3922,3923,3914,3913,3930,3915,3918,3908&callback=__jp1"
+# durl = "https://pacaio.match.qq.com/irs/rcd?cid=52&token=2a92b3959fcb4b2f8cf6a7eb68c55ec3" \
+#        "&ext=3911,3922,3923,3914,3913,3930,3915,3918,3908&callback=__jp1"
 
 # 未登录
-# durl = "https://pacaio.match.qq.com/irs/rcd?cid=52&token=8f6b50e1667f130c10f981309e1d8200" \
-#        "&ext=3911,3922,3923,3914,3913,3930,3915,3918,3908&page=0&isForce=1&expIds=&callback=__jp0"
+durl = "https://pacaio.match.qq.com/irs/rcd?cid=52&token=2a92b3959fcb4b2f8cf6a7eb68c55ec3" \
+       "&ext=3911,3922,3923,3914,3913,3930,3915,3918,3908&page=0&isForce=1&expIds=&callback=__jp0"
 
 
 # durl = "https://pacaio.match.qq.com/irs/rcd?cid=92&token=54424c1ebe77ea829a41040a3620d0e7" \
@@ -28,7 +28,7 @@ durl = "https://pacaio.match.qq.com/irs/rcd?cid=52&token=8f6b50e1667f130c10f9813
 ret = re.get(durl).text
 print(ret)   # "msg":"auth error"
 print(type(ret))
-ret = ret.lstrip("__jp1(")
+ret = ret.lstrip("__jp0(")
 ret = ret.rstrip(")")
 ret = json.loads(ret)
 # print(pprint.pformat(ret))
