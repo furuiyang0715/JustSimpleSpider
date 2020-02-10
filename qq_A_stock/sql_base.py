@@ -183,3 +183,8 @@ if __name__ == "__main__":
     # ret = demo.select_one(sql)
     # print(ret)
 
+    #
+    # vurl = 'https://new.qq.com/omn/FIN20200/ICT2020012600694800.html'
+    # ret = demo.select_one("select * from `qq_Astock_news` where link = %s;", (vurl))
+    # print(ret)
+

@@ -22,7 +22,7 @@ ua = UserAgent()
 
 class qqStock(object):
     def __init__(self):
-        self.local = False
+        self.local = True
         self.token = "8f6b50e1667f130c10f981309e1d8200"
         self.headers = ua.random
         self.list_url = "https://pacaio.match.qq.com/irs/rcd?cid=52&token={}" \
@@ -102,11 +102,16 @@ class qqStock(object):
     def _parse_article_by_requsets(self, item):
         vurl = item.get("link")
 
+        retry = 2
         while True:
             try:
                 resp = self._get(vurl)
             except:
                 traceback.print_exc()
+                retry -= 1
+                if retry < 0:
+                    raise
+
                 self.proxy = None
                 time.sleep(3)
             else:
@@ -121,13 +126,20 @@ class qqStock(object):
         return item
 
     def _parse_list(self):
+        retry = 2
         while True:
             try:
                 list_resp = self._get(self.list_url)
             except:
                 traceback.print_exc()
+
+                retry -= 1
+                if retry < 0:
+                    raise
+
                 self.proxy = None
                 time.sleep(3)
+
             else:
                 break
 
@@ -151,19 +163,45 @@ class qqStock(object):
                     raise Exception("请检查数据")
             return specials, articles
 
+    def _is_exist(self, vurl):
+        ret = self.storage.select_one("select * from `qq_Astock_news` where link = %s;", (vurl))
+        if ret:
+            return True
+        else:
+            return False
+
     def start(self):
+        retry = 2
+        while True:
+            try:
+                self._start()
+                # 1 / 0
+            except:
+                traceback.print_exc()
+                retry -= 1
+                if retry < 0:
+                    raise Exception("运行出错")
+                time.sleep(10)
+            else:
+                break
+
+    def _start(self):
         specials, articles = self._parse_list()
 
         for article in articles:
             time.sleep(1)
             item = {}
             vurl = article.get("vurl")
-            item['link'] = vurl
-            item['pub_date'] = article.get("publish_time")
-            item['title'] = article.get("title")
+            # 判断 vurl 是否存在
+            if not self._is_exist(vurl):
+                item['link'] = vurl
+                item['pub_date'] = article.get("publish_time")
+                item['title'] = article.get("title")
 
-            item = self._parse_article(item)
-            self.storage.save(item)
+                item = self._parse_article(item)
+                self.storage.save(item)
+            else:
+                logger.info("{} 列表文章 已经爬取过了".format(vurl))
 
         logger.info("开始处理专题页")
 
@@ -179,12 +217,17 @@ class qqStock(object):
             for topic in topics:
                 item = {}
                 vurl = topic_url.format(topic)
-                item['link'] = vurl
-                item = self._parse_article(item, special=True)
-                self.storage.save(item)
+
+                if not self._is_exist(vurl):
+                    item['link'] = vurl
+                    item = self._parse_article(item, special=True)
+                    self.storage.save(item)
+                else:
+                    logger.info("{} 专题文章 已经爬取过了".format(vurl))
 
     def __del__(self):
-        logger.debug("selenium 连接关闭 ")
+        # logger.debug("selenium 连接关闭 ")
+        print("selenium 连接关闭 ")
         self.browser.close()
 
 
