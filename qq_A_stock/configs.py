@@ -13,4 +13,4 @@ MYSQL_USER = env.get("MYSQL_USER", cf.get('mysql', 'MYSQL_USER'))
 MYSQL_PASSWORD = env.get("MYSQL_PASSWORD", cf.get('mysql', 'MYSQL_PASSWORD'))
 MYSQL_DB = env.get("MYSQL_DB", cf.get('mysql', 'MYSQL_DB'))
 # MYSQL_TABLE = env.get("MYSQL_TABLE", cf.get('mysql', 'MYSQL_TABLE'))
-
+LOCAL = bool(int(env.get("LOCAL", cf.get('mysql', 'LOCAL'))))

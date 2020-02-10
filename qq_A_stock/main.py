@@ -63,7 +63,7 @@ def main():
     task()
 
     logger.info("当前时间是{}, 开始增量爬取 ".format(datetime.datetime.now()))
-    schedule.every(3).days.at("03:00").do(task)
+    schedule.every(5).hours.at("03:00").do(task)
 
     while True:
         # logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))

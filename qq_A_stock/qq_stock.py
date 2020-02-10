@@ -7,22 +7,24 @@ from queue import Queue
 
 import jsonpath
 import requests
-from fake_useragent import UserAgent
+# from fake_useragent import UserAgent
 from gne import GeneralNewsExtractor
 from selenium import webdriver
 from selenium.webdriver import DesiredCapabilities
 
-from qq_A_stock.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
+from qq_A_stock.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, LOCAL
 from qq_A_stock.fetch_proxy import proxy_run
 from qq_A_stock.my_log import logger
 from qq_A_stock.sql_base import StoreTool
 
-ua = UserAgent()
+# ua = UserAgent()
+# print(ua.random)
+# sys.exit(0)
 
 
 class qqStock(object):
     def __init__(self):
-        self.local = True
+        self.local = LOCAL
         self.token = "8f6b50e1667f130c10f981309e1d8200"
         self.headers = ua.random
         self.list_url = "https://pacaio.match.qq.com/irs/rcd?cid=52&token={}" \
@@ -72,7 +74,10 @@ class qqStock(object):
     def _get(self, url):
             proxy = self._get_proxy()
             logger.debug("获取到的代理是{}".format(proxy))
-            ret = requests.get(url, headers={"User-Agent": ua.random}, proxies={"http": proxy}, timeout=3)
+            ret = requests.get(url,
+                               headers={"User-Agent": 'Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2224.3 Safari/537.36'},
+                               proxies={"http": proxy},
+                               timeout=3)
             return ret
 
     def _parse_article(self, item, special=False):
