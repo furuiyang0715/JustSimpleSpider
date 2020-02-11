@@ -137,7 +137,6 @@ class qqStock(object):
                 list_resp = self._get(self.list_url)
             except:
                 traceback.print_exc()
-
                 retry -= 1
                 if retry < 0:
                     raise
@@ -156,6 +155,8 @@ class qqStock(object):
             body = json.loads(body)
             datas = body.get("data")  # list 数据列表
 
+            logger.info("请求列表页获取的数据是 {}".format(datas))
+
             specials = []
             articles = []
 
@@ -165,7 +166,9 @@ class qqStock(object):
                 elif data.get("article_type") == 0:
                     articles.append(data)
                 else:
-                    raise Exception("请检查数据")
+                    logger.info("爬取到预期外的数据{}".format(data))
+                    logger.info("爬取到预期外的数据类型{}".format(data.get("article_type")))  # 56 视频类型 不再爬取
+                    # raise Exception("请检查数据")
             return specials, articles
 
     def _is_exist(self, vurl):
@@ -242,5 +245,5 @@ if __name__ == "__main__":
     d = qqStock()
     # proxy = d._get_proxy()
     # print(proxy)
-    d.start()
+    d._start()
     print(now() - t1)

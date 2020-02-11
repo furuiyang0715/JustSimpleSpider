@@ -52,6 +52,7 @@ def catch_exceptions(cancel_on_failure=False):
 @catch_exceptions(cancel_on_failure=True)
 def task():
     proxy_run()
+
     now = lambda: time.time()
     t1 = now()
     d = qqStock()

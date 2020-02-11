@@ -24,10 +24,11 @@ IP138 = 'http://2000019.ip138.com/'
 
 
 def echo(color, *args):
-    colors = {'error': '\033[91m', 'success': '\033[94m', 'info': '\033[93m'}
-    if not color in colors or platform.system() == 'Windows':
-        print(' '.join(args))
-    print(colors[color], ' '.join(args), '\033[0m')
+    pass
+    # colors = {'error': '\033[91m', 'success': '\033[94m', 'info': '\033[93m'}
+    # if not color in colors or platform.system() == 'Windows':
+    #     print(' '.join(args))
+    # print(colors[color], ' '.join(args), '\033[0m')
 
 
 def get_content(url, proxies=None) -> str:

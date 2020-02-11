@@ -56,6 +56,7 @@ class PyMysqBase(object):
         return result
 
     def __del__(self):
+        print("数据库连接已经关闭")
         self.connection.close()
 
 
