@@ -10,8 +10,9 @@ import traceback
 import schedule
 
 sys.path.insert(0, "./..")
-from chinabank.china_bank import ChinaBank
 from chinabank.my_log import logger
+from chinabank.china_bank_shujujiedu import ChinaBankShuJuJieDu
+from chinabank.chinabank_xinwenfabu import ChinaBankXinWenFaBu
 
 
 def catch_exceptions(cancel_on_failure=False):
@@ -38,15 +39,21 @@ def catch_exceptions(cancel_on_failure=False):
 
 @catch_exceptions(cancel_on_failure=True)
 def task():
-    # import random
-    # i = random.randint(1, 10)
-    # logger.info("i is {}".format(i))
-    # if i > 5:
-    #     raise RuntimeError("运行异常")
 
-    runner = ChinaBank()
-    runner.start()
-    logger.info("本次未成功爬取的页面是 {} ".format(runner.error_list))
+    now = lambda: time.time()
+
+    for C in [ChinaBankShuJuJieDu, ChinaBankXinWenFaBu]:
+        runner = C()
+        logger.info("{} 爬虫程序开始爬取了".format(runner.name))
+        t1 = now()
+        runner.start()
+        logger.info("本次爬取耗时 {}".format(now() - t1))
+        logger.info("本次未成功爬取的列表页是 {} ".format(runner.error_list))
+        logger.info("本次未成功爬取的详情页是 {} ".format(runner.error_detail))
+
+        logger.info("")
+
+    logger.info("任务结束...")
 
 
 def main():
@@ -54,16 +61,13 @@ def main():
     task()
 
     logger.info("当前时间是{}, 开始增量爬取 ".format(datetime.datetime.now()))
-    schedule.every(1800).seconds.do(task)
-    # schedule.every().day.at("05:00").do(task)
-    # schedule.every(5).days.at("05:00").do(task)
+    schedule.every().day.at("05:00").do(task)
 
     while True:
-        logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
-        # TODO 如果该列表为空 需要发出上报
+        # logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
         schedule.run_pending()
-        time.sleep(300)
-        logger.info("No work to do, waiting")
+        time.sleep(1800)
+        # logger.info("No work to do, waiting")
 
 
 main()

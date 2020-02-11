@@ -30,26 +30,14 @@ logging.config.dictConfig({
             "filename": os.path.join(log_dir, "chinabank.log"),
             "formatter": "simple",
             "when": "D",
-            "backupCount": 5
+            "backupCount": 2
         },
-        # "calendar_file_log": {
-        #     "level": "DEBUG",
-        #     "class": "logging.handlers.TimedRotatingFileHandler",
-        #     "filename": os.path.join(log_dir, "calendar.log"),
-        #     "formatter": "simple",
-        #     "when": "D",
-        #     "backupCount": 5   # 日志保存的页数
-        # },
     },
     "loggers": {
         "chinabank_log": {
             "level": "DEBUG",
             "handlers": ["console", "chinabank_file_log"]
         },
-        # "calendar_log": {
-        #     "level": "DEBUG",
-        #     "handlers": ["console", "calendar_file_log"]
-        # },
     }
 })
 
@@ -57,4 +45,4 @@ logging.config.dictConfig({
 # print(log_dir)
 logger = logging.getLogger("chinabank_log")
 
-logger.info("hello world")
+# logger.info("hello world")
