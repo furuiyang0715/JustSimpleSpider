@@ -147,4 +147,4 @@ def test1():
     print('空余线程数: ', len(spider.threads_pool))
 
 
-test1()
+# test1()
