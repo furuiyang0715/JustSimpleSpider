@@ -17,11 +17,13 @@ class MyThread(Thread):
         self.datas = None
 
     def run(self):
-        url = self.datas.get("url")
+        url = self.datas.get("l")
+        # 判断数据库中是否存在该 url
+
         ret = requests.get(url)
         if ret.status_code == 200:
             print("请求 {} 成功".format(url))
-        # time.sleep(random.randint(1, 5))
+
 
 
 class BaseSpider(object):
