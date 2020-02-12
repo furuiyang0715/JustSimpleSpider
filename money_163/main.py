@@ -57,13 +57,14 @@ def main():
     task()
 
     logger.info("当前时间是{}, 开始增量爬取 ".format(datetime.datetime.now()))
-    # schedule.every().day.at("05:00").do(task)
-    schedule.every(180).seconds.do(task)
+    schedule.every().day.at("05:00").do(task)
+    # schedule.every(180).seconds.do(task)
 
     while True:
         # logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
         schedule.run_pending()
-        time.sleep(10)
+        # time.sleep(10)
+        time.sleep(180)
         # logger.info("No work to do, waiting")
 
 
