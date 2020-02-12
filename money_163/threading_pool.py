@@ -33,13 +33,12 @@ class MyThread(Thread, StoreTool):
 
         ret = requests.get(url)
         if ret.status_code == 200:
-            print("请求 {} 成功".format(url))
             self.datas.update({"article": "我是文章 " + str(time.time())})
             if self._is_exist(url):
                 logger.warning("数据{}已存在".format(url))
             else:
                 self.save(self.datas)
-                logger.info("数据{}保存成功".format(url))
+                # logger.info("数据{}保存成功".format(url))
 
         self.close()
 

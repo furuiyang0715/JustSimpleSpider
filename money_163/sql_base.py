@@ -9,6 +9,7 @@ from money_163.my_log import logger
 
 
 class PyMysqBase(object):
+    # TODO 更改为线程池模式
     def __init__(self,
                  host='localhost',
                  port=3306,
@@ -132,7 +133,7 @@ if __name__ == "__main__":
 
     # 建立连接
     demo = PyMysqBase(**conf)
-    print(demo.connection)
+    # print(demo.connection)
 
     # 测试建表语言
     create_sql = """

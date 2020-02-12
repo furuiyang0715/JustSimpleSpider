@@ -1,7 +1,9 @@
 import json
+import random
 import re
 import sys
 import time
+import traceback
 
 import demjson
 import requests
@@ -55,6 +57,9 @@ class Money163(BaseSpider):
             if a_thread:
                 self.running_thread.append(a_thread)
                 a_thread.start()
+                # 比较简陋 不是真正意义上的线程池 只是不断去创建新的线程
+                # 所以安全起见 每个线程延时一段时间
+                time.sleep(random.randint(1, 6))
 
         # 等待全部的线程运行完毕
         for t in self.running_thread:
@@ -66,7 +71,16 @@ class Money163(BaseSpider):
         print(len(self.running_thread), '个线程, ', '运行时间: ', end_time - start_time, '秒')
         print('空余线程数: ', len(self.threads_pool))
 
+    def start(self):
+        for j in range(3):
+            try:
+                self._start()
+            except:
+                traceback.print_exc()
+            else:
+                break
+
 
 if __name__ == "__main__":
     m = Money163()
-    m._start()
+    m.start()
