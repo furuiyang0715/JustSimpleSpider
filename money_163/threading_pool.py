@@ -5,14 +5,25 @@ import random
 import time
 from threading import Thread
 from queue import Queue
-import time as Time
-# from urllib import request
 import requests
 
+from money_163.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
+from money_163.my_log import logger
+from money_163.sql_base import StoreTool
 
-class MyThread(Thread):
+
+class MyThread(Thread, StoreTool):
     """自定义线程对象"""
     def __init__(self, *args, **kwargs):
+        conf = {
+            "host": MYSQL_HOST,
+            "port": MYSQL_PORT,
+            "user": MYSQL_USER,
+            "password": MYSQL_PASSWORD,
+            "db": MYSQL_DB,
+        }
+        StoreTool.__init__(self, **conf)
+
         Thread.__init__(self, *args, **kwargs)
         self.datas = None
 
@@ -23,7 +34,14 @@ class MyThread(Thread):
         ret = requests.get(url)
         if ret.status_code == 200:
             print("请求 {} 成功".format(url))
+            self.datas.update({"article": "我是文章 " + str(time.time())})
+            if self._is_exist(url):
+                logger.warning("数据{}已存在".format(url))
+            else:
+                self.save(self.datas)
+                logger.info("数据{}保存成功".format(url))
 
+        self.close()
 
 
 class BaseSpider(object):
@@ -123,7 +141,7 @@ def test1():
 
     spider = BaseSpider()
     spider.init_thread(16)
-    start_time = Time.time()
+    start_time = time.time()
     for url in url_list:
         spider.put({"url": url})
 
@@ -144,7 +162,7 @@ def test1():
             t.join()
 
     # 结束时间
-    end_time = Time.time()
+    end_time = time.time()
     print(len(spider.running_thread), '个线程, ', '运行时间: ', end_time - start_time, '秒')
     print('空余线程数: ', len(spider.threads_pool))
 

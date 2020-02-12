@@ -1,5 +1,6 @@
 import datetime
 import sys
+import time
 
 import pymysql
 
@@ -17,16 +18,23 @@ class PyMysqBase(object):
                  charset='utf8mb4',
                  cursorclass=pymysql.cursors.DictCursor,
                  ):
-        self.connection = pymysql.connect(
-            host=host,
-            port=port,
-            user=user,
-            password=password,
-            db=db,
-            charset=charset,
-            cursorclass=cursorclass
-        )
-        logger.debug("已经成功建立数据库连接")
+        while True:
+            try:
+                self.connection = pymysql.connect(
+                    host=host,
+                    port=port,
+                    user=user,
+                    password=password,
+                    db=db,
+                    charset=charset,
+                    cursorclass=cursorclass
+                )
+            except:
+                logger.warning("无法建立更多连接, 请等一等哈..")
+                time.sleep(3)
+            else:
+                # logger.debug("已经成功建立数据库连接")
+                break
 
     def _exec_sql(self, sql):
         with self.connection.cursor() as cursor:
@@ -56,9 +64,15 @@ class PyMysqBase(object):
             result = cursor.fetchone()
         return result
 
-    def __del__(self):
-        print("数据库连接已经关闭")
+    def close(self):
+        # logger.info("手动关闭连接")
         self.connection.close()
+
+    def __del__(self):
+        try:
+            self.connection.close()
+        except:
+            pass
 
 
 class StoreTool(PyMysqBase):
@@ -79,13 +93,14 @@ class StoreTool(PyMysqBase):
             return string
 
     def save(self, item: dict):
+        logger.info("要保存的数据是{}".format(item))
         link = item.get("l")
         title = item.get("t")
         pub_date = item.get("p")
         article = item.get("article")
 
         insert_sql = """
-        insert into `qq_Astock_news` (`pub_date`, `title`, `link`, `article`) values (%s,%s,%s,%s);
+        insert into `netease_money` (`pub_date`, `title`, `link`, `article`) values (%s,%s,%s,%s);
         """
         try:
             try:
