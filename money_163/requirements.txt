@@ -1,0 +1,8 @@
+gne==0.1.5
+PyMySQL==0.9.3
+schedule==0.6.0
+selenium==3.141.0
+requests==2.22.0
+demjson==2.2.4
+jsonnet==0.15.0
+beautifulsoup4==4.8.2

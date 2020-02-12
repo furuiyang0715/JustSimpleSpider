@@ -1,11 +1,11 @@
 """
-docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/qq_astock:v0.0.1 .
-docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/qq_astock:v0.0.1
+docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/ease_money:v0.0.1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/ease_money:v0.0.1
 
 
-sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/qq_astock:v0.0.1
-sudo /usr/local/bin/docker-compose up -d
-sudo docker logs -ft --tail 1000 qq_astock
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/ease_money:v0.0.1
+sudo docker run -itd --name ease_money --env-file ease_money.env registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/ease_money:v0.0.1
+sudo docker logs -ft --tail 1000 ease_money
 sudo docker image prune
 
 use little_crawler
