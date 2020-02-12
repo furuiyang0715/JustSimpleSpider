@@ -61,10 +61,10 @@ def main():
     schedule.every(180).seconds.do(task)
 
     while True:
-        logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
+        # logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
         schedule.run_pending()
         time.sleep(10)
-        logger.info("No work to do, waiting")
+        # logger.info("No work to do, waiting")
 
 
 main()

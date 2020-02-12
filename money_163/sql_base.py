@@ -95,6 +95,7 @@ class StoreTool(PyMysqBase):
 
     def save(self, item: dict):
         logger.info("要保存的数据是{}".format(item))
+        logger.info("")
         link = item.get("l")
         title = item.get("t")
         pub_date = item.get("p")
@@ -112,7 +113,8 @@ class StoreTool(PyMysqBase):
         except pymysql.err.IntegrityError:
             logger.warning("重复插入")
         else:
-            logger.info("保存成功")
+            # logger.info("保存成功")
+            pass
 
     def _is_exist(self, link):
         ret = self.select_one("select * from `netease_money` where link = %s;", (link))

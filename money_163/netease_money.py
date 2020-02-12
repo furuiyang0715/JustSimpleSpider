@@ -58,8 +58,8 @@ class Money163(BaseSpider):
                 self.running_thread.append(a_thread)
                 a_thread.start()
                 # 比较简陋 不是真正意义上的线程池 只是不断去创建新的线程
-                # 所以安全起见 每个线程延时一段时间
-                time.sleep(random.randint(1, 6))
+                # 所以安全起见 每个线程延时一段时间 保证同一时间不会有太多的线程在运行
+                time.sleep(random.randint(1, 3))
 
         # 等待全部的线程运行完毕
         for t in self.running_thread:

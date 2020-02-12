@@ -1,11 +1,15 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 # 文件名：thread_pool.py
+
 import random
 import time
+import traceback
 from threading import Thread
 from queue import Queue
 import requests
+from bs4 import BeautifulSoup
+from gne import GeneralNewsExtractor
 
 from money_163.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
 from money_163.my_log import logger
@@ -26,6 +30,68 @@ class MyThread(Thread, StoreTool):
 
         Thread.__init__(self, *args, **kwargs)
         self.datas = None
+        self.headers = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.70 Safari/537.36'
+        self.current_proxy = None
+
+    # def quick_fectch(self, url):
+    #     purl = "http://www.xicidaili.com/nn/"
+    #     web_html = requests.get(purl, headers={"User-Agent": self.headers}).text
+    #     soup = BeautifulSoup(web_html, 'lxml')
+    #     ip_list = soup.find(id='ip_list').find_all('tr')
+    #     for ip_info in ip_list:
+    #         td_list = ip_info.find_all('td')
+    #         if len(td_list) > 0:
+    #             ip_address = td_list[1].text
+    #             ip_port = td_list[2].text
+    #             proxy = ip_address + ":" + ip_port
+    #             header = {'User-Agent': self.headers}
+    #             proxies = {'http': 'http://{}'.format(proxy), 'https': 'https://{}'.format(proxy)}
+    #             try:
+    #                 r = requests.get(url, headers=header,
+    #                                  proxies=proxies, timeout=3)
+    #             except:
+    #                 print('fail-{}'.format(proxy))
+    #             else:
+    #                 print('success-{}'.format(proxy))
+    #                 self.current_proxy = proxy
+    #                 return True, r
+    #     return False, None
+
+    # def get(self, url):
+    #     """
+    #     对外暴露端口
+    #     :param url:  请求的 url
+    #     :return:
+    #     """
+    #     if self.current_proxy:
+    #         try:
+    #             response = requests.get(url, headers={"User-Agent": self.headers},
+    #                                     proxies={"http": "http://{}".format(self.current_proxy)},
+    #                                     timeout=3
+    #                                     )
+    #         except:
+    #             traceback.print_exc()
+    #             print("上一次的代理已经失效")
+    #         else:
+    #             # print("成功")
+    #             return response
+    #
+    #     ret, response = False, None
+    #     while not ret:
+    #         print("开始新一轮的爬取 ")
+    #         ret, response = self.quick_fectch(url)
+    #     return response
+
+    def get(self, url):
+        return requests.get(url, headers={"User-Agent": self.headers})
+
+    def _parse_content(self, url):
+        # 解析详情页文章
+        page = self.get(url).text
+        extractor = GeneralNewsExtractor()
+        result = extractor.extract(page)
+        content = result.get("content")
+        return content
 
     def run(self):
         url = self.datas.get("l")
@@ -33,13 +99,12 @@ class MyThread(Thread, StoreTool):
 
         ret = requests.get(url)
         if ret.status_code == 200:
-            self.datas.update({"article": "我是文章 " + str(time.time())})
+            content = self._parse_content(url)
+            self.datas.update({"article": content})
             if self._is_exist(url):
                 logger.warning("数据{}已存在".format(url))
             else:
                 self.save(self.datas)
-                # logger.info("数据{}保存成功".format(url))
-
         self.close()
 
 
@@ -51,9 +116,6 @@ class BaseSpider(object):
         self.threads_pool = []
         # 正在运行的线程数量
         self.running_thread = []
-        self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.70 Safari/537.36',
-        }
 
     def init_thread(self, count):
         """
