@@ -9,6 +9,7 @@ sudo docker logs -ft --tail 1000 ease_money
 sudo docker image prune
 
 use little_crawler
+select count(1) from netease_money;
 """
 
 import datetime
