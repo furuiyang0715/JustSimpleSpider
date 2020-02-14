@@ -5,7 +5,7 @@ import pymysql
 logger = logging.getLogger()
 
 
-class PyMysqBase(object):
+class PyMysqlBase(object):
     """建立单个 mysql 数据库连接的 python 封装"""
     def __init__(self,
                  host='localhost',
@@ -27,10 +27,11 @@ class PyMysqBase(object):
         )
         print("已经成功建立数据库连接")
 
-    def _exec_sql(self, sql):
+    def _exec_sql(self, sql, param=None):
         with self.connection.cursor() as cursor:
-            cursor.execute(sql)
+            count = cursor.execute(sql, param)
         self.connection.commit()
+        return count
 
     def insert(self, sql, params):
         with self.connection.cursor() as cursor:
@@ -55,6 +56,29 @@ class PyMysqBase(object):
             result = cursor.fetchone()
         return result
 
+    def insert_many(self, sql, values):
+        with self.connection.cursor() as cursor:
+            count = cursor.executemany(sql, values)
+        return count
+
+    def update(self, sql, param=None):
+        """
+        @summary: 更新数据表记录
+        @param sql: SQL 格式及条件，使用(%s,%s)
+        @param param: 要更新的  值 tuple/list
+        @return: count 受影响的行数
+        """
+        return self._exec_sql(sql, param)
+
+    def delete(self, sql, param=None):
+        """
+        @summary: 删除数据表记录
+        @param sql: SQL 格式及条件，使用(%s,%s)
+        @param param: 要删除的条件 值 tuple/list
+        @return: count 受影响的行数
+        """
+        return self._exec_sql(sql, param)
+
     def __del__(self):
         print("数据库连接已经关闭")
         self.connection.close()
@@ -73,7 +97,7 @@ if __name__ == "__main__":
         "db": MYSQL_DB,
     }
 
-    demo = PyMysqBase(**conf)
+    demo = PyMysqlBase(**conf)
 
     # (1) 测试创建连接
     # print(demo.connection)
@@ -124,4 +148,31 @@ if __name__ == "__main__":
     # sql = f"""select * from {table_name};"""
     # ret = demo.select_one(sql)
     # print(ret)
+
+    # 测试插入多条数据
+    datas = [
+        ("2020-02-01", "我是标题", "我是链接" + str(time.time()), "我是正文"),
+        ("2020-02-01", "我是标题", "我是链接" + str(time.time()), "我是正文"),
+        ("2020-02-01", "我是标题", "我是链接" + str(time.time()), "我是正文"),
+        ("2020-02-01", "我是标题", "我是链接" + str(time.time()), "我是正文"),
+    ]
+    # print(datas)
+    insert_sql = f"""
+        insert into `{table_name}` (`pub_date`, `title`, `link`, `article`) values (%s,%s,%s,%s);
+        """
+    # ret = demo.insert_many(insert_sql, datas)
+    # print(ret)
+
+    # 测试更新数据
+    update_sql = f"update {table_name} set pub_date=%s where pub_date=%s; "
+    data = [("2020-06-06"), ("2020-02-01")]
+    # ret = demo.update(update_sql, data)
+    # print(ret)
+
+    # 测试删除数据
+    sql7 = f"delete from {table_name} where id=%s "
+    param7 = ["91"]
+    # result7 = demo.delete(sql7, param7)
+    # print(result7)
+
 
