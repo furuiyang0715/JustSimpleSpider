@@ -79,10 +79,6 @@ class PyMysqlBase(object):
         """
         return self._exec_sql(sql, param)
 
-    def __del__(self):
-        print("数据库连接已经关闭")
-        self.connection.close()
-
 
 if __name__ == "__main__":
     import sys

@@ -19,12 +19,12 @@ class PyMysqlPoolBase(object):
                  port,
                  user,
                  password,
-                 db_name=None):
+                 db=None):
         self.db_host = host
         self.db_port = int(port)
         self.user = user
         self.password = str(password)
-        self.db = db_name
+        self.db = db
         self.connection = self._getConn()
         self.cursor = self.connection.cursor()
 
