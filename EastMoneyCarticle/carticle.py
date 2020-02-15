@@ -11,6 +11,7 @@ from gne import GeneralNewsExtractor
 import requests
 from lxml import html
 
+from requests.exceptions import ProxyError,Timeout,ConnectionError,ChunkedEncodingError
 from EastMoneyCarticle.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, MYSQL_TABLE
 from EastMoneyCarticle.sql_client import PyMysqlBase
 
@@ -36,6 +37,35 @@ class CArticle(object):
             "db": MYSQL_DB,
         }
         self.sql_client = PyMysqlBase(**conf)
+        self.proxy = self.get_proxy()
+        self.error_detail = []
+
+    def get_proxy(self):
+        r = requests.get('http://localhost:8888/get')
+        proxy = r.text
+        return proxy
+
+    def crawl(self, url, proxy):
+        proxies = {'http': proxy}
+        r = requests.get(url, proxies=proxies, headers=self.headers, timeout=3)
+        return r
+
+    def get(self, url):
+        count = 0
+        proxy = self.proxy
+        print(f"当前代理 {proxy}")
+        while True:
+            count = count + 1
+            try:
+                resp = self.crawl(url, proxy)
+                if resp.status_code == 200:
+                    return resp
+                elif count >= 3:
+                    print('抓取网页失败')
+                    break
+            except (ChunkedEncodingError, ConnectionError, Timeout, UnboundLocalError, UnicodeError, ProxyError):
+                proxy = self.get_proxy()
+                print('代理失败,更换代理', '\n')
 
     def make_query_params(self, msg, page):
         """
@@ -56,10 +86,14 @@ class CArticle(object):
         return query_params
 
     def get_list(self, list_url):
-        return requests.get(list_url, headers=self.headers).text
+        resp = self.get(list_url)
+        if resp:
+            return resp.text
 
     def get_detail(self, detail_url):
-        return requests.get(detail_url, headers=self.headers).text
+        resp = self.get(detail_url)
+        if resp:
+            return resp.text
 
     def parse_list(self, list_page):
         try:
@@ -92,6 +126,7 @@ class CArticle(object):
             count = self.sql_client.insert(insert_sql, values)
         except pymysql.err.IntegrityError:
             print("重复 ")
+            return 1
         except:
             print("失败")
             traceback.print_exc()
@@ -125,24 +160,29 @@ class CArticle(object):
             if list_page:
                 list_gener = self.parse_list(list_page)
                 for data in list_gener:
-                    item = {}
+                    item = dict()
                     item['code'] = key
                     item['link'] = data.get("ArticleUrl")
                     item['title'] = data.get("Title")
                     item['pub_date'] = data.get("ShowTime")
                     detail_body = self.get_detail(data.get("ArticleUrl"))
-                    article = self.parse_detail(detail_body)
+                    article = None
+                    if detail_body:
+                        article = self.parse_detail(detail_body)
                     if article:
                         item['article'] = article
-
                         # 将 item 存储到数据库中
                         to_insert = self.process_item(item)
-                        print(to_insert)
+                        # print(to_insert)
                         ret = self.save(to_insert)
-                        if ret:
-                            print("保存成功")
+                        if not ret:
+                            # 记录失败的详情页链接
+                            self.error_detail.append(data.get("ArticleUrl"))
 
 
 if __name__ == "__main__":
     c = CArticle()
+    # print(c.get_proxy())
+    # ret = c.get("https://www.taoguba.com.cn/quotes/sz000651")
+    # print(ret)
     c.start()
