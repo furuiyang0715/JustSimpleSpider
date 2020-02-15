@@ -151,33 +151,35 @@ class CArticle(object):
     def process_item(self, item):
         return item
 
-    def start(self):
-        key = "格力电器"
-        for page in range(1, 2):
-            list_url = self.start_url + urlencode(self.make_query_params(key, page))
-            list_page = self.get_list(list_url)
+    def _run_page(self, key, page):
+        list_url = self.start_url + urlencode(self.make_query_params(key, page))
+        list_page = self.get_list(list_url)
 
-            if list_page:
-                list_gener = self.parse_list(list_page)
-                for data in list_gener:
-                    item = dict()
-                    item['code'] = key
-                    item['link'] = data.get("ArticleUrl")
-                    item['title'] = data.get("Title")
-                    item['pub_date'] = data.get("ShowTime")
-                    detail_body = self.get_detail(data.get("ArticleUrl"))
-                    article = None
-                    if detail_body:
-                        article = self.parse_detail(detail_body)
-                    if article:
-                        item['article'] = article
-                        # 将 item 存储到数据库中
-                        to_insert = self.process_item(item)
-                        # print(to_insert)
-                        ret = self.save(to_insert)
-                        if not ret:
-                            # 记录失败的详情页链接
-                            self.error_detail.append(data.get("ArticleUrl"))
+        if list_page:
+            list_gener = self.parse_list(list_page)
+            for data in list_gener:
+                item = dict()
+                item['code'] = key
+                item['link'] = data.get("ArticleUrl")
+                item['title'] = data.get("Title")
+                item['pub_date'] = data.get("ShowTime")
+                detail_body = self.get_detail(data.get("ArticleUrl"))
+                article = None
+                if detail_body:
+                    article = self.parse_detail(detail_body)
+                if article:
+                    item['article'] = article
+                    # 将 item 存储到数据库中
+                    to_insert = self.process_item(item)
+                    # print(to_insert)
+                    ret = self.save(to_insert)
+                    if not ret:
+                        # 记录失败的详情页链接
+                        self.error_detail.append(data.get("ArticleUrl"))
+
+    def _start(self, key):
+        for page in range(1, 5 * 10 ** 4):
+            self._run_page(key, page)
 
 
 if __name__ == "__main__":
@@ -185,4 +187,5 @@ if __name__ == "__main__":
     # print(c.get_proxy())
     # ret = c.get("https://www.taoguba.com.cn/quotes/sz000651")
     # print(ret)
-    c.start()
+    key = "格力电器"
+    c._start(key)
