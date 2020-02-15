@@ -119,7 +119,8 @@ if __name__ == "__main__":
           KEY `pub_date` (`pub_date`)
         ) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COMMENT='{comment}';
         """
-    demo._exec_sql(create_sql)
+    print(create_sql)
+    # demo._exec_sql(create_sql)
 
     # (3) 测试删除数据库
     drop_sql = f"""DROP TABLE IF EXISTS `{table_name}`; """

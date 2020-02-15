@@ -15,6 +15,12 @@ MYSQL_DB = env.get("MYSQL_DB", cf.get('mysql', 'MYSQL_DB'))
 MYSQL_TABLE = env.get("MYSQL_TABLE", cf.get('mysql', 'MYSQL_TABLE'))
 LOCAL = bool(int(env.get("LOCAL", cf.get('deploy', 'LOCAL'))))
 
+DC_HOST = env.get("DC_HOST", cf.get('dc', 'DC_HOST'))
+DC_PORT = int(env.get("DC_PORT", cf.get('dc', 'DC_PORT')))
+DC_USER = env.get("DC_USER", cf.get('dc', 'DC_USER'))
+DC_PASSWD = env.get("DC_PASSWD", cf.get('dc', 'DC_PASSWD'))
+DC_DB = env.get("DC_DB", cf.get('dc', 'DC_DB'))
+
 
 if __name__ == "__main__":
     import sys

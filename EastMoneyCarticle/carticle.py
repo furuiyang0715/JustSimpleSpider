@@ -2,7 +2,6 @@ import json
 import random
 import re
 import string
-import sys
 import time
 import traceback
 import pymysql
@@ -10,12 +9,10 @@ import requests
 
 from lxml import html
 from urllib.parse import urlencode
-from gne import GeneralNewsExtractor
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from requests.exceptions import ProxyError, Timeout, ConnectionError, ChunkedEncodingError
 
-from EastMoneyCarticle.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, MYSQL_TABLE
-from EastMoneyCarticle.sql_client import PyMysqlBase
+from EastMoneyCarticle.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, MYSQL_TABLE, \
+    DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB
 
 import logging
 
@@ -36,7 +33,6 @@ class CArticle(object):
 
 
         }
-        self.extractor = GeneralNewsExtractor()
         self.db = MYSQL_DB
         self.table = MYSQL_TABLE
         conf = {
@@ -46,7 +42,6 @@ class CArticle(object):
             "password": MYSQL_PASSWORD,
             "db": MYSQL_DB,
         }
-        # self.sql_client = PyMysqlBase(**conf)
         self.sql_pool = PyMysqlPoolBase(**conf)
         self.proxy = self.get_proxy()
         self.error_detail = []
@@ -213,14 +208,34 @@ class CArticle(object):
 
 class Schedule(object):
     def __init__(self):
-        self.keys = ['格力电器', '视源股份', '科大讯飞']
+        self.keys = sorted(self.dc_info().values())
+
+    def dc_info(self):  # {'300150.XSHE': '世纪瑞尔',
+        """
+        从 datacanter.const_secumain 数据库中获取当天需要爬取的股票信息
+        返回的是 股票代码: 中文名简称 的字典的形式
+        """
+        try:
+            conn = pymysql.connect(host=DC_HOST, port=DC_PORT, user=DC_USER,
+                                   passwd=DC_PASSWD, db=DC_DB)
+        except Exception as e:
+            raise
+
+        cur = conn.cursor()
+        cur.execute("USE datacenter;")
+        cur.execute("""select SecuCode, ChiNameAbbr from const_secumain where SecuCode \
+            in (select distinct SecuCode from const_secumain);""")
+        dc_info = {r[0]: r[1] for r in cur.fetchall()}
+        cur.close()
+        conn.close()
+        return dc_info
 
     def insert_list_info(self, key):
         c = CArticle(key)
         now = lambda: time.time()
         t1 = now()
         cur = t1
-        for page in range(1, 10000):
+        for page in range(1900, 10000):
             page = c._run_page(page)
             if not page:
                 break
@@ -229,10 +244,23 @@ class Schedule(object):
         print(c.error_list)
         print(c.error_detail)
 
-    def run(self):
-        self.insert_list_info("科大讯飞")
+    def run(self, start, end):
+        for key in self.keys[start: end]:
+            # print(key)
+            self.insert_list_info(key)
 
 
 if __name__ == "__main__":
     schedule = Schedule()
-    schedule.run()
+    # print(schedule.dc_info())
+    # print(schedule.keys)
+    # print(len(schedule.keys))   # 3920
+
+    schedule.run(0, 500)
+    # schedule.run(500, 1000)
+    # schedule.run(1000, 1500)
+    # schedule.run(1500, 2000)
+    # schedule.run(2000, 2500)
+    # schedule.run(2500, 3000)
+    # schedule.run(3000, 3500)
+    # schedule.run(3500, 3919)
