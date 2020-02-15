@@ -1,0 +1,4 @@
+PyMySQL==0.9.3
+lxml==4.4.2
+requests==2.22.0
+DBUtils==1.3
