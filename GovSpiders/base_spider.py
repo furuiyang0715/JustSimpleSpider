@@ -129,6 +129,8 @@ class BaseSpider(object):
         except:
             print('Crawling Failed', url)
             return None
+        else:
+            return page
 
     def contract_sql(self, to_insert):
         """
