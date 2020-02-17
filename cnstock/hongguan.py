@@ -157,7 +157,8 @@ if __name__ == "__main__":
     # runner = CNStock(topic='qmt-sns_yw')   #  宏观
     # runner = CNStock(topic='qmt-sns_jg')   # 金融
     # runner = CNStock(topic="qmt-scp_gsxw")   # 公司聚焦
-    runner = CNStock(topic="qmt-tjd_ggkx")   # 公告快讯
+    # runner = CNStock(topic="qmt-tjd_ggkx")   # 公告快讯
+    runner = CNStock(topic="qmt-tjd_bbdj")   # 公告解读
 
     # 测试解析详情页可以实现自动翻页 ...
     # ret = runner.get_detail("http://ggjd.cnstock.com/company/scp_ggjd/tjd_ggjj/202002/4489878.htm")
