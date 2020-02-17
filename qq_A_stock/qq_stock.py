@@ -7,29 +7,24 @@ from queue import Queue
 
 import jsonpath
 import requests
-# from fake_useragent import UserAgent
 from gne import GeneralNewsExtractor
 from selenium import webdriver
 from selenium.webdriver import DesiredCapabilities
+from requests.exceptions import ProxyError, Timeout, ConnectionError, ChunkedEncodingError
 
 from qq_A_stock.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, LOCAL
-from qq_A_stock.fetch_proxy import proxy_run
 from qq_A_stock.my_log import logger
 from qq_A_stock.sql_base import StoreTool
-
-# ua = UserAgent()
-# print(ua.random)
-# sys.exit(0)
 
 
 class qqStock(object):
     def __init__(self):
         self.local = LOCAL
         self.token = "8f6b50e1667f130c10f981309e1d8200"
-        # self.headers = ua.random
+        self.headers = {'User-Agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 "
+                                      "(KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36"}
         self.list_url = "https://pacaio.match.qq.com/irs/rcd?cid=52&token={}" \
        "&ext=3911,3922,3923,3914,3913,3930,3915,3918,3908&callback=__jp1".format(self.token)
-        self.q = Queue()
         self.proxy = None
         self.extractor = GeneralNewsExtractor()
         if self.local:
@@ -40,7 +35,7 @@ class qqStock(object):
                 desired_capabilities=DesiredCapabilities.CHROME
             )
 
-        self.browser.implicitly_wait(5)  # 隐性等待，最长等30秒
+        self.browser.implicitly_wait(30)  # 隐性等待，最长等30秒
         conf = {
             "host": MYSQL_HOST,
             "port": MYSQL_PORT,
@@ -50,46 +45,52 @@ class qqStock(object):
         }
         self.storage = StoreTool(**conf)
 
-    def update_proxies(self):
-        # proxy_run()
-        with open("proxies.txt", "r") as f:
-            proxies = f.readlines()
-        proxies = [p.strip() for p in proxies]
-        for proxy in proxies:
-            self.q.put(proxy)
-
     def _get_proxy(self):
-        if self.proxy:
-            return self.proxy
-
-        elif not self.q.empty():
-            self.proxy = self.q.get()
-            return self.proxy
-
+        if self.local:
+            proxy_url = "http://192.168.0.102:8888/get"
         else:
-            self.update_proxies()
-            self.proxy = self.q.get()
-            return self.proxy
+            proxy_url = "http://172.17.0.5:8888/get"
+        r = requests.get(proxy_url)
+        proxy = r.text
+        return proxy
+
+    def _crawl(self, url, proxy):
+        proxies = {'http': proxy}
+        r = requests.get(url, proxies=proxies, headers=self.headers, timeout=3)
+        return r
 
     def _get(self, url):
-            proxy = self._get_proxy()
-            logger.debug("获取到的代理是{}".format(proxy))
-            ret = requests.get(url,
-                               headers={"User-Agent": 'Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2224.3 Safari/537.36'},
-                               proxies={"http": proxy},
-                               timeout=3)
-            return ret
+        count = 0
+        while True:
+            count = count + 1
+            try:
+                resp = self._crawl(url, self.proxy)
+                if resp.status_code == 200:
+                    return resp
+                elif count >= 5:
+                    logger.warning(f'抓取网页{url}最终失败')
+                    break
+                else:
+                    self.proxy = self._get_proxy()
+                    logger.info(f"无效状态码{resp.status_code}, 更换代理{self.proxy}\n")
+            except (ChunkedEncodingError, ConnectionError, Timeout, UnboundLocalError, UnicodeError, ProxyError):
+                self.proxy = self._get_proxy()
+                logger.info(f'代理失败,更换代理{self.proxy} \n')
 
     def _parse_article(self, item, special=False):
         vurl = item.get("link")
+        retry = 3
         while True:
             try:
                 self.browser.get(vurl)
                 body = self.browser.page_source
             except:
                 traceback.print_exc()
-                self.proxy = None
-                time.sleep(3)
+                retry -= 1
+                if retry <= 0:
+                    return
+                    # break
+                time.sleep(5)
             else:
                 break
 
@@ -101,61 +102,18 @@ class qqStock(object):
             item['title'] = result.get("title")
 
         logger.info(item)
-        time.sleep(1)
-        return item
-
-    def _parse_article_by_requsets(self, item):
-        vurl = item.get("link")
-
-        retry = 2
-        while True:
-            try:
-                resp = self._get(vurl)
-            except:
-                traceback.print_exc()
-                retry -= 1
-                if retry < 0:
-                    raise
-
-                self.proxy = None
-                time.sleep(3)
-            else:
-                break
-
-        body = resp.text
-        result = self.extractor.extract(body)
-        item['article'] = result.get("content")
-        item['pub_date'] = result.get("publish_time")
-        item['title'] = result.get("title")
-        logger.info(item)
         return item
 
     def _parse_list(self):
-        retry = 2
-        while True:
-            try:
-                list_resp = self._get(self.list_url)
-            except:
-                traceback.print_exc()
-                retry -= 1
-                if retry < 0:
-                    raise
-
-                self.proxy = None
-                time.sleep(3)
-
-            else:
-                break
-
-        if list_resp.status_code == 200:
+        list_resp = self._get(self.list_url)
+        if list_resp:
             logger.info("请求主列表页成功 ")
             body = list_resp.text
             body = body.lstrip("__jp1(")
             body = body.rstrip(")")
             body = json.loads(body)
             datas = body.get("data")  # list 数据列表
-
-            logger.info("请求列表页获取的数据是 {}".format(datas))
+            # print(datas)
 
             specials = []
             articles = []
@@ -168,7 +126,7 @@ class qqStock(object):
                 else:
                     logger.info("爬取到预期外的数据{}".format(data))
                     logger.info("爬取到预期外的数据类型{}".format(data.get("article_type")))  # 56 视频类型 不再爬取
-                    # raise Exception("请检查数据")
+
             return specials, articles
 
     def _is_exist(self, vurl):
@@ -179,25 +137,8 @@ class qqStock(object):
             return False
 
     def start(self):
-        retry = 2
-        while True:
-            try:
-                self._start()
-                # 1 / 0
-            except:
-                traceback.print_exc()
-                retry -= 1
-                if retry < 0:
-                    raise Exception("运行出错")
-                time.sleep(10)
-            else:
-                break
-
-    def _start(self):
         specials, articles = self._parse_list()
-
         for article in articles:
-            time.sleep(1)
             item = {}
             vurl = article.get("vurl")
             # 判断 vurl 是否存在
@@ -205,9 +146,9 @@ class qqStock(object):
                 item['link'] = vurl
                 item['pub_date'] = article.get("publish_time")
                 item['title'] = article.get("title")
-
                 item = self._parse_article(item)
-                self.storage.save(item)
+                if item:
+                    self.storage.save(item)
             else:
                 logger.info("{} 列表文章 已经爬取过了".format(vurl))
 
@@ -229,12 +170,12 @@ class qqStock(object):
                 if not self._is_exist(vurl):
                     item['link'] = vurl
                     item = self._parse_article(item, special=True)
-                    self.storage.save(item)
+                    if item:
+                        self.storage.save(item)
                 else:
                     logger.info("{} 专题文章 已经爬取过了".format(vurl))
 
     def __del__(self):
-        # logger.debug("selenium 连接关闭 ")
         print("selenium 连接关闭 ")
         self.browser.close()
 
@@ -243,7 +184,9 @@ if __name__ == "__main__":
     now = lambda: time.time()
     t1 = now()
     d = qqStock()
+
     # proxy = d._get_proxy()
     # print(proxy)
-    d._start()
+
+    d.start()
     print(now() - t1)

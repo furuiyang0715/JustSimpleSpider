@@ -1,16 +1,3 @@
-"""
-docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/qq_astock:v0.0.1 .
-docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/qq_astock:v0.0.1
-
-
-sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/qq_astock:v0.0.1
-sudo /usr/local/bin/docker-compose up -d
-sudo docker logs -ft --tail 1000 qq_astock
-sudo docker image prune
-
-use little_crawler
-"""
-
 import datetime
 import functools
 import time
@@ -18,13 +5,9 @@ import sys
 import traceback
 import schedule
 
-
-
 sys.path.append("./..")
-
 from qq_A_stock.qq_stock import qqStock
 from qq_A_stock.my_log import logger
-from qq_A_stock.fetch_proxy import proxy_run
 
 
 def catch_exceptions(cancel_on_failure=False):
@@ -51,8 +34,6 @@ def catch_exceptions(cancel_on_failure=False):
 
 @catch_exceptions(cancel_on_failure=True)
 def task():
-    proxy_run()
-
     now = lambda: time.time()
     t1 = now()
     d = qqStock()
@@ -65,13 +46,12 @@ def main():
     task()
 
     logger.info("当前时间是{}, 开始增量爬取 ".format(datetime.datetime.now()))
-    schedule.every(5).hours.at("03:00").do(task)
+    schedule.every(5).hours.do(task)
 
     while True:
-        # logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
+        logger.info("当前调度系统中的任务列表是{}".format(schedule.jobs))
         schedule.run_pending()
         time.sleep(180)
-        # logger.info("No work to do, waiting")
 
 
 main()
