@@ -1,6 +1,11 @@
+import sys
 import time
 
+from cnstock.cn_4_hours import CNStock_2
 from cnstock.hongguan import CNStock
+
+
+sys.path.append("./../")
 
 
 def task():
@@ -41,7 +46,16 @@ def task():
             (now() - t1)
         )
         )
-
+    # 上证四小时是不同的网页模式
+    t2 = now()
+    print("{} spider strat.".format("上证4小时"))
+    runner = CNStock_2()
+    runner.start()
+    print("{} spider end, use {} s.\n\n".format(
+        "上证4小时",
+        (now() - t2)
+    )
+    )
 
 
 task()
