@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import pprint
@@ -40,6 +41,7 @@ class CNStock(object):
         self.error_list = []
         self.error_detail = []
         self.topic = kwargs.get("topic")
+        self.check_date = datetime.datetime.today() - datetime.timedelta(days=1)
 
     def make_query_params(self, page):
         """
@@ -79,7 +81,13 @@ class CNStock(object):
                 break
             for one in datas:
                 item = dict()
-                item['pub_date'] = one.get("time")
+                pub_date = datetime.datetime.strptime(one.get("time"), "%Y-%m-%d %H:%M:%S")
+                # print(pub_date)
+                if pub_date < self.check_date:
+                    print("增量完毕\n")
+                    return
+
+                item['pub_date'] = pub_date
                 item['title'] = one.get("title")
                 item['link'] = one.get("link")
                 yield item
