@@ -1,5 +1,6 @@
 import datetime
 import functools
+import logging
 import sys
 import time
 import traceback
@@ -9,6 +10,9 @@ import schedule
 sys.path.append("./../")
 from cnstock.cn_4_hours import CNStock_2
 from cnstock.hongguan import CNStock
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 def catch_exceptions(cancel_on_failure=False):

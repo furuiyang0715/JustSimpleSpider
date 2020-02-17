@@ -121,6 +121,7 @@ class CNStock(object):
         except pymysql.err.IntegrityError:
             logger.warning("重复 ")
             self.sql_pool.connection.rollback()
+            return 1
         except:
             logger.warning("失败")
             # traceback.print_exc()
@@ -192,3 +193,16 @@ if __name__ == "__main__":
     # ret = runner.get_detail("http://ggjd.cnstock.com/company/scp_ggjd/tjd_ggjj/202002/4489878.htm")
     # print(ret)
     runner.start()
+
+
+    # def get_list():
+    #     for i in [[1, 2, 3], [4, 5, 6], [7, 8, 9]]:
+    #         for j in i:
+    #             if j == 6:
+    #                 return
+    #             yield j
+    #
+    # ret = get_list()
+    #
+    # for r in ret:
+    #     print(r)

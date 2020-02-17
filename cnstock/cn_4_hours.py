@@ -1,3 +1,4 @@
+import datetime
 import json
 import random
 import re
@@ -67,6 +68,12 @@ class CNStock_2(CNStock):
                 break
             for one in datas:
                 item = dict()
+
+                pub_date = datetime.datetime.strptime(one.get("datetime"), "%Y-%m-%d %H:%M:%S")
+                if pub_date < self.check_date:
+                    print("增量完毕\n")
+                    return
+
                 item['pub_date'] = one.get("datetime")
                 item['title'] = one.get("title")
                 item['zhaiyao'] = 'http://news.cnstock.com/theme,{}.html'.format(one.get("id"))
@@ -96,6 +103,7 @@ class CNStock_2(CNStock):
                         count = 0
 
 
-runner = CNStock_2()   # 上证4小时
-runner.start()
-print(runner.error_detail)
+if __name__ == "__main__":
+    runner = CNStock_2()   # 上证4小时
+    runner.start()
+    print(runner.error_detail)
