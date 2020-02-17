@@ -123,6 +123,7 @@ class CNStock(object):
             return count
 
     def __del__(self):
+        print("释放资源... ")
         try:
             self.sql_pool.dispose()
         except:
@@ -165,7 +166,9 @@ if __name__ == "__main__":
     # runner = CNStock(topic="qmt-sx_xgcl")   # 市场-新股-新股策略
     # runner = CNStock(topic="qmt-sx_ipopl")   # 市场-新股-IPO评论
 
-    runner = CNStock(topic="qmt-smk_jjdx")   # 市场-基金
+    # runner = CNStock(topic="qmt-smk_jjdx")   # 市场-基金
+    runner = CNStock(topic="qmt-sns_qy")   # 市场-券业
+
 
 
     # 测试解析详情页可以实现自动翻页 ...
