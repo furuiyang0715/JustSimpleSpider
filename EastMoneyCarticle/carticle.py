@@ -194,6 +194,18 @@ class CArticle(object):
         except:
             pass
 
+    def select_key_links(self):
+        select_all_sql = f"select link from {self.table} where code = '{self.key}' and article is NULL;"
+        # links = self.sql_pool.select_many(select_all_sql, size=10)
+        links = self.sql_pool.select_all(select_all_sql)
+        return links
+
+    def update_detail(self, link, artilce):
+        update_sql = f"update {self.table} set article = '{artilce}' where link = '{link}';"
+        # print(update_sql)
+        ret = self.sql_pool.update(update_sql)
+        return ret
+
     def _run_page(self, page):
         list_url = self.start_url + urlencode(self.make_query_params(self.key, page))
         list_page = self.get_list(list_url)
@@ -261,7 +273,37 @@ class Schedule(object):
         with open("record.txt", "a+") as f:
             f.write(f"{key}: error_list: {c.error_list}, error_detail: {c.error_detail}\r\n")
 
-    def run(self, start, end):
+    def run_detail(self, start, end):
+        for key in self.keys[start: end]:
+            c = CArticle(key)
+            links = c.select_key_links()
+            count = 0
+            for link_info in links:
+                link = link_info.get("link")
+                print(key, link)
+                try:
+                    detail_page = c.get_detail(link)
+                    artilce = c.parse_detail(detail_page)
+                    ret = c.update_detail(link, artilce)
+                    if ret:
+                        print("更新成功")
+                    else:
+                        print("更新失败")
+                    count += 1
+                    if count > 10:
+                        c.sql_pool.connection.commit()
+                        count = 0
+                except:
+                    c.error_detail.append(link)
+
+            with open("tell.txt", "a+") as f:
+                f.write(f"{key}: error_detail: {c.error_detail}\r\n")
+
+        with open("tell.txt", "r") as f:
+            lines = f.readlines()
+            print(pprint.pformat(lines))
+
+    def run_list(self, start, end):
         # print(self.keys)
         for key in self.keys[start: end]:
             print(key)
@@ -277,15 +319,47 @@ if __name__ == "__main__":
     # print(schedule.keys)
     # print(schedule.keys.index("长春经开"))
     # print(len(schedule.keys))
-    schedule.run(LIST_START, LIST_END)
+    # schedule.run_list(LIST_START, LIST_END)
+
+    schedule.run_detail(LIST_START, LIST_END)
 
     """
     docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/emm:v1 .
     
     docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/emm:v1
     
-    sudo docker run -itd --name ins --env LIST_START=10 \
+    sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/emm:v1
+    
+    sudo docker run -itd --name ins --env LIST_START=0 \
+    --env LIST_END=10 \
+    registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/emm:v1 
+    
+    sudo docker run -itd --name ins2 --env LIST_START=10 \
     --env LIST_END=100 \
+    registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/emm:v1 
+    
+    sudo docker run -itd --name ins3 --env LIST_START=100 \
+    --env LIST_END=200 \
+    registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/emm:v1 
+    
+    sudo docker run -itd --name ins4 --env LIST_START=200 \
+    --env LIST_END=1000 \
+    registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/emm:v1 
+    
+    sudo docker run -itd --name ins5 --env LIST_START=1000 \
+    --env LIST_END=1500 \
+    registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/emm:v1 
+    
+     sudo docker run -itd --name ins6 --env LIST_START=1500 \
+    --env LIST_END=2000 \
+    registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/emm:v1
+    
+    sudo docker run -itd --name last --env LIST_START=-100 \
+    --env LIST_END=-1 \
+    registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/emm:v1 
+    
+    sudo docker run -itd --name last --env LIST_START=-500 \
+    --env LIST_END=-100 \
     registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/emm:v1 
     
     sudo docker logs -ft --tail 1000 ins
@@ -296,4 +370,7 @@ if __name__ == "__main__":
     use little_crawler; 
     select count(1) from eastmoney_carticle;
     select count(1) from eastmoney_carticle where code = "万东医疗";
+    
+    select count(link) from eastmoney_carticle where code = 'GQY视讯' and article is NULL;
+    select count(1) from  eastmoney_carticle where article is not NULL;
     """
