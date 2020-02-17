@@ -1,5 +1,6 @@
 gne==0.1.5
 PyMySQL==0.9.3
-lxml==4.4.2
+schedule==0.6.0
 requests==2.22.0
+lxml==4.4.2
 DBUtils==1.3
