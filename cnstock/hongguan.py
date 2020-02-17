@@ -19,10 +19,9 @@ logger = logging.getLogger()
 
 
 class CNStock(object):
-    def __init__(self, topic):
+    def __init__(self, *args, **kwargs):
         headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 "
                                  "(KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36",
-                   # "Cookie": "Hm_lvt_5f1ddd842219521824ad49f82d8a712c=1581899979; Hm_lpvt_5f1ddd842219521824ad49f82d8a712c=1581905127",
                    "Referer": "http://news.cnstock.com/news/sns_yw/index.html",
                    }
         self.headers = headers
@@ -40,7 +39,7 @@ class CNStock(object):
         self.table = MYSQL_TABLE
         self.error_list = []
         self.error_detail = []
-        self.topic = topic
+        self.topic = kwargs.get("topic")
 
     def make_query_params(self, page):
         """
@@ -155,6 +154,6 @@ class CNStock(object):
 
 
 # runner = CNStock('qmt-sns_yw')   #  宏观
-runner = CNStock('qmt-sns_jg')   # 金融
+runner = CNStock('qmt-sns_jg')     # 金融
 
 runner.start()
