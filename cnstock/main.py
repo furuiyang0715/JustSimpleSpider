@@ -1,11 +1,9 @@
 import sys
 import time
 
+sys.path.append("./../")
 from cnstock.cn_4_hours import CNStock_2
 from cnstock.hongguan import CNStock
-
-
-sys.path.append("./../")
 
 
 def task():

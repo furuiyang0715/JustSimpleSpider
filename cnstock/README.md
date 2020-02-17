@@ -36,3 +36,18 @@ http://www.cnstock.com/
 
 - 新三板：http://jrz.cnstock.com/yw 
     - 要闻：http://jrz.cnstock.com/yw
+    
+### 部署
+```python
+docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/cnstock:v1 .
+    
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/cnstock:v1
+
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/cnstock:v1
+
+sudo docker run -itd --name cn_stock registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/cnstock:v1
+
+sudo docker logs -ft --tail 1000 cn_stock
+```
+
+部署时更换 .conf 的配置即可。 
