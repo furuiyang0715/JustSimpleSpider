@@ -19,7 +19,7 @@ logger = logging.getLogger()
 
 
 class CNStock(object):
-    def __init__(self):
+    def __init__(self, topic):
         headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 "
                                  "(KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36",
                    # "Cookie": "Hm_lvt_5f1ddd842219521824ad49f82d8a712c=1581899979; Hm_lpvt_5f1ddd842219521824ad49f82d8a712c=1581905127",
@@ -40,13 +40,15 @@ class CNStock(object):
         self.table = MYSQL_TABLE
         self.error_list = []
         self.error_detail = []
+        self.topic = topic
 
     def make_query_params(self, page):
         """
         拼接动态请求参数
         """
         query_params = {
-            'colunm': 'qmt-sns_yw',  # 该参数表明按时间排序
+            # 'colunm': 'qmt-sns_yw',
+            'colunm': self.topic,
             'page': str(page),   # 最大 50 页
             'num': str(10),
             'showstock': str(0),
@@ -59,7 +61,7 @@ class CNStock(object):
         return query_params
 
     def get_list(self):
-        for page in range(0, 2):
+        for page in range(0, 1000):
             print(page)
             params = self.make_query_params(page)
             url = self.list_url + urlencode(params)
@@ -136,7 +138,7 @@ class CNStock(object):
                 if not link or link == "null":
                     continue
                 item['article'] = self.get_detail(link)
-                # print(item)
+                print(item)
                 ret = self._save(item)
                 count += 1
                 if ret:
@@ -152,5 +154,7 @@ class CNStock(object):
                     count = 0
 
 
-runner = CNStock()
+# runner = CNStock('qmt-sns_yw')   #  宏观
+runner = CNStock('qmt-sns_jg')   # 金融
+
 runner.start()
