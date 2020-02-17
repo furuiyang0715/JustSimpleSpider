@@ -171,10 +171,12 @@ if __name__ == "__main__":
     # runner = CNStock(topic="qmt-smk_zq")   # 市场-债券
     # runner = CNStock(topic="qmt-smk_xt")   # 市场-信托
 
-    runner = CNStock(topic="qmt-skc_tt")   # 科创板-要闻
-
-
-
+    # runner = CNStock(topic="qmt-skc_tt")   # 科创板-要闻
+    # runner = CNStock(topic="qmt-skc_jgfx")   # 科创板-监管
+    # runner = CNStock(topic="qmt-skc_sbgsdt")   # 科创板-公司
+    # runner = CNStock(topic="qmt-skc_tzzn")   # 科创板-投资
+    # runner = CNStock(topic="qmt-skc_gd")   # 科创板-观点
+    runner = CNStock(topic="qmt-sjrz_yw")   # 新三板-要闻
 
     # 测试解析详情页可以实现自动翻页 ...
     # ret = runner.get_detail("http://ggjd.cnstock.com/company/scp_ggjd/tjd_ggjj/202002/4489878.htm")
