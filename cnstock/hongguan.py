@@ -153,7 +153,9 @@ class CNStock(object):
                     count = 0
 
 
-# runner = CNStock('qmt-sns_yw')   #  宏观
-runner = CNStock('qmt-sns_jg')     # 金融
+# runner = CNStock(topic='qmt-sns_yw')   #  宏观
+# runner = CNStock(topic='qmt-sns_jg')   # 金融
+runner = CNStock(topic="qmt-scp_gsxw")   # 公司聚焦
+
 
 runner.start()
