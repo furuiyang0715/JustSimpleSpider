@@ -44,6 +44,9 @@ def task():
             (now() - t1)
         )
         )
+        with open("record.txt", "a+") as f:
+            f.write(f"{topic}: {runner.error_detail}")
+
     # 上证四小时是不同的网页模式
     t2 = now()
     print("{} spider strat.".format("上证4小时"))
@@ -54,6 +57,8 @@ def task():
         (now() - t2)
     )
     )
+    with open("record.txt", "a+") as f:
+        f.write(f"上证4小时: {runner.error_detail}")
 
 
 task()
