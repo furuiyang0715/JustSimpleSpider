@@ -1,11 +1,33 @@
+import datetime
+import functools
 import sys
 import time
+import traceback
+
+import schedule
 
 sys.path.append("./../")
 from cnstock.cn_4_hours import CNStock_2
 from cnstock.hongguan import CNStock
 
 
+def catch_exceptions(cancel_on_failure=False):
+    def catch_exceptions_decorator(job_func):
+        @functools.wraps(job_func)
+        def wrapper(*args, **kwargs):
+            try:
+                return job_func(*args, **kwargs)
+            except:
+                print(traceback.format_exc())
+                if cancel_on_failure:
+                    print("异常, 任务结束, {}".format(schedule.CancelJob))
+                    schedule.cancel_job(job_func)
+                    return schedule.CancelJob
+        return wrapper
+    return catch_exceptions_decorator
+
+
+@catch_exceptions(cancel_on_failure=True)
 def task():
     task_info = {
         'qmt-sns_yw': "要闻-宏观",
@@ -61,4 +83,17 @@ def task():
         f.write(f"上证4小时: {runner.error_detail}")
 
 
-task()
+def main():
+    print("启动时第一次开始爬取任务")
+    task()
+
+    print("当前时间是{}, 开始增量爬取 ".format(datetime.datetime.now()))
+    schedule.every().day.at("09:00").do(task)
+
+    while True:
+        print("当前调度系统中的任务列表是{}".format(schedule.jobs))
+        schedule.run_pending()
+        time.sleep(180)
+
+
+main()
