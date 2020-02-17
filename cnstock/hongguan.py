@@ -155,11 +155,13 @@ class CNStock(object):
 
 
 if __name__ == "__main__":
-    # runner = CNStock(topic='qmt-sns_yw')   #  宏观
-    # runner = CNStock(topic='qmt-sns_jg')   # 金融
-    # runner = CNStock(topic="qmt-scp_gsxw")   # 公司聚焦
-    # runner = CNStock(topic="qmt-tjd_ggkx")   # 公告快讯
-    # runner = CNStock(topic="qmt-tjd_bbdj")   # 公告解读
+    # runner = CNStock(topic='qmt-sns_yw')   #  要闻-宏观
+    # runner = CNStock(topic='qmt-sns_jg')   # 要闻-金融
+
+    # runner = CNStock(topic="qmt-scp_gsxw")   # 公司-公司聚焦
+    # runner = CNStock(topic="qmt-tjd_ggkx")   # 公司-公告快讯
+    # runner = CNStock(topic="qmt-tjd_bbdj")   # 公司-公告解读
+
     # runner = CNStock(topic="qmt-smk_gszbs")   # 市场-直播
     # runner = CNStock(topic="qmt-sx_xgjj")   # 市场-新股-新股聚焦
     # runner = CNStock(topic="qmt-sx_zcdt")   # 市场-新股-政策动态
