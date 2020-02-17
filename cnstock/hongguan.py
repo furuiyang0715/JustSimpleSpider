@@ -168,7 +168,8 @@ if __name__ == "__main__":
 
     # runner = CNStock(topic="qmt-smk_jjdx")   # 市场-基金
     # runner = CNStock(topic="qmt-sns_qy")   # 市场-券业
-    runner = CNStock(topic="qmt-smk_zq")   # 市场-债券
+    # runner = CNStock(topic="qmt-smk_zq")   # 市场-债券
+    runner = CNStock(topic="qmt-smk_xt")   # 市场-信托
 
 
 
