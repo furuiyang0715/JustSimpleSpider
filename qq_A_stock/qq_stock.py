@@ -1,9 +1,6 @@
 import json
-import pprint
-import sys
 import time
 import traceback
-from queue import Queue
 
 import jsonpath
 import requests
@@ -30,6 +27,7 @@ class qqStock(object):
         if self.local:
             self.browser = webdriver.Chrome()
         else:
+            self._check_selenium_status()
             self.browser = webdriver.Remote(
                 command_executor="http://chrome:4444/wd/hub",
                 desired_capabilities=DesiredCapabilities.CHROME
@@ -44,6 +42,23 @@ class qqStock(object):
             "db": MYSQL_DB,
         }
         self.storage = StoreTool(**conf)
+
+    def _check_selenium_status(self):
+        """
+        检查 selenium 服务端的状态
+        :return:
+        """
+        while True:
+            i = 0
+            try:
+                resp = requests.get("http://chrome:4444/wd/hub/status", timeout=0.5)
+            except:
+                i += 1
+                if i > 10:
+                    raise
+            else:
+                logger.info(resp.text)
+                break
 
     def _get_proxy(self):
         if self.local:
