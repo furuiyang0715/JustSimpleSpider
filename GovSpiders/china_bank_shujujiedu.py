@@ -1,5 +1,3 @@
-import time
-
 from lxml import html
 from GovSpiders.base_spider import BaseSpider
 
@@ -62,54 +60,6 @@ class ChinaBankShuJuJieDu(BaseSpider):
             item["article_link"] = news_link
             items.append(item)
         return items
-
-    def process_list(self, page_num):
-        list_retry = 2
-        try:
-            list_page = self.fetch_page(self.start_url.format(page_num))
-            if list_page:
-                items = self._parse_list_page(list_page)
-            else:
-                raise
-        except:
-            list_retry -= 1
-            if list_retry < 0:
-                return
-            self.process_list(page_num)
-        else:
-            return items
-
-    def process_detail(self, link):
-        detail_retry = 2
-        try:
-            detail_page = self.fetch_page(link)
-            if detail_page:
-                article = self._parse_detail_page(detail_page)
-            else:
-                raise
-        except:
-            detail_retry -= 1
-            if detail_retry < 0:
-                return
-            self.process_detail(link)
-        else:
-            return article
-
-    def _start(self, page_num):
-        items = self.process_list(page_num)
-        if items:
-            for item in items:
-                link = item["article_link"]
-                article = self.process_detail(link)
-                if article:
-                    item['article_content'] = article
-                    ret = self.save(item)
-                    if not ret:
-                        self.error_detail.append(item.get("article_link"))
-                else:
-                    self.error_detail.append(link)
-        else:
-            self.error_list.append(self.start_url.format(page_num))
 
 
 if __name__ == "__main__":
