@@ -48,10 +48,12 @@ var ret = function(input) {
         return output;
     }
 
-var input = '1581996129'   // 时间戳字符串
+//var input = '1581996129'   // 时间戳字符串
 
-
-ret(input)
+input = Math.floor(new Date().getTime()/1000);
+// 1582007206
+console.log(input)
+//ret(input)
 
 
 // 运行: node test.js

@@ -1,64 +1,30 @@
 import json
+import math
 import pprint
+import time
 
 import requests as req
-url = "http://webapi.cninfo.com.cn//api/sysapi/p_sysapi1128"
-headers = {
-    'Accept': 'application/json, text/javascript, */*; q=0.01',
-    'Referer': 'http://webapi.cninfo.com.cn/',
-    'User-Agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 "
-                  "(KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36",
-    # 'Cookie': '__qc_wId=726; pgv_pvid=6020356972; Hm_lvt_489bd07e99fbfc5f12cbb4145adb0a9b=1581945588; '
-    #           'codeKey=02e5be195b; Hm_lpvt_489bd07e99fbfc5f12cbb4145adb0a9b=1581945773',
-    # __qc_wId=726; pgv_pvid=6020356972; Hm_lvt_489bd07e99fbfc5f12cbb4145adb0a9b=1581945588;
-    # codeKey=a46215bf5e; Hm_lpvt_489bd07e99fbfc5f12cbb4145adb0a9b=1581946570
-    'Origin': 'http://webapi.cninfo.com.cn',
-    'Connection': 'keep-alive',
-    'Accept-Encoding': 'gzip, deflate',
-    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-    'Cache-Control': 'no-cache',
-    'Content-Length': '0',
-    'Host': 'webapi.cninfo.com.cn',
-    # 'mcode': 'MTU4MTk0NTc3Mg==',
-    # 'mcode': 'MTU4MTk0NjU3MA==',
-    'mcode': 'MTU4MTk0NzQzOQ==',
-    'Pragma': 'no-cache',
-    'X-Requested-With': 'XMLHttpRequest'
-
-}
-
-# ret = req.post(url, headers=headers).text
-# py_data = json.loads(ret)
-# print(pprint.pformat(py_data))
 
 
-def convert(input):
+def convert(dt: str):
     keyStr = "ABCDEFGHIJKLMNOP" + "QRSTUVWXYZabcdef" + "ghijklmnopqrstuv" + "wxyz0123456789+/" + "="
     output = ""
-    chr1 = ""
-    chr2 = ""
-    chr3 = ""
-    enc1 = ""
-    enc2 = ""
-    enc3 = ""
-    enc4 = ""
     i = 0
-
-    while i < len(input):
+    while i < len(dt):
         try:
-            chr1 = ord(input[i])
+            chr1 = ord(dt[i])
         except IndexError:
             chr1 = 0
         i += 1
 
         try:
-            chr2 = ord(input[i])
+            chr2 = ord(dt[i])
         except IndexError:
             chr2 = 0
         i += 1
 
         try:
-            chr3 = ord(input[i])
+            chr3 = ord(dt[i])
         except:
             chr3 = 0
         i += 1
@@ -80,8 +46,41 @@ def convert(input):
     return output
 
 
-input = '1581996129'
-print(convert(input))
+dt = str(math.floor(time.time()))
+mcode = convert(dt)
+# print(mcode)
+
+
+url = "http://webapi.cninfo.com.cn//api/sysapi/p_sysapi1128"
+headers = {
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'Referer': 'http://webapi.cninfo.com.cn/',
+    'User-Agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36",
+    # 'Cookie': '__qc_wId=726; pgv_pvid=6020356972; Hm_lvt_489bd07e99fbfc5f12cbb4145adb0a9b=1581945588; '
+    #           'codeKey=02e5be195b; Hm_lpvt_489bd07e99fbfc5f12cbb4145adb0a9b=1581945773',
+    # __qc_wId=726; pgv_pvid=6020356972; Hm_lvt_489bd07e99fbfc5f12cbb4145adb0a9b=1581945588;
+    # codeKey=a46215bf5e; Hm_lpvt_489bd07e99fbfc5f12cbb4145adb0a9b=1581946570
+    'Origin': 'http://webapi.cninfo.com.cn',
+    'Connection': 'keep-alive',
+    'Accept-Encoding': 'gzip, deflate',
+    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+    'Cache-Control': 'no-cache',
+    'Content-Length': '0',
+    'Host': 'webapi.cninfo.com.cn',
+    # 'mcode': 'MTU4MTk0NTc3Mg==',
+    # 'mcode': 'MTU4MTk0NjU3MA==',
+    'mcode': '{}'.format(mcode),
+    'Pragma': 'no-cache',
+    'X-Requested-With': 'XMLHttpRequest'
+
+}
+
+body = req.post(url, headers=headers).text
+py_data = json.loads(body)
+print(pprint.pformat(py_data))
+
+
 
 """
 headers: {"mcode": indexcode.getResCode()},
