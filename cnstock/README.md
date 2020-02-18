@@ -56,15 +56,8 @@ sudo docker logs -ft --tail 1000 cn_stock
 表名： cn_stock
 中文名：上海证券报
 监控时间：9:30\16:00
-SQL: SELECT count(id) FROM cn_stock WHERE pub_date > date_sub(CURDATE(), interval 1 day)
+SQL: SELECT count(id) FROM cn_stock WHERE pub_date > date_sub(CURDATE(), interval 1 day);
 监控条数大于： 10
 日期： 自然日
 
-(舆情数据库)
-上线时间: 2020.02.18
-数据库： cn_stock
-数据源： 上海证券报
-网址： http://www.cnstock.com/
-上线时间： 2020-02-17
-增量周期：每天
 
