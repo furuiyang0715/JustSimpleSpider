@@ -26,10 +26,62 @@ headers = {
     'X-Requested-With': 'XMLHttpRequest'
 
 }
-ret = req.post(url, headers=headers).text
-py_data = json.loads(ret)
-print(pprint.pformat(py_data))
 
+# ret = req.post(url, headers=headers).text
+# py_data = json.loads(ret)
+# print(pprint.pformat(py_data))
+
+
+def convert(input):
+    keyStr = "ABCDEFGHIJKLMNOP" + "QRSTUVWXYZabcdef" + "ghijklmnopqrstuv" + "wxyz0123456789+/" + "="
+    output = ""
+    chr1 = ""
+    chr2 = ""
+    chr3 = ""
+    enc1 = ""
+    enc2 = ""
+    enc3 = ""
+    enc4 = ""
+    i = 0
+
+    while i < len(input):
+        try:
+            chr1 = ord(input[i])
+        except IndexError:
+            chr1 = 0
+        i += 1
+
+        try:
+            chr2 = ord(input[i])
+        except IndexError:
+            chr2 = 0
+        i += 1
+
+        try:
+            chr3 = ord(input[i])
+        except:
+            chr3 = 0
+        i += 1
+
+        enc1 = chr1 >> 2
+        enc2 = ((chr1 & 3) << 4) | (chr2 >> 4)
+        enc3 = ((chr2 & 15) << 2) | (chr3 >> 6)
+        enc4 = chr3 & 63
+
+        # print(chr1, chr2, chr3, enc1, enc2, enc3, enc4)
+
+        if not chr2:
+            enc3 = enc4 = 64
+        elif not chr3:
+            enc4 = 64
+
+        output = output + keyStr[enc1] + keyStr[enc2] + keyStr[enc3] + keyStr[enc4]
+
+    return output
+
+
+input = '1581996129'
+print(convert(input))
 
 """
 headers: {"mcode": indexcode.getResCode()},
@@ -148,7 +200,7 @@ var JSonToCSV = {
         return Sys;
     },		
       
-    missjson:function(input) {  
+    missjson: function(input) {  
         var keyStr = "ABCDEFGHIJKLMNOP" + "QRSTUVWXYZabcdef" + "ghijklmnopqrstuv"   + "wxyz0123456789+/" + "=";  
         var output = "";  
         var chr1, chr2, chr3 = "";  
@@ -177,6 +229,4 @@ var JSonToCSV = {
     }  
 };
 window.JSonToCSV = JSonToCSV;
-
-
 """
