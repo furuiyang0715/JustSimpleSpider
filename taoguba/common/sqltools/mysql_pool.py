@@ -1,7 +1,5 @@
 import logging
-import pprint
 import re
-import sys
 import traceback
 
 import pymysql
@@ -295,7 +293,7 @@ class MyPymysqlPool(BasePymysqlPool):
 
 def mysql_test():
     # 创建连接对象
-    from chinabank.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD
+    from temp.chinabank.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD
     mysql = MyPymysqlPool({
             "host": MYSQL_HOST,
             "port": MYSQL_PORT,
