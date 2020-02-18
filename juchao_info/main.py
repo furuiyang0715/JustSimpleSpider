@@ -8,7 +8,10 @@ import traceback
 import schedule
 
 sys.path.append("./../")
-from cninfo.juchao import JuChaoInfo
+print(sys.path)
+
+from juchao_info.juchao import JuChaoInfo
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)

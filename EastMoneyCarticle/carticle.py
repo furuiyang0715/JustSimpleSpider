@@ -358,6 +358,10 @@ if __name__ == "__main__":
     --env LIST_END=-1 \
     registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/emm:v1 
     
+    sudo docker run -itd --name last1 --env LIST_START=-1000 \
+    --env LIST_END=-500 \
+    registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/emm:v1 
+    
     sudo docker run -itd --name last --env LIST_START=-500 \
     --env LIST_END=-100 \
     registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/emm:v1 

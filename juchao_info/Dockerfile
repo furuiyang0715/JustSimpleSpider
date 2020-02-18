@@ -4,13 +4,13 @@ ENV TZ=Asia/Shanghai
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN mkdir /cninfo
+RUN mkdir /juchao_info
 
-WORKDIR /cninfo
+WORKDIR /juchao_info
 
-ADD . /cninfo
+ADD . /juchao_info
 
-WORKDIR /cninfo
+WORKDIR  /juchao_info
 
 RUN pip install -r requirements.txt -i https://pypi.douban.com/simple
 

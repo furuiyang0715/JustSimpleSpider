@@ -1,13 +1,14 @@
 import json
 import logging
 import math
+import pprint
 import time
 
 import pymysql
 import requests as req
 
-from cninfo.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, MYSQL_TABLE
-from cninfo.sql_pool import PyMysqlPoolBase
+from juchao_info.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, MYSQL_TABLE
+from juchao_info.sql_pool import PyMysqlPoolBase
 
 logger = logging.getLogger()
 
@@ -22,23 +23,21 @@ class JuChaoInfo(object):
         self.mcode = self._generate_mcode()
         self.headers = {
             'Accept': 'application/json, text/javascript, */*; q=0.01',
-            'Referer': 'http://webapi.cninfo.com.cn/',
-            'User-Agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 "
-                          "(KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36",
-            'Cookie': '__qc_wId=726; pgv_pvid=6020356972; Hm_lvt_489bd07e99fbfc5f12cbb4145adb0a9b=1581945588; '
-                      'codeKey=02e5be195b; Hm_lpvt_489bd07e99fbfc5f12cbb4145adb0a9b=1581945773',
-            'Origin': 'http://webapi.cninfo.com.cn',
-            'Connection': 'keep-alive',
             'Accept-Encoding': 'gzip, deflate',
             'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
             'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
             'Content-Length': '0',
+            'Cookie': '__qc_wId=726; pgv_pvid=6020356972; Hm_lvt_489bd07e99fbfc5f12cbb4145adb0a9b=1581945588; codeKey=ce7a9a719b; Hm_lpvt_489bd07e99fbfc5f12cbb4145adb0a9b=1582016401',
             'Host': 'webapi.cninfo.com.cn',
             'mcode': '{}'.format(self.mcode),
+            'Origin': 'http://webapi.cninfo.com.cn',
             'Pragma': 'no-cache',
-            'X-Requested-With': 'XMLHttpRequest'
+            'Referer': 'http://webapi.cninfo.com.cn/',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36',
+            'X-Requested-With': 'XMLHttpRequest',
 
-        }
+}
         conf = {
             "host": MYSQL_HOST,
             "port": MYSQL_PORT,
@@ -88,6 +87,7 @@ class JuChaoInfo(object):
 
     def _get(self, url):
         resp = req.post(url, headers=self.headers)
+        # print(resp)
         if resp.status_code == 200:
             return resp.text
 
@@ -117,6 +117,7 @@ class JuChaoInfo(object):
 
     def get_list(self, url):
         body = self._get(url)
+        # print(body)
         py_data = json.loads(body)
         result_code = py_data.get("resultcode")
         if result_code == 200:
@@ -162,4 +163,5 @@ class JuChaoInfo(object):
 
 if __name__ == "__main__":
     runner = JuChaoInfo()
+    # runner._get(runner.zuixin_url)
     runner.start()

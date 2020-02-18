@@ -3,7 +3,7 @@ import pymysql
 from pymysql.cursors import DictCursor
 from DBUtils.PooledDB import PooledDB
 
-from cninfo.configs import MYSQL_PORT, MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
+from juchao_info.configs import MYSQL_PORT, MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
 
 logger = logging.getLogger()
 
@@ -164,7 +164,7 @@ def mysql_test():
             ) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COMMENT='{comment}';
             """
     drop_sql = f"""DROP TABLE IF EXISTS `{table_name}`; """
-
+    print(create_sql)
     # pool._exec_sql(create_sql)
     # pool._exec_sql(drop_sql)
 
