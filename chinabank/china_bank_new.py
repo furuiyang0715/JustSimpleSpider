@@ -73,12 +73,9 @@ class ChinaBank(object):
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36',
         }
         resp1 = s.get(url, headers=h1)
-        # print(resp1)
         cookie1 = resp1.headers.get("Set-Cookie").split(";")[0]
         origin_text = resp1.text
-        # print(origin_text)
         redirect_url = self.get_refer_url(origin_text)
-        # print(redirect_url)
         h1.update({
             'Cookie': cookie1,
             'Referer': 'http://www.pbc.gov.cn/goutongjiaoliu/113456/113469/11040/index1.html',
