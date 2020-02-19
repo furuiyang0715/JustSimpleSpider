@@ -8,10 +8,10 @@ from lxml import html
 from GovSpiders.base_spider import BaseSpider
 
 
-class GovStats(BaseSpider):
+class GovStatsShuJuJieDu(BaseSpider):
     """国家统计局爬虫 数据解读"""
     def __init__(self):
-        super(GovStats, self).__init__()
+        super(GovStatsShuJuJieDu, self).__init__()
         self.name = '数据解读'
         # self.table = 'gov_stats_sjjd'
         self.table = 'gov_stats'
@@ -92,7 +92,7 @@ class GovStats(BaseSpider):
 
 
 if __name__ == "__main__":
-    runner = GovStats()
+    runner = GovStatsShuJuJieDu()
     runner._start(1)
 
 
