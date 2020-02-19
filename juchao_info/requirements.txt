@@ -1,5 +1,0 @@
-schedule==0.6.0
-PyMySQL==0.9.3
-requests==2.22.0
-cninfo==0.1.0
-DBUtils==1.3
