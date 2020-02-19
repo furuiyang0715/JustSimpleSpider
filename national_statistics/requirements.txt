@@ -1,7 +1,0 @@
-fake_useragent==0.1.11
-selenium==3.141.0
-schedule==0.6.0
-requests==2.22.0
-redis==3.3.11
-PyMySQL==0.9.3
-DBUtils==1.3

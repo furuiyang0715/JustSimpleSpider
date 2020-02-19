@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS `chinabank` (
 SHOW FULL COLUMNS FROM `chinabank`;
 ```
 #### 分栏目 
-中国银行包括数据解读以及新闻发布两个栏目，共用一张数据表。 
+中国银行包括[数据解读]以及[新闻发布]两个栏目，共用一张数据表。 
 #### 部署信息
 
 ### 国家统计局
@@ -42,4 +42,8 @@ CREATE TABLE `gov_stats` (
   KEY `pub_date` (`pub_date`)
 ) ENGINE=InnoDB AUTO_INCREMENT=299 DEFAULT CHARSET=utf8mb4 COMMENT='国家统计局';
 ```
+#### 分栏目 
+国家统计局包括[最新发布][数据解读][统计动态][新闻发布会]四个栏目, 共用一张数据表。 
+#### 部署信息 
+
 
