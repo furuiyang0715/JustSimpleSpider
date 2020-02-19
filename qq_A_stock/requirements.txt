@@ -1,6 +1,0 @@
-requests==2.22.0
-schedule==0.6.0
-jsonpath==0.82
-PyMySQL==0.9.3
-gne==0.1.5
-selenium==3.141.0
