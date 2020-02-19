@@ -174,7 +174,12 @@ class BaseSpider(object):
             return ret
 
     def _get_page_url(self, page_num):
-        return self.start_url.format(page_num)
+        if self.start_url:
+            return self.start_url.format(page_num)
+        elif page_num == 1:
+            return self.first_url
+        else:
+            return self.format_url.format(page_num)
 
     def process_list(self, page_num):
         page_url = self._get_page_url(page_num)
@@ -211,6 +216,7 @@ class BaseSpider(object):
 
     def _start(self, page_num):
         items = self.process_list(page_num)
+        # print(items)
         if items:
             for item in items:
                 link = item["link"]

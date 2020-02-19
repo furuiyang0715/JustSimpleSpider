@@ -2,13 +2,7 @@ from lxml import html
 from GovSpiders.base_spider import BaseSpider
 
 
-class ChinaBankShuJuJieDu(BaseSpider):
-    def __init__(self):
-        super(ChinaBankShuJuJieDu, self).__init__()
-        self.name = '中国银行-数据解读'
-        self.table = 'chinabank'
-        self.start_url = 'http://www.pbc.gov.cn/diaochatongjisi/116219/116225/11871/index{}.html'
-
+class ChinaBankMixin(object):
     def _parse_table(self, zoom):
         my_table = zoom.xpath("./table")[0]
         trs = my_table.xpath("./tbody/tr")
@@ -62,9 +56,30 @@ class ChinaBankShuJuJieDu(BaseSpider):
         return items
 
 
+class ChinaBankShuJuJieDu(BaseSpider, ChinaBankMixin):
+    def __init__(self):
+        super(ChinaBankShuJuJieDu, self).__init__()
+        self.name = '中国银行-数据解读'
+        self.table = 'chinabank'
+        self.start_url = 'http://www.pbc.gov.cn/diaochatongjisi/116219/116225/11871/index{}.html'
+
+
+class ChinaBankXinWenFaBu(BaseSpider, ChinaBankMixin):
+    def __init__(self):
+        super(ChinaBankXinWenFaBu, self).__init__()
+        self.name = '中国银行-新闻发布'
+        self.table = "chinabank"
+        self.start_url = "http://www.pbc.gov.cn/goutongjiaoliu/113456/113469/11040/index{}.html"
+
+
 if __name__ == "__main__":
     demo = ChinaBankShuJuJieDu()
-    demo._start(2)
+    demo._start(1)
     print(demo.error_list)
     print(demo.error_detail)
+
+    # demo = ChinaBankXinWenFaBu()
+    # demo._start(1)
+    # print(demo.error_list)
+    # print(demo.error_detail)
 
