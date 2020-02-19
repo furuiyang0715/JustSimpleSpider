@@ -6,7 +6,7 @@ class ChinaBankShuJuJieDu(BaseSpider):
     def __init__(self):
         super(ChinaBankShuJuJieDu, self).__init__()
         self.name = '中国银行-数据解读'
-        self.table = 'chinabank_shujujiedu'
+        self.table = 'chinabank'
         self.start_url = 'http://www.pbc.gov.cn/diaochatongjisi/116219/116225/11871/index{}.html'
 
     def _parse_table(self, zoom):
@@ -52,19 +52,19 @@ class ChinaBankShuJuJieDu(BaseSpider):
                 news_date_part = news_title_part.xpath("./following-sibling::span[@class='hui12']")[0].text_content()
             except:
                 news_date_part = news_title_part.xpath("./following-sibling::a/span[@class='hui12']")[0].text_content()
-            item["pubdate"] = news_date_part
+            item["pub_date"] = news_date_part
             news_title = news_title_part.xpath("./a")[0].text_content()
-            item["article_title"] = news_title
+            item["title"] = news_title
             news_link = news_title_part.xpath("./a/@href")[0]
             news_link = "http://www.pbc.gov.cn" + news_link
-            item["article_link"] = news_link
+            item["link"] = news_link
             items.append(item)
         return items
 
 
 if __name__ == "__main__":
     demo = ChinaBankShuJuJieDu()
-    demo._start(1)
+    demo._start(2)
     print(demo.error_list)
     print(demo.error_detail)
 

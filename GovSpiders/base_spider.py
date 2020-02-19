@@ -173,10 +173,14 @@ class BaseSpider(object):
         else:
             return ret
 
+    def _get_page_url(self, page_num):
+        return self.start_url.format(page_num)
+
     def process_list(self, page_num):
+        page_url = self._get_page_url(page_num)
         list_retry = 2
         try:
-            list_page = self.fetch_page(self.start_url.format(page_num))
+            list_page = self.fetch_page(page_url)
             if list_page:
                 items = self._parse_list_page(list_page)
             else:
@@ -209,18 +213,18 @@ class BaseSpider(object):
         items = self.process_list(page_num)
         if items:
             for item in items:
-                link = item["article_link"]
+                link = item["link"]
                 article = self.process_detail(link)
                 if article:
-                    item['article_content'] = article
+                    item['article'] = article
                     print(item)
                     ret = self.save(item)
                     if not ret:
-                        self.error_detail.append(item.get("article_link"))
+                        self.error_detail.append(item.get("link"))
                 else:
                     self.error_detail.append(link)
         else:
-            self.error_list.append(self.start_url.format(page_num))
+            self.error_list.append(self._get_page_url(page_num))
 
 
 if __name__ == "__main__":
