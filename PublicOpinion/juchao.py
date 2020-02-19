@@ -37,7 +37,7 @@ class JuChaoInfo(object):
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36',
             'X-Requested-With': 'XMLHttpRequest',
 
-}
+        }
         conf = {
             "host": MYSQL_HOST,
             "port": MYSQL_PORT,

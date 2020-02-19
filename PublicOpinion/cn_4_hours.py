@@ -9,7 +9,7 @@ from urllib.parse import urlencode
 import requests as req
 from lxml import html
 
-from cnstock.hongguan import CNStock
+from PublicOpinion.cn_hongguan import CNStock
 
 
 class CNStock_2(CNStock):

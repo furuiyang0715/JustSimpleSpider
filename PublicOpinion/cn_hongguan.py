@@ -13,8 +13,8 @@ import pymysql
 import requests as req
 from gne import GeneralNewsExtractor
 
-from cnstock.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, MYSQL_TABLE
-from cnstock.sql_pool import PyMysqlPoolBase
+from PublicOpinion.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
+from PublicOpinion.sql_pool import PyMysqlPoolBase
 
 logger = logging.getLogger()
 
@@ -37,7 +37,7 @@ class CNStock(object):
         }
         self.sql_pool = PyMysqlPoolBase(**conf)
         self.db = MYSQL_DB
-        self.table = MYSQL_TABLE
+        self.table = "cn_stock"
         self.error_list = []
         self.error_detail = []
         self.topic = kwargs.get("topic")
@@ -116,18 +116,12 @@ class CNStock(object):
     def _save(self, to_insert):
         try:
             insert_sql, values = self.contract_sql(to_insert)
-            # count = self.sql_client.insert(insert_sql, values)
             count = self.sql_pool.insert(insert_sql, values)
         except pymysql.err.IntegrityError:
-            logger.warning("重复 ")
-            self.sql_pool.connection.rollback()
+            logger.warning("重复")
             return 1
         except:
             logger.warning("失败")
-            # traceback.print_exc()
-            # self.error_detail.append(to_insert.get("link"))
-            self.sql_pool.connection.rollback()
-            # 插入失败之后需要进行回滚
         else:
             return count
 
@@ -189,20 +183,7 @@ if __name__ == "__main__":
     # runner = CNStock(topic="qmt-skc_gd")   # 科创板-观点
     runner = CNStock(topic="qmt-sjrz_yw")   # 新三板-要闻
 
-    # 测试解析详情页可以实现自动翻页 ...
+    # 测试解析详情页可以实现自动翻页
     # ret = runner.get_detail("http://ggjd.cnstock.com/company/scp_ggjd/tjd_ggjj/202002/4489878.htm")
     # print(ret)
     runner.start()
-
-
-    # def get_list():
-    #     for i in [[1, 2, 3], [4, 5, 6], [7, 8, 9]]:
-    #         for j in i:
-    #             if j == 6:
-    #                 return
-    #             yield j
-    #
-    # ret = get_list()
-    #
-    # for r in ret:
-    #     print(r)
