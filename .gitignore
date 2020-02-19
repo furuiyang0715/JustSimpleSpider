@@ -112,3 +112,4 @@ notes.MD
 *.conf
 *.yml
 *.log.*
+temp/*
