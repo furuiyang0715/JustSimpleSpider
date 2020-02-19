@@ -13,7 +13,8 @@ class GovStats(BaseSpider):
     def __init__(self):
         super(GovStats, self).__init__()
         self.name = '数据解读'
-        self.table = 'gov_stats_sjjd'
+        # self.table = 'gov_stats_sjjd'
+        self.table = 'gov_stats'
         self.first_url = "http://www.stats.gov.cn/tjsj/sjjd/index.html"
         self.format_url = "http://www.stats.gov.cn/tjsj/sjjd/index_{}.html"
         self.detail_base_url = 'http://www.stats.gov.cn/tjsj/sjjd/'

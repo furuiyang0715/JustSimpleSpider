@@ -24,3 +24,22 @@ SHOW FULL COLUMNS FROM `chinabank`;
 中国银行包括数据解读以及新闻发布两个栏目，共用一张数据表。 
 #### 部署信息
 
+### 国家统计局
+#### 任务详情
+Tower 任务: 国家统计局资讯采集 ( https://tower.im/teams/12559/todos/29254 )
+#### 建表并查看 
+```shell script
+CREATE TABLE `gov_stats` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `pub_date` datetime NOT NULL COMMENT '发布时间',
+  `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章标题',
+  `link` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章详情页链接',
+  `article` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '详情页内容',
+  `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+  `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `link` (`link`),
+  KEY `pub_date` (`pub_date`)
+) ENGINE=InnoDB AUTO_INCREMENT=299 DEFAULT CHARSET=utf8mb4 COMMENT='国家统计局';
+```
+
