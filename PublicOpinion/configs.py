@@ -14,6 +14,13 @@ MYSQL_USER = env.get("MYSQL_USER", cf.get('mysql', 'MYSQL_USER'))
 MYSQL_PASSWORD = env.get("MYSQL_PASSWORD", cf.get('mysql', 'MYSQL_PASSWORD'))
 MYSQL_DB = env.get("MYSQL_DB", cf.get('mysql', 'MYSQL_DB'))
 
+# local mysql
+LOCAL_MYSQL_HOST = env.get("LOCAL_MYSQL_HOST", cf.get('mysql', 'LOCAL_MYSQL_HOST'))
+LOCAL_MYSQL_PORT = int(env.get("LOCAL_MYSQL_PORT", cf.get('mysql', 'LOCAL_MYSQL_PORT')))
+LOCAL_MYSQL_USER = env.get("LOCAL_MYSQL_USER", cf.get('mysql', 'LOCAL_MYSQL_USER'))
+LOCAL_MYSQL_PASSWORD = env.get("LOCAL_MYSQL_PASSWORD", cf.get('mysql', 'LOCAL_MYSQL_PASSWORD'))
+LOCAL_MYSQL_DB = env.get("LOCAL_MYSQL_DB", cf.get('mysql', 'LOCAL_MYSQL_DB'))
+
 # datacenter
 DC_HOST = env.get("DC_HOST", cf.get('dc', 'DC_HOST'))
 DC_PORT = int(env.get("DC_PORT", cf.get('dc', 'DC_PORT')))

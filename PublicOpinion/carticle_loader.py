@@ -4,14 +4,18 @@ import random
 import re
 import string
 import time
+import traceback
 from urllib.parse import urlencode
 
 import pymysql
 import requests
 from lxml import html
+import sys
 
+sys.path.append("./../")
 from PublicOpinion.configs import MYSQL_DB, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, DC_HOST, DC_PORT, \
-    DC_USER, DC_PASSWD, DC_DB
+    DC_USER, DC_PASSWD, DC_DB, LOCAL, LOCAL_MYSQL_HOST, LOCAL_MYSQL_PORT, LOCAL_MYSQL_USER, LOCAL_MYSQL_PASSWORD, \
+    LOCAL_MYSQL_DB
 from PublicOpinion.sql_pool import PyMysqlPoolBase
 
 
@@ -20,8 +24,11 @@ logger = logging.getLogger()
 
 class CArticle(object):
     def __init__(self, key):
-        self.local = True
-        self.abu = True
+        # 本地运行亦或者是在服务器上运行
+        self.local = LOCAL
+        # 是否使用阿布云代理
+        self.abu = False
+        # 股票代码中文简称
         self.key = key
         self.start_url = 'http://api.so.eastmoney.com/bussiness/Web/GetSearchList?'
         self.page_size = 10
@@ -33,15 +40,27 @@ class CArticle(object):
         }
         self.db = MYSQL_DB
         self.table = "eastmoney_carticle"
-        conf = {
-            "host": MYSQL_HOST,
-            "port": MYSQL_PORT,
-            "user": MYSQL_USER,
-            "password": MYSQL_PASSWORD,
-            "db": MYSQL_DB,
-        }
+        if self.local:
+            conf = {
+                "host": LOCAL_MYSQL_HOST,
+                "port": LOCAL_MYSQL_PORT,
+                "user": LOCAL_MYSQL_USER,
+                "password": LOCAL_MYSQL_PASSWORD,
+                "db": LOCAL_MYSQL_DB,
+            }
+        else:
+            conf = {
+                "host": MYSQL_HOST,
+                "port": MYSQL_PORT,
+                "user": MYSQL_USER,
+                "password": MYSQL_PASSWORD,
+                "db": MYSQL_DB,
+            }
         self.sql_pool = PyMysqlPoolBase(**conf)
-        self.proxy = self._get_proxy()
+        # 不使用阿布云的情况下 初始化代理
+        if not self.abu:
+            self.proxy = self._get_proxy()
+        # 记录出错的列表页 以及 详情页 url
         self.error_detail = []
         self.error_list = []
 
@@ -100,7 +119,7 @@ class CArticle(object):
             "http": proxy_meta,
             "https": proxy_meta,
         }
-        retry = 2
+        retry = 2  # 重试三次 事不过三^_^
         while True:
             try:
                 resp = requests.get(url,
@@ -111,15 +130,17 @@ class CArticle(object):
                 if resp.status_code == 200:
                     return resp
                 else:
+                    print(resp.status_code, "retry")
                     retry -= 1
                     if retry <= 0:
                         return None
-                    return self._abu_get(url)
+                    time.sleep(3)
             except:
+                print("error retry")
                 retry -= 1
                 if retry <= 0:
                     return None
-                return self._abu_get(url)
+                time.sleep(3)
 
     def _get_proxy(self):
         if self.local:
@@ -182,11 +203,61 @@ class CArticle(object):
         # links = self.sql_pool.select_all(select_all_sql)
         return links
 
-    def _update_detail(self, link, artilce):
-        update_sql = f"update {self.table} set article = '{artilce}' where link = '{link}';"
+    def transferContent(self, content):
+        if content is None:
+            return None
+        else:
+            string = ""
+            for c in content:
+                if c == '"':
+                    string += '\\\"'
+                elif c == "'":
+                    string += "\\\'"
+                elif c == "\\":
+                    string += "\\\\"
+                else:
+                    string += c
+            return string
+
+    def _filter_char(self, test_str):
+        # 处理特殊的空白字符
+        # '\u200b' 是 \xe2\x80\x8b
+        for cha in ['\n', '\r', '\t',
+                    '\u200a', '\u200b', '\u200c', '\u200d', '\u200e',
+                    '\u202a', '\u202b', '\u202c', '\u202d', '\u202e',
+                    ]:
+            test_str = test_str.replace(cha, '')
+        test_str = test_str.replace(u'\xa0', u' ')  # 把 \xa0 替换成普通的空格
+        return test_str
+
+    def _process_content(self, vs):
+        # 去除 4 字节的 utf-8 字符，否则插入mysql时会出错
         try:
-            ret = self.sql_pool.update(update_sql)
+            # python UCS-4 build的处理方式
+            highpoints = re.compile(u'[\U00010000-\U0010ffff]')
+        except re.error:
+            # python UCS-2 build的处理方式
+            highpoints = re.compile(u'[\uD800-\uDBFF][\uDC00-\uDFFF]')
+
+        params = list()
+        for v in vs:
+            # 对插入数据进行一些处理
+            nv = highpoints.sub(u'', v)
+            nv = self._filter_char(nv)
+            params.append(nv)
+        return "".join(params)
+
+    def _update_detail(self, link, article):
+        # 直接插入文本内容可能出错 需对其进行处理
+        # article = self.transferContent(article)
+        article = self._process_content(article)
+        print("文章内容是: \n", article)
+        update_sql = f"update {self.table} set article =%s where link =%s;"
+        try:
+            ret = self.sql_pool.update(update_sql, [(article), (link)])
+            # ret = self.sql_pool.update(update_sql)
         except:
+            traceback.print_exc()
             print("插入失败")
             return None
         else:
@@ -291,12 +362,6 @@ class Schedule(object):
     def run_list(self, start=None, end=None, key=None):
         if key:
             self._start_instance(key)
-        elif start and not end:
-            for key in self.keys[start:]:
-                self._start_instance(key)
-        elif not start and end:
-            for key in self.keys[:end]:
-                self._start_instance(key)
         else:
             for key in self.keys[start: end]:
                 self._start_instance(key)
@@ -307,7 +372,7 @@ class Schedule(object):
             links = c._select_rest_all_links()
             if len(links) < 20:
                 break
-            # print(links)
+            print(links)
             print("length:", len(links))
             for link in links:
                 link = link.get("link")
@@ -332,8 +397,9 @@ class Schedule(object):
         count = 0
         for link in links:
             link = link.get("link")
+            print("当前处理连接:", link)
             detail_resp = c._get(link)
-            print(detail_resp)
+            print("响应结果: ", detail_resp)
             if detail_resp:
                 detail_page = detail_resp.text
                 article = c._parse_detail(detail_page)
@@ -352,7 +418,10 @@ class Schedule(object):
     def run_detail(self, start=None, end=None, key=None):
         if key:
             self._start_ins_detail(key)
-            # self._start_rest_detail()
+        else:
+            for k in self.keys[start: end]:
+                print(k)
+                self._start_ins_detail(k)
 
 
 if __name__ == "__main__":
@@ -361,4 +430,7 @@ if __name__ == "__main__":
 
     import os
     key = os.environ.get("KEY", "格力电器")
-    s.run_detail(key=key)
+    start = os.environ.get("START", 0)
+    end = os.environ.get("END", 0)
+    print(key, start, end)
+    s.run_detail(key=key, start=int(start), end=int(end))
