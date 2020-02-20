@@ -21,6 +21,7 @@ logger = logging.getLogger()
 class CArticle(object):
     def __init__(self, key):
         self.local = True
+        self.abu = True
         self.key = key
         self.start_url = 'http://api.so.eastmoney.com/bussiness/Web/GetSearchList?'
         self.page_size = 10
@@ -82,6 +83,44 @@ class CArticle(object):
         else:
             return count
 
+    def _abu_get(self, url):
+        """使用阿布云代理 默认失败后重新发起请求"""
+        proxy_host = "http-cla.abuyun.com"
+        proxy_port = 9030
+        # 代理隧道验证信息
+        proxy_user = "H74JU520TZ0I2SFC"
+        proxy_pass = "7F5B56602A1E53B2"
+        proxy_meta = "http://%(user)s:%(pass)s@%(host)s:%(port)s" % {
+            "host": proxy_host,
+            "port": proxy_port,
+            "user": proxy_user,
+            "pass": proxy_pass,
+        }
+        proxies = {
+            "http": proxy_meta,
+            "https": proxy_meta,
+        }
+        retry = 2
+        while True:
+            try:
+                resp = requests.get(url,
+                                    proxies=proxies,
+                                    headers=self.headers,
+                                    timeout=3,
+                                    )
+                if resp.status_code == 200:
+                    return resp
+                else:
+                    retry -= 1
+                    if retry <= 0:
+                        return None
+                    return self._abu_get(url)
+            except:
+                retry -= 1
+                if retry <= 0:
+                    return None
+                return self._abu_get(url)
+
     def _get_proxy(self):
         if self.local:
             r = requests.get('http://192.168.0.102:8888/get')
@@ -96,6 +135,9 @@ class CArticle(object):
         return r
 
     def _get(self, url):
+        if self.abu:
+            return self._abu_get(url)
+
         count = 0
         while True:
             count = count + 1
@@ -134,10 +176,21 @@ class CArticle(object):
         links = self.sql_pool.select_all(select_all_sql)
         return links
 
+    def _select_rest_all_links(self):
+        select_all_sql = f"select link from {self.table} where article is NULL;"
+        links = self.sql_pool.select_many(select_all_sql, size=20)
+        # links = self.sql_pool.select_all(select_all_sql)
+        return links
+
     def _update_detail(self, link, artilce):
         update_sql = f"update {self.table} set article = '{artilce}' where link = '{link}';"
-        ret = self.sql_pool.update(update_sql)
-        return ret
+        try:
+            ret = self.sql_pool.update(update_sql)
+        except:
+            print("插入失败")
+            return None
+        else:
+            return ret
 
     def _get_list(self, list_url):
         resp = self._get(list_url)
@@ -235,7 +288,7 @@ class Schedule(object):
         with open("record.txt", "a+") as f:
             f.write(f"{key}: error_list: {c.error_list}, error_detail: {c.error_detail}\r\n")
 
-    def run_list(self, start: None, end: None, key: None):
+    def run_list(self, start=None, end=None, key=None):
         if key:
             self._start_instance(key)
         elif start and not end:
@@ -247,3 +300,65 @@ class Schedule(object):
         else:
             for key in self.keys[start: end]:
                 self._start_instance(key)
+
+    def _start_rest_detail(self):
+        c = CArticle("")
+        while True:
+            links = c._select_rest_all_links()
+            if len(links) < 20:
+                break
+            # print(links)
+            print("length:", len(links))
+            for link in links:
+                link = link.get("link")
+                detail_resp = c._get(link)
+                print("resp:", detail_resp)
+                if detail_resp:
+                    detail_page = detail_resp.text
+                    article = c._parse_detail(detail_page)
+                    # print("article: ", article)
+                    ret = c._update_detail(link, article)
+                    if ret:
+                        print("更新成功")
+                    else:
+                        print("更新失败")
+            print("一次提交")
+            c.sql_pool.end()
+
+    def _start_ins_detail(self, key):
+        c = CArticle(key)
+        links = c._select_key_links()
+        print(links)
+        count = 0
+        for link in links:
+            link = link.get("link")
+            detail_resp = c._get(link)
+            print(detail_resp)
+            if detail_resp:
+                detail_page = detail_resp.text
+                article = c._parse_detail(detail_page)
+                ret = c._update_detail(link, article)
+                if ret:
+                    print("更新成功")
+                else:
+                    print("更新失败")
+                count += 1
+                if count > 9:
+                    print("提交")
+                    c.sql_pool.end()
+                    count = 0
+        c.sql_pool.dispose()
+
+    def run_detail(self, start=None, end=None, key=None):
+        if key:
+            self._start_ins_detail(key)
+            # self._start_rest_detail()
+
+
+if __name__ == "__main__":
+    s = Schedule()
+    # s.run_list(key="格力电器")
+
+    import os
+    key = os.environ.get("KEY", "格力电器")
+    s.run_detail(key=key)
