@@ -18,3 +18,17 @@ CREATE TABLE `eastmoney_carticle` (
 ) ENGINE=InnoDB AUTO_INCREMENT=34657 DEFAULT CHARSET=utf8mb4 COMMENT='东财-财富号文章' ; 
 
 ```
+#### 部署 
+```shell script
+docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/ca:v1 .
+    
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/ca:v1
+
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/ca:v1
+
+# 拉取历史数据
+sudo docker run -itd --name ins --env START=0 \
+--env END=2000 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/ca:v1 
+
+```
