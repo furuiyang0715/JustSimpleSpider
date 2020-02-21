@@ -192,7 +192,7 @@ class STCN_YaoWen(object):
             else:
                 count = 0
                 for item in items:
-                    print(item)
+                    # print(item)
                     ret = self._save(item)
                     if not ret:
                         print("保存单个失败 ")
@@ -391,6 +391,57 @@ class STCN_Column(STCN_YaoWen):
         return items
 
 
+class STCN_Market(STCN_Kuaixun):
+    def __init__(self):
+        super(STCN_Market, self).__init__()
+        self.list_url = "http://stock.stcn.com/"
+
+    def _parse_list_body(self, body):
+        # print(body)
+        doc = html.fromstring(body)
+        items = []
+        # 列表文章
+        columns = doc.xpath("//ul[@class='news_list']/li")
+        num = 0
+        for column in columns:
+            num += 1
+            # print(column.tag)
+            title = column.xpath("./p/a/@title")[0]
+            link = column.xpath("./p/a/@href")[0]
+            pub_date = column.xpath("./p[@class='sj']")[0].text_content()
+            pub_date = '{} {}'.format(pub_date[:10], pub_date[10:])
+            item = dict()
+            item['title'] = title
+            item['link'] = link
+            item['pub_date'] = pub_date
+            detail_body = self._get(link)
+            if detail_body:
+                article = self._parse_detail(detail_body)
+                if article:
+                    item['article'] = self._process_content(article)
+                    print(item)
+                    items.append(item)
+        # print(num)
+        return items
+
+    def _start(self):
+        list_body = self._get(self.list_url)
+        if list_body:
+            items = self._parse_list_body(list_body)
+            # print(items)
+            ret = self._save_many(items)
+            if ret:
+                print("批量保存数据成功 ")
+
+            else:
+                for item in items:
+                    print(item)
+                    ret = self._save(item)
+                    if not ret:
+                        print("保存单个失败 ")
+                self.sql_pool.end()
+
+
 if __name__ == "__main__":
     # d = STCN_YaoWen()    # 要闻
 
@@ -400,7 +451,9 @@ if __name__ == "__main__":
 
     # d = STCN_XWPL()    # 评论
 
-    d = STCN_Column()   # 专栏
+    # d = STCN_Column()   # 专栏
+
+    d = STCN_Market()   # 股市
 
     d._start()
 
