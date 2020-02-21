@@ -1,14 +1,37 @@
 import pprint
 import re
+import traceback
 
 import requests
 from lxml import html
 
+from PublicOpinion.configs import LOCAL_MYSQL_HOST, LOCAL_MYSQL_PORT, LOCAL_MYSQL_USER, LOCAL_MYSQL_PASSWORD, \
+    LOCAL_MYSQL_DB, MYSQL_HOST, MYSQL_PORT, MYSQL_PASSWORD, MYSQL_DB, MYSQL_USER
+from PublicOpinion.sql_pool import PyMysqlPoolBase
+
 
 class STCN_YaoWen(object):
     def __init__(self):
+        self.local = True
         self.list_url = "http://news.stcn.com/"
         self.table = "stcn_info"
+        if self.local:
+            conf = {
+                "host": LOCAL_MYSQL_HOST,
+                "port": LOCAL_MYSQL_PORT,
+                "user": LOCAL_MYSQL_USER,
+                "password": LOCAL_MYSQL_PASSWORD,
+                "db": LOCAL_MYSQL_DB,
+            }
+        else:
+            conf = {
+                "host": MYSQL_HOST,
+                "port": MYSQL_PORT,
+                "user": MYSQL_USER,
+                "password": MYSQL_PASSWORD,
+                "db": MYSQL_DB,
+            }
+        self.sql_pool = PyMysqlPoolBase(**conf)
 
     def _get(self, url):
         resp = requests.get(url)
@@ -107,23 +130,67 @@ class STCN_YaoWen(object):
         # return base_sql, tuple(vs)
         return base_sql
 
+    def _save(self, item):
+        insert_sql = self._contract_sql(item)
+        value = [(item.get("article"),
+                  item.get("link"),
+                  item.get("pub_date"),
+                  item.get("title"))]
+        try:
+            ret = self.sql_pool.insert(insert_sql, value)
+        except:
+            traceback.print_exc()
+        else:
+            return ret
+
+    def _save_many(self, items):
+        values = [(item.get("article"),
+                   item.get("link"),
+                   item.get("pub_date"),
+                   item.get("title")) for item in items]
+        insert_many_sql = self._contract_sql(items[0])
+        try:
+            ret = self.sql_pool.insert_many(insert_many_sql, values)
+        except:
+            traceback.print_exc()
+        else:
+            return ret
+        finally:
+            self.sql_pool.dispose()
+
+    def __del__(self):
+        try:
+            self.sql_pool.dispose()
+        except:
+            pass
+
     def _start(self):
         list_body = self._get(self.list_url)
         if list_body:
             items = self._parse_list_body(list_body)
             # print(pprint.pformat(items))
-            values = [(item.get("article"),
-                      item.get("link"),
-                      item.get("pub_date"),
-                      item.get("title")) for item in items]
-            insert_many_sql = self._contract_sql(items[0])
-            # print(insert_many_sql)
-            # print(pprint.pformat(values))
+            ret = self._save_many(items)
+            if ret:
+                print("批量保存数据成功 ")
+            else:
+                count = 0
+                for item in items:
+                    ret = self._save(item)
+                    if not ret:
+                        print("保存单个失败 ")
+                    count += 1
+                    if count > 9:
+                        self.sql_pool.end()
+                self.sql_pool.dispose()
 
 
 if __name__ == "__main__":
     d = STCN_YaoWen()
     d._start()
+
+    # print(d.sql_pool)
+
+
     item = {
         'article': '证券时报e公司讯，2月16日0—24时，31个省（自治区、直辖市）和新疆生产建设兵团报告新增确诊病例2048例，新增死亡病例105例（湖北100例，河南3例，广东2例），新增疑似病例1563例。',
         'link': 'http://kuaixun.stcn.com/2020/0217/15643313.shtml',
