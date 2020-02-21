@@ -14,11 +14,10 @@ from PublicOpinion.configs import LOCAL_MYSQL_HOST, LOCAL_MYSQL_PORT, LOCAL_MYSQ
 from PublicOpinion.sql_pool import PyMysqlPoolBase
 
 
-class STCN_YaoWen(object):
+class STCN_Base(object):
     def __init__(self):
-        self.local = True
-        self.list_url = "http://news.stcn.com/"
         self.table = "stcn_info"
+        self.local = True
         if self.local:
             conf = {
                 "host": LOCAL_MYSQL_HOST,
@@ -51,51 +50,6 @@ class STCN_YaoWen(object):
             return None
         else:
             return content
-
-    def _parse_list_body(self, body):
-        doc = html.fromstring(body)
-        items = []
-        # 题头文章
-        first = doc.xpath("//dl[@class='hotNews']")[0]
-        title = first.xpath("//dt/a/@title")[0]
-        link = first.xpath("//dt/a/@href")[0]
-        pub_date = first.xpath("//dd[@class='sj']")[0].text_content()
-        pub_date = '{} {}'.format(pub_date[:10], pub_date[10:])
-        first = dict()
-        first['title'] = title
-        first['link'] = link
-        first['pub_date'] = pub_date
-        detail_body = self._get(link)
-        if detail_body:
-            article = self._parse_detail(detail_body)
-            if article:
-                first['article'] = article
-                items.append(first)
-
-        # 列表文章
-        columns = doc.xpath("//ul[@class='news_list']/li")
-        num = 0
-        for column in columns:
-            num += 1
-            # print(column.tag)
-            title = column.xpath("./p[@class='tit']/a/@title")[0]
-            link = column.xpath("./p[@class='tit']/a/@href")[0]
-            pub_date = column.xpath("./p[@class='sj']")[0].text_content()
-            pub_date = '{} {}'.format(pub_date[:10], pub_date[10:])
-            # print(title, link, pub_date)
-            item = dict()
-            item['title'] = title
-            item['link'] = link
-            item['pub_date'] = pub_date
-            detail_body = self._get(link)
-            if detail_body:
-                article = self._parse_detail(detail_body)
-                if article:
-                    item['article'] = self._process_content(article)
-                    # print(item)
-                    items.append(item)
-        print("num is ", num)
-        return items
 
     def _filter_char(self, test_str):
         # 处理特殊的空白字符
@@ -180,12 +134,64 @@ class STCN_YaoWen(object):
         except:
             pass
 
+
+# ==================================================================================================
+
+
+class STCN_YaoWen(STCN_Base):
+    def __init__(self):
+        super(STCN_YaoWen, self).__init__()
+        self.list_url = "http://news.stcn.com/"
+
+    def _parse_list_body(self, body):
+        doc = html.fromstring(body)
+        items = []
+        # 题头文章
+        first = doc.xpath("//dl[@class='hotNews']")[0]
+        title = first.xpath("//dt/a/@title")[0]
+        link = first.xpath("//dt/a/@href")[0]
+        pub_date = first.xpath("//dd[@class='sj']")[0].text_content()
+        pub_date = '{} {}'.format(pub_date[:10], pub_date[10:])
+        first = dict()
+        first['title'] = title
+        first['link'] = link
+        first['pub_date'] = pub_date
+        detail_body = self._get(link)
+        if detail_body:
+            article = self._parse_detail(detail_body)
+            if article:
+                first['article'] = article
+                items.append(first)
+
+        # 列表文章
+        columns = doc.xpath("//ul[@class='news_list']/li")
+        num = 0
+        for column in columns:
+            num += 1
+            # print(column.tag)
+            title = column.xpath("./p[@class='tit']/a/@title")[0]
+            link = column.xpath("./p[@class='tit']/a/@href")[0]
+            pub_date = column.xpath("./p[@class='sj']")[0].text_content()
+            pub_date = '{} {}'.format(pub_date[:10], pub_date[10:])
+            # print(title, link, pub_date)
+            item = dict()
+            item['title'] = title
+            item['link'] = link
+            item['pub_date'] = pub_date
+            detail_body = self._get(link)
+            if detail_body:
+                article = self._parse_detail(detail_body)
+                if article:
+                    item['article'] = self._process_content(article)
+                    # print(item)
+                    items.append(item)
+        print("num is ", num)
+        return items
+
     def _start(self):
         list_body = self._get(self.list_url)
-        # print(list_body)
         if list_body:
             items = self._parse_list_body(list_body)
-            # print(pprint.pformat(items))
             ret = self._save_many(items)
             if ret:
                 print("批量保存数据成功 ")
@@ -202,12 +208,110 @@ class STCN_YaoWen(object):
                 self.sql_pool.dispose()
 
 
-class STCN_Kuaixun(STCN_YaoWen):
+class STCN_Company(STCN_YaoWen):
+    def __init__(self):
+        super(STCN_Company, self).__init__()
+        self.list_url = "http://company.stcn.com/"
+
+
+class STCN_Column(STCN_YaoWen):
+    def __init__(self):
+        super(STCN_Column, self).__init__()
+        self.list_url = "http://space.stcn.com"
+        self.extractor = GeneralNewsExtractor()
+
+    def _get(self, url):
+        resp = requests.get(url)
+        # print(resp.encoding)
+        if resp.status_code == 200:
+            body = resp.text.encode("ISO-8859-1").decode("utf-8")
+            return body
+
+    def _parse_detail(self, body):
+        try:
+            result = self.extractor.extract(body)
+            content = result.get("content")
+        except:
+            return None
+        else:
+            return content
+
+    def _parse_list_body(self, body):
+        # print(body)
+        doc = html.fromstring(body)
+        items = []
+        # 列表文章
+        columns = doc.xpath('//div[@id="news_list2"]/dl')
+        # print(columns)
+        num = 0
+        for column in columns:
+            num += 1
+            # print(column.tag)
+            title = column.xpath('./dd[@class="mtit"]/a/@title')[0]
+            link = column.xpath('./dd[@class="mtit"]/a/@href')[0]
+
+            pub_date = column.xpath('./dd[@class="mexp"]/span')[0].text_content()
+            yesterday = datetime.datetime.today()-datetime.timedelta(days=1)
+            before_yesterday = datetime.datetime.today()-datetime.timedelta(days=2)
+            pub_date = pub_date.replace("昨天", yesterday.strftime("%Y-%m-%d"))
+            pub_date = pub_date.replace("前天", before_yesterday.strftime("%Y-%m-%d"))
+            # print(title, link, pub_date)
+
+            item = dict()
+            item['title'] = title
+            item['link'] = link
+            item['pub_date'] = pub_date
+            detail_body = requests.get(link).text
+            if detail_body:
+                article = self._parse_detail(detail_body)
+                if article:
+                    item['article'] = self._process_content(article)
+                    print(item)
+                    items.append(item)
+        # print(num)
+        return items
+
+
+class STCN_Market(STCN_YaoWen):
+    def __init__(self):
+        super(STCN_Market, self).__init__()
+        self.list_url = "http://stock.stcn.com/"
+
+    def _parse_list_body(self, body):
+        # print(body)
+        doc = html.fromstring(body)
+        items = []
+        # 列表文章
+        columns = doc.xpath("//ul[@class='news_list']/li")
+        num = 0
+        for column in columns:
+            num += 1
+            # print(column.tag)
+            title = column.xpath("./p/a/@title")[0]
+            link = column.xpath("./p/a/@href")[0]
+            pub_date = column.xpath("./p[@class='sj']")[0].text_content()
+            pub_date = '{} {}'.format(pub_date[:10], pub_date[10:])
+            item = dict()
+            item['title'] = title
+            item['link'] = link
+            item['pub_date'] = pub_date
+            detail_body = self._get(link)
+            if detail_body:
+                article = self._parse_detail(detail_body)
+                if article:
+                    item['article'] = self._process_content(article)
+                    print(item)
+                    items.append(item)
+        # print(num)
+        return items
+
+
+# ==================================================================================================
+
+class STCN_Kuaixun(STCN_Base):
 
     def __init__(self):
         super(STCN_Kuaixun, self).__init__()
-        # self.list_url = "http://kuaixun.stcn.com/"
-        self.list_url = "http://kuaixun.stcn.com/index.shtml"
         self.format_url = "http://kuaixun.stcn.com/index_{}.shtml"
 
     def _parse_list_body(self, body):
@@ -333,115 +437,6 @@ class STCN_XWPL(STCN_Kuaixun):
         return items
 
 
-class STCN_Column(STCN_YaoWen):
-    def __init__(self):
-        super(STCN_Column, self).__init__()
-        self.list_url = "http://space.stcn.com"
-        self.extractor = GeneralNewsExtractor()
-
-    def _get(self, url):
-        resp = requests.get(url)
-        # print(resp.encoding)
-        if resp.status_code == 200:
-            body = resp.text.encode("ISO-8859-1").decode("utf-8")
-            return body
-
-    def _parse_detail(self, body):
-        try:
-            result = self.extractor.extract(body)
-            content = result.get("content")
-        except:
-            return None
-        else:
-            return content
-
-    def _parse_list_body(self, body):
-        # print(body)
-        doc = html.fromstring(body)
-        items = []
-        # 列表文章
-        columns = doc.xpath('//div[@id="news_list2"]/dl')
-        # print(columns)
-        num = 0
-        for column in columns:
-            num += 1
-            # print(column.tag)
-            title = column.xpath('./dd[@class="mtit"]/a/@title')[0]
-            link = column.xpath('./dd[@class="mtit"]/a/@href')[0]
-
-            pub_date = column.xpath('./dd[@class="mexp"]/span')[0].text_content()
-            yesterday = datetime.datetime.today()-datetime.timedelta(days=1)
-            before_yesterday = datetime.datetime.today()-datetime.timedelta(days=2)
-            pub_date = pub_date.replace("昨天", yesterday.strftime("%Y-%m-%d"))
-            pub_date = pub_date.replace("前天", before_yesterday.strftime("%Y-%m-%d"))
-            # print(title, link, pub_date)
-
-            item = dict()
-            item['title'] = title
-            item['link'] = link
-            item['pub_date'] = pub_date
-            detail_body = requests.get(link).text
-            if detail_body:
-                article = self._parse_detail(detail_body)
-                if article:
-                    item['article'] = self._process_content(article)
-                    print(item)
-                    items.append(item)
-        # print(num)
-        return items
-
-
-class STCN_Market(STCN_Kuaixun):
-    def __init__(self):
-        super(STCN_Market, self).__init__()
-        self.list_url = "http://stock.stcn.com/"
-
-    def _parse_list_body(self, body):
-        # print(body)
-        doc = html.fromstring(body)
-        items = []
-        # 列表文章
-        columns = doc.xpath("//ul[@class='news_list']/li")
-        num = 0
-        for column in columns:
-            num += 1
-            # print(column.tag)
-            title = column.xpath("./p/a/@title")[0]
-            link = column.xpath("./p/a/@href")[0]
-            pub_date = column.xpath("./p[@class='sj']")[0].text_content()
-            pub_date = '{} {}'.format(pub_date[:10], pub_date[10:])
-            item = dict()
-            item['title'] = title
-            item['link'] = link
-            item['pub_date'] = pub_date
-            detail_body = self._get(link)
-            if detail_body:
-                article = self._parse_detail(detail_body)
-                if article:
-                    item['article'] = self._process_content(article)
-                    print(item)
-                    items.append(item)
-        # print(num)
-        return items
-
-    def _start(self):
-        list_body = self._get(self.list_url)
-        if list_body:
-            items = self._parse_list_body(list_body)
-            # print(items)
-            ret = self._save_many(items)
-            if ret:
-                print("批量保存数据成功 ")
-
-            else:
-                for item in items:
-                    print(item)
-                    ret = self._save(item)
-                    if not ret:
-                        print("保存单个失败 ")
-                self.sql_pool.end()
-
-
 class STCN_DaPan(STCN_Kuaixun):
     def __init__(self):
         super(STCN_DaPan, self).__init__()
@@ -476,12 +471,6 @@ class STCN_DaPan(STCN_Kuaixun):
         return items
 
 
-class STCN_BanKuai(STCN_DaPan):
-    def __init__(self):
-        super(STCN_BanKuai, self).__init__()
-        self.format_url = "http://stock.stcn.com/bankuai/{}.shtml"
-
-
 class STCN_XinGu(STCN_DaPan):
     def __init__(self):
         super(STCN_XinGu, self).__init__()
@@ -500,10 +489,13 @@ class STCN_YanBao(STCN_DaPan):
         self.format_url = "http://kuaixun.stcn.com/list/kxyb_{}.shtml"
 
 
-class STCN_Company(STCN_YaoWen):
+class STCN_BanKuai(STCN_DaPan):
     def __init__(self):
-        super(STCN_Company, self).__init__()
-        self.list_url = "http://company.stcn.com/"
+        super(STCN_BanKuai, self).__init__()
+        self.format_url = "http://stock.stcn.com/bankuai/{}.shtml"
+
+
+# ==================================================================================================
 
 
 if __name__ == "__main__":
@@ -530,8 +522,6 @@ if __name__ == "__main__":
     # d = STCN_YanBao()   # 研报
 
     d = STCN_Company()   # 公司
-
-
 
     d._start()
 
