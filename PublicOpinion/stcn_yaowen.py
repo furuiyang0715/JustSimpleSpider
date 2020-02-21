@@ -488,6 +488,12 @@ class STCN_XinGu(STCN_DaPan):
         self.format_url = "http://stock.stcn.com/xingu/{}.shtml"
 
 
+class STCN_ZhuLi(STCN_DaPan):
+    def __init__(self):
+        super(STCN_ZhuLi, self).__init__()
+        self.format_url = "http://stock.stcn.com/zhuli/{}.shtml"
+
+
 if __name__ == "__main__":
     # d = STCN_YaoWen()    # 要闻
 
@@ -505,7 +511,9 @@ if __name__ == "__main__":
 
     # d = STCN_BanKuai()   # 版块
 
-    d = STCN_XinGu()   # 新股
+    # d = STCN_XinGu()   # 新股
+
+    d = STCN_ZhuLi()   # 主力
 
     d._start()
 
