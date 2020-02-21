@@ -255,11 +255,48 @@ class STCN_Kuaixun(STCN_YaoWen):
                     self.sql_pool.end()
 
 
+class STCN_Roll(STCN_Kuaixun):
+    def __init__(self):
+        super(STCN_Roll, self).__init__()
+        self.format_url = "http://news.stcn.com/roll/index_{}.shtml"
+
+    def _parse_list_body(self, body):
+        # print(body)
+        doc = html.fromstring(body)
+        items = []
+        # 列表文章
+        columns = doc.xpath("//ul[@id='news_list2']/li")
+        num = 0
+        for column in columns:
+            num += 1
+            # print(column.tag)
+            title = column.xpath("./a")[-1].xpath("./@title")[0]
+            # print(title)
+            link = column.xpath("./a")[-1].xpath("./@href")[0]
+            # print(link)
+            pub_date = column.xpath("./span")[0].text_content()
+            pub_date = '{} {}'.format(pub_date[:10], pub_date[10:])
+            # print(pub_date)
+            item = dict()
+            item['title'] = title
+            item['link'] = link
+            item['pub_date'] = pub_date
+            detail_body = self._get(link)
+            if detail_body:
+                article = self._parse_detail(detail_body)
+                item['article'] = self._process_content(article)
+                print(item)
+                items.append(item)
+        # print(num)
+        return items
+
+
 if __name__ == "__main__":
     # d = STCN_YaoWen()    # 要闻
 
-    d = STCN_Kuaixun()    # 快讯
+    # d = STCN_Kuaixun()    # 快讯
 
+    d = STCN_Roll()    # 滚动
 
     d._start()
 
