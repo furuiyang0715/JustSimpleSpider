@@ -164,7 +164,6 @@ class STCN_YaoWen(object):
             return ret
         finally:
             self.sql_pool.end()
-            # self.sql_pool.dispose()
 
     def __del__(self):
         try:
@@ -200,6 +199,7 @@ class STCN_Kuaixun(STCN_YaoWen):
         super(STCN_Kuaixun, self).__init__()
         # self.list_url = "http://kuaixun.stcn.com/"
         self.list_url = "http://kuaixun.stcn.com/index.shtml"
+        self.format_url = "http://kuaixun.stcn.com/index_{}.shtml"
 
     def _parse_detail(self, body):
         doc = html.fromstring(body)
@@ -235,12 +235,30 @@ class STCN_Kuaixun(STCN_YaoWen):
         # print(num)
         return items
 
+    def _start(self):
+        for page in range(1, 21):
+            print("\nThe page is {}".format(page))
+            list_url = self.format_url.format(page)
+            list_body = self._get(list_url)
+            if list_body:
+                items = self._parse_list_body(list_body)
+                ret = self._save_many(items)
+                if ret:
+                    print("批量保存数据成功 ")
+
+                else:
+                    for item in items:
+                        print(item)
+                        ret = self._save(item)
+                        if not ret:
+                            print("保存单个失败 ")
+                    self.sql_pool.end()
 
 
 if __name__ == "__main__":
-    d = STCN_YaoWen()    # 要闻
+    # d = STCN_YaoWen()    # 要闻
 
-    # d = STCN_Kuaixun()    # 快讯
+    d = STCN_Kuaixun()    # 快讯
 
 
     d._start()
