@@ -192,7 +192,7 @@ class STCN_YaoWen(object):
             else:
                 count = 0
                 for item in items:
-                    # print(item)
+                    print(item)
                     ret = self._save(item)
                     if not ret:
                         print("保存单个失败 ")
@@ -500,6 +500,12 @@ class STCN_YanBao(STCN_DaPan):
         self.format_url = "http://kuaixun.stcn.com/list/kxyb_{}.shtml"
 
 
+class STCN_Company(STCN_YaoWen):
+    def __init__(self):
+        super(STCN_Company, self).__init__()
+        self.list_url = "http://company.stcn.com/"
+
+
 if __name__ == "__main__":
     # d = STCN_YaoWen()    # 要闻
 
@@ -521,7 +527,9 @@ if __name__ == "__main__":
 
     # d = STCN_ZhuLi()   # 主力
 
-    d = STCN_YanBao()   # 研报
+    # d = STCN_YanBao()   # 研报
+
+    d = STCN_Company()   # 公司
 
 
 
