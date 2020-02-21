@@ -1,5 +1,6 @@
 import pprint
 import re
+import sys
 import traceback
 
 import pymysql
@@ -41,12 +42,8 @@ class STCN_YaoWen(object):
 
     def _parse_detail(self, body):
         doc = html.fromstring(body)
-        nodes = doc.xpath("//div[@class='txt_con']/p")
-        contents = []
-        for node in nodes:
-            contents.append(node.text_content())
-        article = "".join(contents)
-        return article
+        node = doc.xpath("//div[@class='txt_con']")[0]
+        return node.text_content()
 
     def _parse_list_body(self, body):
         doc = html.fromstring(body)
@@ -69,9 +66,9 @@ class STCN_YaoWen(object):
 
         # 列表文章
         columns = doc.xpath("//ul[@class='news_list']/li")
-        # num = 0
+        num = 0
         for column in columns:
-            # num += 1
+            num += 1
             # print(column.tag)
             title = column.xpath("./p[@class='tit']/a/@title")[0]
             link = column.xpath("./p[@class='tit']/a/@href")[0]
@@ -86,8 +83,9 @@ class STCN_YaoWen(object):
             if detail_body:
                 article = self._parse_detail(detail_body)
                 item['article'] = self._process_content(article)
+                # print(item)
                 items.append(item)
-        # print(num)
+        print("num is ", num)
         return items
 
     def _filter_char(self, test_str):
@@ -116,7 +114,8 @@ class STCN_YaoWen(object):
             nv = highpoints.sub(u'', v)
             nv = self._filter_char(nv)
             params.append(nv)
-        return "".join(params)
+        content = "".join(params).strip()
+        return content
 
     def _contract_sql(self, to_insert):
         ks = []
@@ -175,6 +174,7 @@ class STCN_YaoWen(object):
 
     def _start(self):
         list_body = self._get(self.list_url)
+        # print(list_body)
         if list_body:
             items = self._parse_list_body(list_body)
             # print(pprint.pformat(items))
@@ -184,7 +184,7 @@ class STCN_YaoWen(object):
             else:
                 count = 0
                 for item in items:
-                    # print(item)
+                    print(item)
                     ret = self._save(item)
                     if not ret:
                         print("保存单个失败 ")
@@ -194,20 +194,55 @@ class STCN_YaoWen(object):
                 self.sql_pool.dispose()
 
 
+class STCN_Kuaixun(STCN_YaoWen):
+
+    def __init__(self):
+        super(STCN_Kuaixun, self).__init__()
+        # self.list_url = "http://kuaixun.stcn.com/"
+        self.list_url = "http://kuaixun.stcn.com/index.shtml"
+
+    def _parse_detail(self, body):
+        doc = html.fromstring(body)
+        node = doc.xpath("//div[@class='txt_con']")[0]
+        return node.text_content()
+
+    def _parse_list_body(self, body):
+        doc = html.fromstring(body)
+        items = []
+        # 列表文章
+        columns = doc.xpath("//ul[@id='news_list2']/li")
+        num = 0
+        for column in columns:
+            num += 1
+            # print(column.tag)
+            title = column.xpath("./a/@title")[0]
+            link = column.xpath("./a/@href")[0]
+            pub_date = column.xpath("./span")[0].text_content()
+            # print(pub_date)
+            pub_time = column.xpath("./i")[0].text_content()
+            # print(pub_time)
+            pub_date = '{} {}'.format(pub_date, pub_time)
+            item = dict()
+            item['title'] = title
+            item['link'] = link
+            item['pub_date'] = pub_date
+            detail_body = self._get(link)
+            if detail_body:
+                article = self._parse_detail(detail_body)
+                item['article'] = self._process_content(article)
+                print(item)
+                items.append(item)
+        # print(num)
+        return items
+
+
+
 if __name__ == "__main__":
-    d = STCN_YaoWen()
+    d = STCN_YaoWen()    # 要闻
+
+    # d = STCN_Kuaixun()    # 快讯
+
+
     d._start()
 
-    # print(d.sql_pool)
 
-
-    item = {
-        'article': '证券时报e公司讯，2月16日0—24时，31个省（自治区、直辖市）和新疆生产建设兵团报告新增确诊病例2048例，新增死亡病例105例（湖北100例，河南3例，广东2例），新增疑似病例1563例。',
-        'link': 'http://kuaixun.stcn.com/2020/0217/15643313.shtml',
-        'pub_date': '2020-02-17 08:55',
-        'title': '全国新增2048例新冠肺炎 累计报告70548例新冠肺炎'}
-    # ret = d._contract_sql(item)
-    # print(ret)
-
-    # ret = d._save(item)
-    # print(ret)
