@@ -494,6 +494,12 @@ class STCN_ZhuLi(STCN_DaPan):
         self.format_url = "http://stock.stcn.com/zhuli/{}.shtml"
 
 
+class STCN_YanBao(STCN_DaPan):
+    def __init__(self):
+        super(STCN_YanBao, self).__init__()
+        self.format_url = "http://kuaixun.stcn.com/list/kxyb_{}.shtml"
+
+
 if __name__ == "__main__":
     # d = STCN_YaoWen()    # 要闻
 
@@ -513,7 +519,11 @@ if __name__ == "__main__":
 
     # d = STCN_XinGu()   # 新股
 
-    d = STCN_ZhuLi()   # 主力
+    # d = STCN_ZhuLi()   # 主力
+
+    d = STCN_YanBao()   # 研报
+
+
 
     d._start()
 
