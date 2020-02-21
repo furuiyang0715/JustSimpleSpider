@@ -253,7 +253,7 @@ class STCN_Kuaixun(STCN_YaoWen):
 
                 else:
                     for item in items:
-                        print(item)
+                        # print(item)
                         ret = self._save(item)
                         if not ret:
                             print("保存单个失败 ")
@@ -442,6 +442,40 @@ class STCN_Market(STCN_Kuaixun):
                 self.sql_pool.end()
 
 
+class STCN_DaPan(STCN_Kuaixun):
+    def __init__(self):
+        super(STCN_DaPan, self).__init__()
+        self.format_url = "http://stock.stcn.com/dapan/{}.shtml"
+
+    def _parse_list_body(self, body):
+        # print(body)
+        doc = html.fromstring(body)
+        items = []
+        # 列表文章
+        columns = doc.xpath("//ul[@id='news_list2']/li")
+        num = 0
+        for column in columns:
+            num += 1
+            # print(column.tag)
+            title = column.xpath("./a/@title")[0]
+            link = column.xpath("./a/@href")[0]
+            pub_date = column.xpath("./span")[0].text_content()
+            pub_date = '{} {}'.format(pub_date[:10], pub_date[10:])
+            item = dict()
+            item['title'] = title
+            item['link'] = link
+            item['pub_date'] = pub_date
+            detail_body = self._get(link)
+            if detail_body:
+                article = self._parse_detail(detail_body)
+                if article:
+                    item['article'] = self._process_content(article)
+                    print(item)
+                    items.append(item)
+        # print(num)
+        return items
+
+
 if __name__ == "__main__":
     # d = STCN_YaoWen()    # 要闻
 
@@ -453,7 +487,9 @@ if __name__ == "__main__":
 
     # d = STCN_Column()   # 专栏
 
-    d = STCN_Market()   # 股市
+    # d = STCN_Market()   # 股市
+
+    d = STCN_DaPan()   # 股市
 
     d._start()
 
