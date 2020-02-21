@@ -2,6 +2,7 @@ import pprint
 import re
 import traceback
 
+import pymysql
 import requests
 from lxml import html
 
@@ -132,12 +133,17 @@ class STCN_YaoWen(object):
 
     def _save(self, item):
         insert_sql = self._contract_sql(item)
-        value = [(item.get("article"),
-                  item.get("link"),
-                  item.get("pub_date"),
-                  item.get("title"))]
+        # print(insert_sql)
+        value = (item.get("article"),
+                 item.get("link"),
+                 item.get("pub_date"),
+                 item.get("title"))
+        # print(value)
         try:
             ret = self.sql_pool.insert(insert_sql, value)
+        except pymysql.err.IntegrityError:
+            print("重复数据 ")
+            return 1
         except:
             traceback.print_exc()
         else:
@@ -151,12 +157,15 @@ class STCN_YaoWen(object):
         insert_many_sql = self._contract_sql(items[0])
         try:
             ret = self.sql_pool.insert_many(insert_many_sql, values)
+        except pymysql.err.IntegrityError:
+            print("批量中有重复数据")
         except:
             traceback.print_exc()
         else:
             return ret
         finally:
-            self.sql_pool.dispose()
+            self.sql_pool.end()
+            # self.sql_pool.dispose()
 
     def __del__(self):
         try:
@@ -175,6 +184,7 @@ class STCN_YaoWen(object):
             else:
                 count = 0
                 for item in items:
+                    # print(item)
                     ret = self._save(item)
                     if not ret:
                         print("保存单个失败 ")
@@ -197,4 +207,7 @@ if __name__ == "__main__":
         'pub_date': '2020-02-17 08:55',
         'title': '全国新增2048例新冠肺炎 累计报告70548例新冠肺炎'}
     # ret = d._contract_sql(item)
+    # print(ret)
+
+    # ret = d._save(item)
     # print(ret)
