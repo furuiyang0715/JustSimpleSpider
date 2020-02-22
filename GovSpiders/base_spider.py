@@ -157,7 +157,36 @@ class BaseSpider(object):
         return base_sql, tuple(vs)
 
     def _process_item(self, item):
+        item.update({"article": self._process_content(item.get("article"))})
         return item
+
+    def _process_content(self, vs):
+        # 去除 4 字节的 utf-8 字符，否则插入mysql时会出错
+        try:
+            # python UCS-4 build的处理方式
+            highpoints = re.compile(u'[\U00010000-\U0010ffff]')
+        except re.error:
+            # python UCS-2 build的处理方式
+            highpoints = re.compile(u'[\uD800-\uDBFF][\uDC00-\uDFFF]')
+
+        params = list()
+        for v in vs:
+            # 对插入数据进行一些处理
+            nv = highpoints.sub(u'', v)
+            nv = self._filter_char(nv)
+            params.append(nv)
+        return "".join(params)
+
+    def _filter_char(self, test_str):
+        # 处理特殊的空白字符
+        # '\u200b' 是 \xe2\x80\x8b
+        for cha in ['\n', '\r', '\t',
+                    '\u200a', '\u200b', '\u200c', '\u200d', '\u200e',
+                    '\u202a', '\u202b', '\u202c', '\u202d', '\u202e',
+                    ]:
+            test_str = test_str.replace(cha, '')
+        test_str = test_str.replace(u'\xa0', u' ')  # 把 \xa0 替换成普通的空格
+        return test_str
 
     def save(self, item):
         to_insert = self._process_item(item)
