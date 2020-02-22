@@ -21,9 +21,13 @@ LOCAL_MYSQL_USER = env.get("LOCAL_MYSQL_USER", cf.get('mysql', 'LOCAL_MYSQL_USER
 LOCAL_MYSQL_PASSWORD = env.get("LOCAL_MYSQL_PASSWORD", cf.get('mysql', 'LOCAL_MYSQL_PASSWORD'))
 LOCAL_MYSQL_DB = env.get("LOCAL_MYSQL_DB", cf.get('mysql', 'LOCAL_MYSQL_DB'))
 
-# deploy
-LOCAL = bool(int(env.get("LOCAL", cf.get('deploy', 'LOCAL'))))
-FIRST = bool(int(env.get("FIRST", cf.get('deploy', 'FIRST'))))
+# datacenter
+DC_HOST = env.get("DC_HOST", cf.get('dc', 'DC_HOST'))
+DC_PORT = int(env.get("DC_PORT", cf.get('dc', 'DC_PORT')))
+DC_USER = env.get("DC_USER", cf.get('dc', 'DC_USER'))
+DC_PASSWD = env.get("DC_PASSWD", cf.get('dc', 'DC_PASSWD'))
+DC_DB = env.get("DC_DB", cf.get('dc', 'DC_DB'))
+
 
 if __name__ == "__main__":
     import sys

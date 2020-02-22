@@ -8,7 +8,7 @@ import traceback
 import schedule
 
 sys.path.append("./../")
-
+from GovSpiders.configs import FIRST
 from GovSpiders.china_bank import ChinaBankShuJuJieDu, ChinaBankXinWenFaBu
 from GovSpiders.gov_stats_sjjd import GovStatsShuJuJieDu
 from GovSpiders.gov_stats_tjdt import GovStatsTongJiDongTai
@@ -16,6 +16,8 @@ from GovSpiders.gov_stats_xwfbh import GovStatsXinWenFaBuHui
 from GovSpiders.gov_stats_zxfb import GovStatsZuiXinFaBu
 
 logger = logging.getLogger()
+
+first = FIRST  # 确定是第一次全量爬取还是后续增量爬取
 
 
 def catch_exceptions(cancel_on_failure=False):
@@ -46,10 +48,12 @@ def task():
     try:
         chinabank_shujufenxi = ChinaBankShuJuJieDu()
 
-        for page in range(1, 25):
-            chinabank_shujufenxi._start(page)
+        if first:
+            for page in range(1, 25):
+                chinabank_shujufenxi._start(page)
+        else:
+            chinabank_shujufenxi._start(1)
 
-        # chinabank_shujufenxi._start(1)
         print("[中国银行]-[数据解读]失败列表页: ".format(chinabank_shujufenxi.error_list))
         print("[中国银行]-[数据解读]失败详情页: ".format(chinabank_shujufenxi.error_detail))
     except:
@@ -60,10 +64,12 @@ def task():
     try:
         chinabank_xinwenfabu = ChinaBankXinWenFaBu()
 
-        for page in range(1, 265):
-            chinabank_xinwenfabu._start(page)
+        if first:
+            for page in range(1, 265):
+                chinabank_xinwenfabu._start(page)
+        else:
+            chinabank_xinwenfabu._start(1)
 
-        # chinabank_xinwenfabu._start(1)
         print("[中国银行]-[新闻发布]失败列表页: ".format(chinabank_xinwenfabu.error_list))
         print("[中国银行]-[新闻发布]失败列表页: ".format(chinabank_xinwenfabu.error_detail))
     except:
@@ -76,10 +82,11 @@ def task():
     try:
         gov_shujujiedu = GovStatsShuJuJieDu()
 
-        for page in range(1, 6):
-            gov_shujujiedu._start(page)
-
-        # gov_shujujiedu._start(1)
+        if first:
+            for page in range(1, 6):
+                gov_shujujiedu._start(page)
+        else:
+            gov_shujujiedu._start(1)
 
         print("[国家统计局]-[数据解读]失败列表页: ".format(gov_shujujiedu.error_list))
         print("[国家统计局]-[数据解读]失败列表页: ".format(gov_shujujiedu.error_detail))
@@ -91,10 +98,11 @@ def task():
     try:
         gov_tongjidongtai = GovStatsTongJiDongTai()
 
-        for page in range(1, 6):
-            gov_tongjidongtai._start(page)
-
-        # gov_tongjidongtai._start(1)
+        if first:
+            for page in range(1, 6):
+                gov_tongjidongtai._start(page)
+        else:
+            gov_tongjidongtai._start(1)
 
         print("[国家统计局]-[统计动态]失败列表页: ".format(gov_tongjidongtai.error_list))
         print("[国家统计局]-[统计动态]失败列表页: ".format(gov_tongjidongtai.error_detail))
@@ -106,22 +114,27 @@ def task():
     try:
         gov_xinwenfabuhui = GovStatsXinWenFaBuHui()
 
-        for page in range(1, 6):
-            gov_xinwenfabuhui._start(page)
+        if first:
+            for page in range(1, 6):
+                gov_xinwenfabuhui._start(page)
+        else:
+            gov_xinwenfabuhui._start(1)
 
-        # gov_xinwenfabuhui._start(1)
-        print("[国家统计局]-[统计动态]失败列表页: ".format(gov_xinwenfabuhui.error_list))
-        print("[国家统计局]-[统计动态]失败列表页: ".format(gov_xinwenfabuhui.error_detail))
+        print("[国家统计局]-[新闻发布会]失败列表页: ".format(gov_xinwenfabuhui.error_list))
+        print("[国家统计局]-[新闻发布会]失败列表页: ".format(gov_xinwenfabuhui.error_detail))
     except:
         traceback.print_exc()
         print("[国家统计局]-[新闻发布会] 开启失败\n")
 
+    print("当前模块[国家统计局]-[最新发布]")
     try:
         gov_zuixinfabu = GovStatsZuiXinFaBu()
-        for page in range(1, 6):
-            gov_zuixinfabu._start(page)
+        if first:
+            for page in range(1, 6):
+                gov_zuixinfabu._start(page)
+        else:
+            gov_zuixinfabu._start(1)
 
-        # gov_zuixinfabu._start(1)
         print("[国家统计局]-[最新发布]失败列表页: ".format(gov_zuixinfabu.error_list))
         print("[国家统计局]-[最新发布]失败列表页: ".format(gov_zuixinfabu.error_detail))
     except:

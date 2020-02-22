@@ -245,6 +245,59 @@ class STCN_Company(STCN_YaoWen):
         self.list_url = "http://company.stcn.com/"
 
 
+class STCN_ZT(STCN_YaoWen):
+    def __init__(self):
+        super(STCN_ZT, self).__init__()
+        self.list_url = "http://zt.stcn.com/"
+
+    def _parse_list_body(self, body):
+        print(body)
+        sys.exit(0)
+        doc = html.fromstring(body)
+        items = []
+        # 题头文章
+        first = doc.xpath("//dl[@class='hotNews']")[0]
+        title = first.xpath("//dt/a/@title")[0]
+        link = first.xpath("//dt/a/@href")[0]
+        pub_date = first.xpath("//dd[@class='sj']")[0].text_content()
+        pub_date = '{} {}'.format(pub_date[:10], pub_date[10:])
+        first = dict()
+        first['title'] = title
+        first['link'] = link
+        first['pub_date'] = pub_date
+        detail_body = self._get(link)
+        if detail_body:
+            article = self._parse_detail(detail_body)
+            if article:
+                first['article'] = article
+                items.append(first)
+
+        # 列表文章
+        columns = doc.xpath("//ul[@class='news_list']/li")
+        num = 0
+        for column in columns:
+            num += 1
+            # print(column.tag)
+            title = column.xpath("./p[@class='tit']/a/@title")[0]
+            link = column.xpath("./p[@class='tit']/a/@href")[0]
+            pub_date = column.xpath("./p[@class='sj']")[0].text_content()
+            pub_date = '{} {}'.format(pub_date[:10], pub_date[10:])
+            # print(title, link, pub_date)
+            item = dict()
+            item['title'] = title
+            item['link'] = link
+            item['pub_date'] = pub_date
+            detail_body = self._get(link)
+            if detail_body:
+                article = self._parse_detail(detail_body)
+                if article:
+                    item['article'] = self._process_content(article)
+                    # print(item)
+                    items.append(item)
+        print("num is ", num)
+        return items
+
+
 class STCN_Column(STCN_YaoWen):
     def __init__(self):
         super(STCN_Column, self).__init__()
@@ -552,9 +605,11 @@ if __name__ == "__main__":
 
     # d = STCN_YanBao()   # 研报
 
-    d = STCN_Company()   # 公司
+    # d = STCN_Company()   # 公司
 
-    d = STCN_KCB()  # 科创板
+    # d = STCN_KCB()  # 科创板
+
+    d = STCN_ZT()  # 专题
 
     d._start()
 
