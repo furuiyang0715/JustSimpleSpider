@@ -7,6 +7,7 @@ import re
 import string
 import sys
 import time
+import traceback
 from urllib.parse import urlencode
 
 import pymysql
@@ -39,7 +40,7 @@ class CNStock(object):
                 "db": LOCAL_MYSQL_DB,
 
             }
-            self.DB = LOCAL_MYSQL_DB
+            self.db = LOCAL_MYSQL_DB
         else:
             conf = {
                 "host": MYSQL_HOST,
@@ -135,6 +136,7 @@ class CNStock(object):
             logger.warning("重复")
             return 1
         except:
+            traceback.print_exc()
             logger.warning("失败")
         else:
             return count
