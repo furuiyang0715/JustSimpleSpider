@@ -6,7 +6,8 @@ import requests
 from gne import GeneralNewsExtractor
 from requests.exceptions import ProxyError, Timeout, ConnectionError, ChunkedEncodingError
 
-from PublicOpinion.configs import LOCAL, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
+from PublicOpinion.configs import LOCAL, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, LOCAL_MYSQL_HOST, \
+    LOCAL_MYSQL_PORT, LOCAL_MYSQL_USER, LOCAL_MYSQL_PASSWORD, LOCAL_MYSQL_DB
 from PublicOpinion.sql_pool import PyMysqlPoolBase
 
 logger = logging.getLogger()
@@ -20,51 +21,71 @@ class qqStock(object):
                                       "(KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36"}
         self.list_url = "https://pacaio.match.qq.com/irs/rcd?cid=52&token={}" \
        "&ext=3911,3922,3923,3914,3913,3930,3915,3918,3908&callback=__jp1".format(self.token)
-        self.proxy = None
+        # self.proxy = None
         self.extractor = GeneralNewsExtractor()
-        conf = {
-            "host": MYSQL_HOST,
-            "port": MYSQL_PORT,
-            "user": MYSQL_USER,
-            "password": MYSQL_PASSWORD,
-            "db": MYSQL_DB,
-        }
+
+        self.local = LOCAL
+        if self.local:
+            conf = {
+                "host": LOCAL_MYSQL_HOST,
+                "port": LOCAL_MYSQL_PORT,
+                "user": LOCAL_MYSQL_USER,
+                "password": LOCAL_MYSQL_PASSWORD,
+                "db": LOCAL_MYSQL_DB,
+
+            }
+            self.db = LOCAL_MYSQL_DB
+        else:
+            conf = {
+                "host": MYSQL_HOST,
+                "port": MYSQL_PORT,
+                "user": MYSQL_USER,
+                "password": MYSQL_PASSWORD,
+                "db": MYSQL_DB,
+            }
+            self.db = MYSQL_DB
+
         self.sql_pool = PyMysqlPoolBase(**conf)
-        self.db = MYSQL_DB
         self.table = "qq_Astock_news"
         self.error_detail = []
 
-    def _get_proxy(self):
-        if self.local:
-            proxy_url = "http://192.168.0.102:8888/get"
-        else:
-            proxy_url = "http://172.17.0.5:8888/get"
-        r = requests.get(proxy_url)
-        proxy = r.text
-        return proxy
+    # def _get_proxy(self):
+    #     if self.local:
+    #         proxy_url = "http://192.168.0.102:8888/get"
+    #     else:
+    #         proxy_url = "http://172.17.0.5:8888/get"
+    #     r = requests.get(proxy_url)
+    #     proxy = r.text
+    #     return proxy
 
-    def _crawl(self, url, proxy):
-        proxies = {'http': proxy}
-        r = requests.get(url, proxies=proxies, headers=self.headers, timeout=3)
+    def _crawl(self, url):
+        r = requests.get(url, headers=self.headers, timeout=3)
         return r
+
+        # proxies = {'http': proxy}
+        # r = requests.get(url, proxies=proxies, headers=self.headers, timeout=3)
+        # return r
 
     def _get(self, url):
         count = 0
         while True:
             count = count + 1
             try:
-                resp = self._crawl(url, self.proxy)
+                resp = self._crawl(url)
                 if resp.status_code == 200:
                     return resp
                 elif count > 2:
-                    print(f'抓取网页{url}最终失败')
                     break
-                else:
-                    self.proxy = self._get_proxy()
-                    print(f"无效状态码{resp.status_code}, 更换代理{self.proxy}\n")
+                # else:
+                #     self.proxy = self._get_proxy()
+                #     print(f"无效状态码{resp.status_code}, 更换代理{self.proxy}\n")
             except (ChunkedEncodingError, ConnectionError, Timeout, UnboundLocalError, UnicodeError, ProxyError):
-                self.proxy = self._get_proxy()
-                print(f'代理连接失败,更换代理{self.proxy}\n')
+                # self.proxy = self._get_proxy()
+                # print(f'代理连接失败,更换代理{self.proxy}\n')
+                if count > 2:
+                    break
+
+        print(f'抓取网页{url}最终失败')
 
     def _parse_article(self, vurl):
         detail_page = self._get(vurl)
@@ -128,11 +149,16 @@ class qqStock(object):
             item['link'] = vurl
             item['pub_date'] = article.get("publish_time")
             item['title'] = article.get("title")
-            item = self._parse_article(item)
-            print(item)
-            ret = self._save(item)
-            if not ret:
-                print('保存失败')
+            article = self._parse_article(vurl)
+            if article:
+                item['article'] = article
+                print(item)
+                ret = self._save(item)
+                if not ret:
+                    print('保存失败')
+                    self.error_detail.append(vurl)
+            else:
+                self.error_detail.append(vurl)
 
         print("开始处理专题页")
 
@@ -161,17 +187,20 @@ class qqStock(object):
                     link = "https://new.qq.com/omn/{}/{}.html".format(id[:8], id)
                     title = new.get("longtitle")
                     pub_date = new.get("time")
-                    if link:
+                    if link and title and pub_date:
                         article = self._parse_article(link)
-                    if link and title and pub_date and article:
-                        item['link'] = link
-                        item['pub_date'] = pub_date
-                        item['title'] = title
-                        item['article'] = article
-                        print(item)
-                        ret = self._save(item)
-                        if not ret:
-                            print("保存失败")
+                        if article:
+                            item['link'] = link
+                            item['pub_date'] = pub_date
+                            item['title'] = title
+                            item['article'] = article
+                            print(item)
+                            ret = self._save(item)
+                            if not ret:
+                                print("保存失败")
+                                self.error_detail.append(link)
+                        else:
+                            self.error_detail.append(link)
 
     def __del__(self):
         self.sql_pool.dispose()

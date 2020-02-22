@@ -8,6 +8,8 @@ import traceback
 import schedule
 
 sys.path.append("./../")
+from PublicOpinion.qq_stock import qqStock
+from PublicOpinion.netease_money import Money163
 from PublicOpinion.configs import FIRST
 from PublicOpinion.cn_4_hours import CNStock_2
 from PublicOpinion.cn_hongguan import CNStock
@@ -47,6 +49,20 @@ def juchao():
     print("insert error list: {}".format(runner.error_detail))
     with open("record.txt", "a+") as f:
         f.write("juchao: {}\r\n".format(runner.error_detail))
+
+
+def neteasy():
+    m = Money163()
+    m._start()
+    with open("record.txt", "a+") as f:
+        f.write("网易财经: {}\r\n".format(m.error_detail))
+
+
+def qq_stock():
+    d = qqStock()
+    d._start()
+    with open("h_record.txt", "a+") as f:
+        f.write("腾讯财经网页版: {}\r\n".format(d.error_detail))
 
 
 def cn_stock():
@@ -104,10 +120,39 @@ def cn_stock():
         f.write(f"上证4小时: {runner.error_detail}\r\n")
 
 
+def hour_task():
+    # 记录时间信息
+    dt = datetime.datetime.today().strftime("%Y-%m-%d %H-%M-%S")
+    with open("h_record.txt", "a+") as f:
+        f.write("{}\r\n".format(dt))
+
+    print("开始爬取腾讯财经网页版")
+    try:
+        qq_stock()
+    except:
+        traceback.print_exc()
+        print("爬取腾讯财经失败")
+
+    with open("h_record.txt", "r") as f:
+        ret = f.readlines()
+    print(pprint.pformat(ret))
+
+
 @catch_exceptions(cancel_on_failure=True)
 def task():
+    # 记录时间信息
+    dt = datetime.datetime.today().strftime("%Y-%m-%d")
+    with open("record.txt", "a+") as f:
+        f.write("{}\r\n".format(dt))
 
-    print("开始爬取\n\n")
+    print("开始爬取网易财经")
+    try:
+        neteasy()
+    except:
+        traceback.print_exc()
+        print("爬取网易财经失败")
+
+    print("开始爬取巨潮资讯\n\n")
     try:
         juchao()
     except:
@@ -130,8 +175,11 @@ def main():
     print('【舆情】模块启动时开启一次爬取.')
     task()
 
+    hour_task()
+
     print("当前时间是{}, 开始【舆情】模块的增量爬取 ".format(datetime.datetime.now()))
     schedule.every().day.at("10:00").do(task)
+    schedule.every(5).hours.do(hour_task)
 
     while True:
         print("【舆情】当前调度系统中的任务列表是{}".format(schedule.jobs))
