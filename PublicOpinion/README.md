@@ -47,4 +47,15 @@ sudo docker run -itd --name ins4 --env KEY='' --env START=600 \
 --env END=1000 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/ca:v1 
 
+### --------------------------------------------------------------------
+
+
+docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/yuqing:v1 .
+    
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/yuqing:v1
+
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/yuqing:v1
+
+sudo docker run -itd --name yuqing registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/yuqing:v1 
+
 ```
