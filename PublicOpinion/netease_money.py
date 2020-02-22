@@ -5,7 +5,8 @@ import pymysql
 import requests
 from gne import GeneralNewsExtractor
 
-from PublicOpinion.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_PASSWORD, MYSQL_USER, MYSQL_DB
+from PublicOpinion.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_PASSWORD, MYSQL_USER, MYSQL_DB, LOCAL, LOCAL_MYSQL_HOST, \
+    LOCAL_MYSQL_PORT, LOCAL_MYSQL_USER, LOCAL_MYSQL_PASSWORD, LOCAL_MYSQL_DB
 from PublicOpinion.sql_pool import PyMysqlPoolBase
 
 
@@ -16,16 +17,30 @@ class Money163(object):
         self.headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 "
                                  "(KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36",
                    }
-        conf = {
-            "host": MYSQL_HOST,
-            "port": MYSQL_PORT,
-            "user": MYSQL_USER,
-            "password": MYSQL_PASSWORD,
-            "db": MYSQL_DB,
-        }
+        self.local = LOCAL
+        if self.local:
+            conf = {
+                "host": LOCAL_MYSQL_HOST,
+                "port": LOCAL_MYSQL_PORT,
+                "user": LOCAL_MYSQL_USER,
+                "password": LOCAL_MYSQL_PASSWORD,
+                "db": LOCAL_MYSQL_DB,
+
+            }
+            self.db = LOCAL_MYSQL_DB
+        else:
+            conf = {
+                "host": MYSQL_HOST,
+                "port": MYSQL_PORT,
+                "user": MYSQL_USER,
+                "password": MYSQL_PASSWORD,
+                "db": MYSQL_DB,
+            }
+            self.db = MYSQL_DB
+
         self.sql_pool = PyMysqlPoolBase(**conf)
-        self.db = MYSQL_DB
         self.table = "netease_money"
+        self.error_detail = []
 
     def _parse_list(self, body):
         js_obj = re.findall(r"news:(.*)\};", body)[0]
@@ -35,9 +50,12 @@ class Money163(object):
                 yield data
 
     def _parse_detail(self, detail_url):
-        page = requests.get(detail_url, headers=self.headers).text
-        result = self.extractor.extract(page)
-        content = result.get("content")
+        try:
+            page = requests.get(detail_url, headers=self.headers).text
+            result = self.extractor.extract(page)
+            content = result.get("content")
+        except:
+            return
         return content
 
     def contract_sql(self, to_insert):
@@ -72,14 +90,20 @@ class Money163(object):
             for one in ret:
                 # print(one)
                 item = dict()
-                item['link'] = one.get("l")
+                link = one.get("l")
+                item['link'] = link
                 item['title'] = one.get("t")
                 item['pub_date'] = one.get("p")
-                item['article'] = self._parse_detail(one.get("l"))
-                print(item)
-                ret = self._save(item)
-                if not ret:
-                    print("保存失败 ")
+                article = self._parse_detail(one.get("l"))
+                if article:
+                    item['article'] = article
+                    print(item)
+                    ret = self._save(item)
+                    if not ret:
+                        print("保存失败 ")
+                        self.error_detail.append(link)
+                else:
+                    self.error_detail.append(link)
 
 
 if __name__ == "__main__":
