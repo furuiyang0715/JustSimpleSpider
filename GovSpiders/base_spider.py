@@ -12,7 +12,8 @@ from lxml import html
 
 from selenium import webdriver
 from selenium.webdriver import DesiredCapabilities
-from GovSpiders.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, LOCAL
+from GovSpiders.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, LOCAL, LOCAL_MYSQL_HOST, \
+    LOCAL_MYSQL_PORT, LOCAL_MYSQL_USER, LOCAL_MYSQL_PASSWORD, LOCAL_MYSQL_DB
 from GovSpiders.sql_client import PyMysqlBase
 
 logger = logging.getLogger()
@@ -40,14 +41,22 @@ class BaseSpider(object):
                     desired_capabilities=DesiredCapabilities.CHROME
                 )
             self.browser.implicitly_wait(5)
-
-        conf = {
-            "host": MYSQL_HOST,
-            "port": MYSQL_PORT,
-            "user": MYSQL_USER,
-            "password": MYSQL_PASSWORD,
-            "db": MYSQL_DB,
-        }
+        if self.local:
+            conf = {
+                "host": LOCAL_MYSQL_HOST,
+                "port": LOCAL_MYSQL_PORT,
+                "user": LOCAL_MYSQL_USER,
+                "password": LOCAL_MYSQL_PASSWORD,
+                "db": LOCAL_MYSQL_DB,
+            }
+        else:
+            conf = {
+                "host": MYSQL_HOST,
+                "port": MYSQL_PORT,
+                "user": MYSQL_USER,
+                "password": MYSQL_PASSWORD,
+                "db": MYSQL_DB,
+            }
         self.db = MYSQL_DB
         self.sql_client = PyMysqlBase(**conf)
         self.extractor = GeneralNewsExtractor()
@@ -252,7 +261,7 @@ class BaseSpider(object):
                 article = self.process_detail(link)
                 if article:
                     item['article'] = article
-                    print(item)
+                    # print(item)
                     ret = self.save(item)
                     if not ret:
                         self.error_detail.append(item.get("link"))

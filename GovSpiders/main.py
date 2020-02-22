@@ -1,10 +1,13 @@
 import datetime
 import functools
 import logging
+import sys
 import time
 import traceback
 
 import schedule
+
+sys.path.append("./../")
 
 from GovSpiders.china_bank import ChinaBankShuJuJieDu, ChinaBankXinWenFaBu
 from GovSpiders.gov_stats_sjjd import GovStatsShuJuJieDu
@@ -39,32 +42,45 @@ def catch_exceptions(cancel_on_failure=False):
 
 @catch_exceptions(cancel_on_failure=True)
 def task():
-    # print("当前模块[中国银行]-[数据分析]")
-    # try:
-    #     chinabank_shujufenxi = ChinaBankShuJuJieDu()
-    #     chinabank_shujufenxi._start(1)
-    #     print("[中国银行]-[数据分析]失败列表页: ".format(chinabank_shujufenxi.error_list))
-    #     print("[中国银行]-[数据分析]失败详情页: ".format(chinabank_shujufenxi.error_detail))
-    # except:
-    #     traceback.print_exc()
-    #     print("模块[中国银行]-[数据分析]开启失败\n")
-    #
-    # print("当前模块[中国银行]-[新闻发布]")
-    # try:
-    #     chinabank_xinwenfabu = ChinaBankXinWenFaBu()
-    #     chinabank_xinwenfabu._start(1)
-    #     print("[中国银行]-[新闻发布]失败列表页: ".format(chinabank_xinwenfabu.error_list))
-    #     print("[中国银行]-[新闻发布]失败列表页: ".format(chinabank_xinwenfabu.error_detail))
-    # except:
-    #     traceback.print_exc()
-    #     print("模块[中国银行]-[新闻发布]开启失败\n")
+    print("当前模块[中国银行]-[数据解读]")
+    try:
+        chinabank_shujufenxi = ChinaBankShuJuJieDu()
+
+        for page in range(1, 25):
+            chinabank_shujufenxi._start(page)
+
+        # chinabank_shujufenxi._start(1)
+        print("[中国银行]-[数据解读]失败列表页: ".format(chinabank_shujufenxi.error_list))
+        print("[中国银行]-[数据解读]失败详情页: ".format(chinabank_shujufenxi.error_detail))
+    except:
+        traceback.print_exc()
+        print("模块[中国银行]-[数据解读]开启失败\n")
+
+    print("当前模块[中国银行]-[新闻发布]")
+    try:
+        chinabank_xinwenfabu = ChinaBankXinWenFaBu()
+
+        for page in range(1, 265):
+            chinabank_xinwenfabu._start(page)
+
+        # chinabank_xinwenfabu._start(1)
+        print("[中国银行]-[新闻发布]失败列表页: ".format(chinabank_xinwenfabu.error_list))
+        print("[中国银行]-[新闻发布]失败列表页: ".format(chinabank_xinwenfabu.error_detail))
+    except:
+        traceback.print_exc()
+        print("模块[中国银行]-[新闻发布]开启失败\n")
 
     # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
     print("当前模块[国家统计局]-[数据解读]")
     try:
         gov_shujujiedu = GovStatsShuJuJieDu()
-        gov_shujujiedu._start(1)
+
+        for page in range(1, 6):
+            gov_shujujiedu._start(page)
+
+        # gov_shujujiedu._start(1)
+
         print("[国家统计局]-[数据解读]失败列表页: ".format(gov_shujujiedu.error_list))
         print("[国家统计局]-[数据解读]失败列表页: ".format(gov_shujujiedu.error_detail))
     except:
@@ -74,7 +90,12 @@ def task():
     print("当前模块[国家统计局]-[统计动态]")
     try:
         gov_tongjidongtai = GovStatsTongJiDongTai()
-        gov_tongjidongtai._start(1)
+
+        for page in range(1, 6):
+            gov_tongjidongtai._start(page)
+
+        # gov_tongjidongtai._start(1)
+
         print("[国家统计局]-[统计动态]失败列表页: ".format(gov_tongjidongtai.error_list))
         print("[国家统计局]-[统计动态]失败列表页: ".format(gov_tongjidongtai.error_detail))
     except:
@@ -84,7 +105,11 @@ def task():
     print("当前模块[国家统计局]-[新闻发布会]")
     try:
         gov_xinwenfabuhui = GovStatsXinWenFaBuHui()
-        gov_xinwenfabuhui._start(1)
+
+        for page in range(1, 6):
+            gov_xinwenfabuhui._start(page)
+
+        # gov_xinwenfabuhui._start(1)
         print("[国家统计局]-[统计动态]失败列表页: ".format(gov_xinwenfabuhui.error_list))
         print("[国家统计局]-[统计动态]失败列表页: ".format(gov_xinwenfabuhui.error_detail))
     except:
@@ -93,7 +118,10 @@ def task():
 
     try:
         gov_zuixinfabu = GovStatsZuiXinFaBu()
-        gov_zuixinfabu._start(1)
+        for page in range(1, 6):
+            gov_zuixinfabu._start(page)
+
+        # gov_zuixinfabu._start(1)
         print("[国家统计局]-[最新发布]失败列表页: ".format(gov_zuixinfabu.error_list))
         print("[国家统计局]-[最新发布]失败列表页: ".format(gov_zuixinfabu.error_detail))
     except:

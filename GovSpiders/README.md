@@ -46,4 +46,13 @@ CREATE TABLE `gov_stats` (
 国家统计局包括[最新发布][数据解读][统计动态][新闻发布会]四个栏目, 共用一张数据表。 
 #### 部署信息 
 
+docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/gover:v0.0.1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/gover:v0.0.1
+
+
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/gover:v0.0.1
+sudo docker run -itd --name gov registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/gover:v0.0.1
+sudo docker logs -ft --tail 1000 gov
+sudo docker image prune
+
 
