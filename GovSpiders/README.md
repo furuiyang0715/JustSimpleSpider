@@ -51,8 +51,11 @@ docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/gover:v0.0.1
 
 
 sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/gover:v0.0.1
+
+// 首次部署
 sudo docker run -itd --name gov registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/gover:v0.0.1
+// 增量部署
+sudo docker run -itd --name gov --env FIRST=0 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/gover:v0.0.1
+
 sudo docker logs -ft --tail 1000 gov
 sudo docker image prune
-
-
