@@ -30,6 +30,7 @@ DC_DB = env.get("DC_DB", cf.get('dc', 'DC_DB'))
 
 # deploy
 LOCAL = bool(int(env.get("LOCAL", cf.get('deploy', 'LOCAL'))))
+FIRST = bool(int(env.get("FIRST", cf.get('deploy', 'FIRST'))))
 
 
 if __name__ == "__main__":

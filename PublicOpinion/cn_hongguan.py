@@ -13,7 +13,8 @@ import pymysql
 import requests as req
 from gne import GeneralNewsExtractor
 
-from PublicOpinion.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
+from PublicOpinion.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, LOCAL, LOCAL_MYSQL_HOST, \
+    LOCAL_MYSQL_PORT, LOCAL_MYSQL_USER, LOCAL_MYSQL_PASSWORD, LOCAL_MYSQL_DB
 from PublicOpinion.sql_pool import PyMysqlPoolBase
 
 logger = logging.getLogger()
@@ -28,15 +29,28 @@ class CNStock(object):
         self.headers = headers
         self.list_url = "http://app.cnstock.com/api/waterfall?"
         self.extractor = GeneralNewsExtractor()
-        conf = {
-            "host": MYSQL_HOST,
-            "port": MYSQL_PORT,
-            "user": MYSQL_USER,
-            "password": MYSQL_PASSWORD,
-            "db": MYSQL_DB,
-        }
+        self.local = LOCAL
+        if self.local:
+            conf = {
+                "host": LOCAL_MYSQL_HOST,
+                "port": LOCAL_MYSQL_PORT,
+                "user": LOCAL_MYSQL_USER,
+                "password": LOCAL_MYSQL_PASSWORD,
+                "db": LOCAL_MYSQL_DB,
+
+            }
+            self.DB = LOCAL_MYSQL_DB
+        else:
+            conf = {
+                "host": MYSQL_HOST,
+                "port": MYSQL_PORT,
+                "user": MYSQL_USER,
+                "password": MYSQL_PASSWORD,
+                "db": MYSQL_DB,
+            }
+            self.db = MYSQL_DB
+
         self.sql_pool = PyMysqlPoolBase(**conf)
-        self.db = MYSQL_DB
         self.table = "cn_stock"
         self.error_list = []
         self.error_detail = []
