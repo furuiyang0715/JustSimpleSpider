@@ -7,7 +7,8 @@ import time
 import pymysql
 import requests as req
 
-from PublicOpinion.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
+from PublicOpinion.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, LOCAL_MYSQL_DB, \
+    LOCAL_MYSQL_HOST, LOCAL_MYSQL_USER, LOCAL_MYSQL_PORT, LOCAL_MYSQL_PASSWORD, LOCAL
 from PublicOpinion.sql_pool import PyMysqlPoolBase
 
 logger = logging.getLogger()
@@ -38,15 +39,27 @@ class JuChaoInfo(object):
             'X-Requested-With': 'XMLHttpRequest',
 
         }
-        conf = {
-            "host": MYSQL_HOST,
-            "port": MYSQL_PORT,
-            "user": MYSQL_USER,
-            "password": MYSQL_PASSWORD,
-            "db": MYSQL_DB,
-        }
+        self.local = LOCAL
+        if self.local:
+            conf = {
+                "host": LOCAL_MYSQL_HOST,
+                "port": LOCAL_MYSQL_PORT,
+                "user": LOCAL_MYSQL_USER,
+                "password": LOCAL_MYSQL_PASSWORD,
+                "db": LOCAL_MYSQL_DB,
+
+            }
+            self.db = LOCAL_MYSQL_DB
+        else:
+            conf = {
+                "host": MYSQL_HOST,
+                "port": MYSQL_PORT,
+                "user": MYSQL_USER,
+                "password": MYSQL_PASSWORD,
+                "db": MYSQL_DB,
+            }
+            self.db = MYSQL_DB
         self.sql_pool = PyMysqlPoolBase(**conf)
-        self.db = MYSQL_DB
         self.table = "juchao_info"
         self.error_detail = []
 
@@ -156,9 +169,9 @@ class JuChaoInfo(object):
                 num = 0
                 self.sql_pool.connection.commit()
 
-        print("insert error list: {}".format(self.error_detail))
-        with open("error.txt", "a+") as f:
-            f.write("{}".format(self.error_detail))
+        # print("insert error list: {}".format(self.error_detail))
+        # with open("error.txt", "a+") as f:
+        #     f.write("{}".format(self.error_detail))
 
 
 if __name__ == "__main__":

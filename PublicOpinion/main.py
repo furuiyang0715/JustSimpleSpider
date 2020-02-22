@@ -7,11 +7,11 @@ import time
 import traceback
 import schedule
 
-from PublicOpinion.cn_4_hours import CNStock_2
-from PublicOpinion.cn_hongguan import CNStock
-
 sys.path.append("./../")
 from PublicOpinion.configs import FIRST
+from PublicOpinion.cn_4_hours import CNStock_2
+from PublicOpinion.cn_hongguan import CNStock
+from PublicOpinion.juchao import JuChaoInfo
 
 
 logger = logging.getLogger()
@@ -41,9 +41,15 @@ def catch_exceptions(cancel_on_failure=False):
     return catch_exceptions_decorator
 
 
-@catch_exceptions(cancel_on_failure=True)
-def task():
-    print("开始爬取上海证券报")
+def juchao():
+    runner = JuChaoInfo()
+    runner.start()
+    print("insert error list: {}".format(runner.error_detail))
+    with open("record.txt", "a+") as f:
+        f.write("juchao: {}\r\n".format(runner.error_detail))
+
+
+def cn_stock():
     task_info = {
         'qmt-sns_yw': "要闻-宏观",
         "qmt-sns_jg": "要闻-金融",
@@ -82,7 +88,7 @@ def task():
         )
         )
         with open("record.txt", "a+") as f:
-            f.write(f"{topic}: {runner.error_detail}")
+            f.write(f"{topic}: {runner.error_detail}\r\n")
 
     # 上证四小时是不同的网页模式
     t2 = now()
@@ -95,11 +101,28 @@ def task():
     )
     )
     with open("record.txt", "a+") as f:
-        f.write(f"上证4小时: {runner.error_detail}")
+        f.write(f"上证4小时: {runner.error_detail}\r\n")
+
+
+@catch_exceptions(cancel_on_failure=True)
+def task():
+
+    print("开始爬取\n\n")
+    try:
+        juchao()
+    except:
+        traceback.print_exc()
+        print("爬取巨潮失败")
+
+    print("开始爬取上海证券报\n\n")
+    try:
+        cn_stock()
+    except:
+        traceback.print_exc()
+        print("爬取上海证券报失败 ")
 
     with open("record.txt", "r") as f:
         ret = f.readlines()
-
     print(pprint.pformat(ret))
 
 
