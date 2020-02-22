@@ -49,6 +49,7 @@ class BaseSpider(object):
                 "password": LOCAL_MYSQL_PASSWORD,
                 "db": LOCAL_MYSQL_DB,
             }
+            self.db = LOCAL_MYSQL_DB
         else:
             conf = {
                 "host": MYSQL_HOST,
@@ -57,7 +58,7 @@ class BaseSpider(object):
                 "password": MYSQL_PASSWORD,
                 "db": MYSQL_DB,
             }
-        self.db = MYSQL_DB
+            self.db = MYSQL_DB
         self.sql_client = PyMysqlBase(**conf)
         self.extractor = GeneralNewsExtractor()
 
@@ -166,8 +167,10 @@ class BaseSpider(object):
         return base_sql, tuple(vs)
 
     def _process_item(self, item):
-        item.update({"article": self._process_content(item.get("article"))})
         return item
+
+        # item.update({"article": self._process_content(item.get("article"))})
+        # return item
 
     def _process_content(self, vs):
         # 去除 4 字节的 utf-8 字符，否则插入mysql时会出错
@@ -222,39 +225,43 @@ class BaseSpider(object):
     def process_list(self, page_num):
         page_url = self._get_page_url(page_num)
         list_retry = 2
-        try:
-            list_page = self.fetch_page(page_url)
-            if list_page:
-                items = self._parse_list_page(list_page)
+        while True:
+            try:
+                list_page = self.fetch_page(page_url)
+                if list_page:
+                    items = self._parse_list_page(list_page)
+                else:
+                    raise
+            except:
+                print("list page {} retry ".format(page_num))
+                list_retry -= 1
+                if list_retry < 0:
+                    return
+                # self.process_list(page_num)
             else:
-                raise
-        except:
-            list_retry -= 1
-            if list_retry < 0:
-                return
-            self.process_list(page_num)
-        else:
-            return items
+                return items
 
     def process_detail(self, link):
         detail_retry = 2
-        try:
-            detail_page = self.fetch_page(link)
-            if detail_page:
-                article = self._parse_detail_page(detail_page)
+        while True:
+            try:
+                detail_page = self.fetch_page(link)
+                if detail_page:
+                    article = self._parse_detail_page(detail_page)
+                else:
+                    raise
+            except:
+                print("detail page {} retry ".format(link))
+                detail_retry -= 1
+                if detail_retry < 0:
+                    return
             else:
-                raise
-        except:
-            detail_retry -= 1
-            if detail_retry < 0:
-                return
-            self.process_detail(link)
-        else:
-            return article
+                return article
 
     def _start(self, page_num):
+        print("page num is {}\n".format(page_num))
         items = self.process_list(page_num)
-        # print(items)
+        print(items)
         if items:
             for item in items:
                 link = item["link"]

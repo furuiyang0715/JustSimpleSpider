@@ -19,6 +19,8 @@ logger = logging.getLogger()
 
 first = FIRST  # 确定是第一次全量爬取还是后续增量爬取
 
+print("first is ", first)
+
 
 def catch_exceptions(cancel_on_failure=False):
     """
@@ -143,14 +145,14 @@ def task():
 
 
 def main():
-    logger.info('官媒模块启动时开启一次爬取.')
+    print('官媒模块启动时开启一次爬取.')
     task()
 
-    logger.info("当前时间是{}, 开始官媒模块的增量爬取 ".format(datetime.datetime.now()))
+    print("当前时间是{}, 开始官媒模块的增量爬取 ".format(datetime.datetime.now()))
     schedule.every().day.at("05:00").do(task)
 
     while True:
-        logger.info("官媒当前调度系统中的任务列表是{}".format(schedule.jobs))
+        print("官媒当前调度系统中的任务列表是{}".format(schedule.jobs))
         schedule.run_pending()
         time.sleep(1800)   # 没有任务时每隔半小时查看一次任务列表
 
