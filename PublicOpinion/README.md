@@ -56,6 +56,7 @@ docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/yuqing:v1
 
 sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/yuqing:v1
 
-sudo docker run -itd --name yuqing registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/yuqing:v1 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name yuqing \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/yuqing:v1 
 
 ```

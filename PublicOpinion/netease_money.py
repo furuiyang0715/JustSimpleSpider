@@ -1,3 +1,4 @@
+import datetime
 import re
 
 import demjson
@@ -93,7 +94,19 @@ class Money163(object):
                 link = one.get("l")
                 item['link'] = link
                 item['title'] = one.get("t")
-                item['pub_date'] = one.get("p")
+
+                # 在返回的 json 数据中 最新的数据在最前面 定时+增量 只需要爬取大于当前时间一天之前的新闻
+                # 保险起见 设置为 2
+                dt = datetime.datetime.today() - datetime.timedelta(days=2)
+                pub_date = one.get("p")
+                pt = datetime.datetime.strptime(pub_date, "%Y-%m-%d %H:%M:%S")
+                if pt < dt:
+                    print(pt)
+                    print(dt)
+                    print('网易财经增量完毕 ')
+                    return
+
+                item['pub_date'] = pub_date
                 article = self._parse_detail(one.get("l"))
                 if article:
                     item['article'] = article
