@@ -161,6 +161,7 @@ class STCN_Base(object):
             for page in range(1, self.page_num + 1):
                 print("\nThe page is {}".format(page))
                 list_url = self.format_url.format(page)
+                print(list_url)
                 list_body = self._get(list_url)
                 if list_body:
                     items = self._parse_list_body(list_body)
