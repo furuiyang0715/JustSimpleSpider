@@ -8,6 +8,7 @@ from PublicOpinion.stcn import stcn_utils as utils
 
 
 class STCN_Market(STCN_Base):
+    # 股市
     def __init__(self):
         super(STCN_Market, self).__init__()
         self.list_url = "http://stock.stcn.com/"

@@ -7,6 +7,7 @@ from PublicOpinion.stcn.base_stcn import STCN_Base
 
 
 class STCN_YaoWen(STCN_Base):
+    # 要闻
     def __init__(self):
         super(STCN_YaoWen, self).__init__()
         self.list_url = "http://news.stcn.com/"
