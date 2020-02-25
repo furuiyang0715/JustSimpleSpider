@@ -575,7 +575,7 @@ class STCN_BanKuai(STCN_DaPan):
 
 
 if __name__ == "__main__":
-    # d = STCN_YaoWen()    # 要闻
+    d = STCN_YaoWen()    # 要闻
 
     # d = STCN_Kuaixun()    # 快讯
 
@@ -604,5 +604,3 @@ if __name__ == "__main__":
     # d = STCN_ZT()  # 专题  TODO 页面情况太多 暂时不做..
 
     d._start()
-
-
