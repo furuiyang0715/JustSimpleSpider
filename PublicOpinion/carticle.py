@@ -24,8 +24,8 @@ from PublicOpinion.configs import LOCAL, MYSQL_DB, LOCAL_MYSQL_HOST, LOCAL_MYSQL
 from PublicOpinion.sql_pool import PyMysqlPoolBase
 
 
-PROXY_URL = os.environ.get("PROXY_URL", "http://172.17.0.4:8888/get")   # 远程的代理地址
-LOCAL_PROXY_URL = os.environ.get("LOCAL_PROXY_URL", "http://127.0.0.1:8888/get")   # 本地的代理url
+PROXY_URL = os.environ.get("PROXY_URL", "http://172.17.0.4:8888/{}")   # 远程的代理地址
+LOCAL_PROXY_URL = os.environ.get("LOCAL_PROXY_URL", "http://127.0.0.1:8888/{}")   # 本地的代理url
 logger = logging.getLogger()
 
 
@@ -118,12 +118,35 @@ class CArticle(object):
             return count
 
     def _get_proxy(self):
+        # 获取一个可用代理 如果当前没有可用的话 就 sleep 3 秒钟
         if self.local:
-            r = requests.get(LOCAL_PROXY_URL)
+            while True:
+                count = requests.get(LOCAL_PROXY_URL.format("count"))
+                if count:
+                    resp = requests.get(LOCAL_PROXY_URL.format("get"))
+                    break
+                else:
+                    print("当前无可用代理, 等一会儿 ")
+                    time.sleep(3)
+            return resp.text
         else:
-            r = requests.get(PROXY_URL)
-        proxy = r.text
-        return proxy
+            while True:
+                count = requests.get(PROXY_URL.format("count"))
+                if count:
+                    resp = requests.get(PROXY_URL.format("get"))
+                    break
+                else:
+                    print("当前无可用代理, 等一会儿 ")
+                    time.sleep(3)
+            return resp.text
+
+    # def _get_proxy(self):
+    #     if self.local:
+    #         r = requests.get(LOCAL_PROXY_URL)
+    #     else:
+    #         r = requests.get(PROXY_URL)
+    #     proxy = r.text
+    #     return proxy
 
     def _delete_detail_404(self, url):
         delete_sql = f"delete from `{self.table}` where link = {url};"
@@ -300,7 +323,7 @@ class CArticle(object):
         # 所以在  _start 之外还会有一个总的 "调度函数"
 
         # (1) 生成 list_url
-        for page in range(1, 1000):
+        for page in range(1, 100):
             print(page)
             list_url = self.start_url + urlencode(self.make_query_params(self.key, page))
             # print(list_url)
@@ -394,7 +417,6 @@ if __name__ == "__main__":
 
     s.run()
     # sys.exit(0)
-
 
     # c = CArticle(key='格力电器')
     # print(c.proxy)
