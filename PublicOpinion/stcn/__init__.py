@@ -10,6 +10,7 @@
 # 要闻-评论 http://news.stcn.com/xwpl/1.shtml [xwpl.py]
 # 要闻-时报观察 http://news.stcn.com/sbgc/ 【空白页面】
 # 要闻-创投 http://news.stcn.com/xwct/1.shtml [chuangtou.py]
+# 要闻-人物 http://news.stcn.com/renwu/1.shtml [renwu.py]
 
 
 # 快讯 http://kuaixun.stcn.com/index_1.shtml [kuaixun.py]
