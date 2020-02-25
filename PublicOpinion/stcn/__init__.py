@@ -11,21 +11,21 @@
 # 要闻-时报观察 http://news.stcn.com/sbgc/ 【空白页面】
 # 要闻-创投 http://news.stcn.com/xwct/1.shtml [chuangtou.py]
 # 要闻-人物 http://news.stcn.com/renwu/1.shtml [renwu.py]
+# 要闻-时报动态 http://news.stcn.com/sbdt/1.shtml [sbdt.py]
 
+### 快讯 http://kuaixun.stcn.com/index_1.shtml [kuaixun.py]
+### 专栏 http://space.stcn.com/ [space.py]
+### 股市 http://stock.stcn.com/ [market.py]
+### 公司 http://company.stcn.com/ [company.py]
+### 研报 http://kuaixun.stcn.com/list/kxyb.shtml [yanbao.py]
+### 机构 http://finance.stcn.com/ [finance.py]
 
-# 快讯 http://kuaixun.stcn.com/index_1.shtml [kuaixun.py]
-#
-
-#
 # 深度 http://news.stcn.com/sdbd/1.shtml
 #
 # 评论 http://news.stcn.com/xwpl/1.shtml [xwpl.py]
 #
 # 观察 http://news.stcn.com/sbgc/1.shtml 同 要闻-时报观察
-#
-# 专栏 http://space.stcn.com/ [space.py]
-#
-# 股市 http://stock.stcn.com/ [market.py]
+
 #
 # 大盘 http://stock.stcn.com/dapan/1.shtml [dapan.py]
 #
