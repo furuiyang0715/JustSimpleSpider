@@ -15,8 +15,11 @@ import pymysql
 import requests
 from lxml import html
 
+sys.path.append("./../")
+
 from PublicOpinion.configs import LOCAL, MYSQL_DB, LOCAL_MYSQL_HOST, LOCAL_MYSQL_PORT, LOCAL_MYSQL_USER, \
-    LOCAL_MYSQL_PASSWORD, LOCAL_MYSQL_DB, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD
+    LOCAL_MYSQL_PASSWORD, LOCAL_MYSQL_DB, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, DC_HOST, DC_PORT, DC_USER, \
+    DC_PASSWD, DC_DB
 from PublicOpinion.sql_pool import PyMysqlPoolBase
 
 
@@ -68,7 +71,7 @@ class CArticle(object):
         self.proxy = self._get_proxy()
         self.dt_format = '%Y-%m-%d %H:%M:%S'
         # 增量爬取的临界时间
-        self.limit_time = datetime.datetime(2020, 2, 14)
+        self.limit_time = datetime.datetime(2020, 2, 1)
         # 是否使用代理
         self.use_proxy = 1
 
@@ -340,10 +343,40 @@ class CArticle(object):
                             logger.warning(f"插入失败 {item}")
                 self.sql_pool.end()  # self.sql_pool.connection.commit()
                 print(f"第{page}页保存成功")
-                return page
+
+
+class Schedule(object):
+    def __init__(self):
+        self.keys = sorted(self.dc_info().values())
+
+    def dc_info(self):  # {'300150.XSHE': '世纪瑞尔',
+        """
+        从 datacanter.const_secumain 数据库中获取当天需要爬取的股票信息
+        返回的是 股票代码: 中文名简称 的字典的形式
+        """
+        try:
+            conn = pymysql.connect(host=DC_HOST, port=DC_PORT, user=DC_USER,
+                                   passwd=DC_PASSWD, db=DC_DB)
+        except Exception as e:
+            raise
+
+        cur = conn.cursor()
+        cur.execute("USE datacenter;")
+        cur.execute("""select SecuCode, ChiNameAbbr from const_secumain where SecuCode \
+            in (select distinct SecuCode from const_secumain);""")
+        dc_info = {r[0]: r[1] for r in cur.fetchall()}
+        cur.close()
+        conn.close()
+        return dc_info
 
 
 if __name__ == "__main__":
+    s = Schedule()
+    print(s.dc_info())
+
+    sys.exit(0)
+
+
     c = CArticle(key='格力电器')
     # print(c.proxy)
     c._start()
