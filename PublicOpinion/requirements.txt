@@ -1,7 +1,8 @@
-gne==0.1.5
 requests==2.22.0
+threadpool==1.3.2
+gne==0.1.5
 PyMySQL==0.9.3
-schedule==0.6.0
 demjson==2.2.4
+schedule==0.6.0
 lxml==4.4.2
 DBUtils==1.3
