@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
+import os
 import random
 import re
 import string
@@ -21,6 +22,8 @@ from PublicOpinion.sql_pool import PyMysqlPoolBase
 
 
 logger = logging.getLogger()
+PROXY_URL = os.environ.get("PROXY_URL", "http://172.17.0.4:8888/{}")   # 远程的代理地址
+LOCAL_PROXY_URL = os.environ.get("LOCAL_PROXY_URL", "http://127.0.0.1:8888/{}")   # 本地的代理url
 
 
 class CArticleLoder(object):
@@ -143,13 +146,36 @@ class CArticleLoder(object):
                     return None
                 time.sleep(3)
 
+    # def _get_proxy(self):
+    #     if self.local:
+    #         r = requests.get('http://192.168.0.102:8888/get')
+    #     else:
+    #         r = requests.get('http://172.17.0.4:8888/get')
+    #     proxy = r.text
+    #     return proxy
+
     def _get_proxy(self):
+        # 获取一个可用代理 如果当前没有可用的话 就 sleep 3 秒钟
         if self.local:
-            r = requests.get('http://192.168.0.102:8888/get')
+            while True:
+                count = requests.get(LOCAL_PROXY_URL.format("count"))
+                if count:
+                    resp = requests.get(LOCAL_PROXY_URL.format("get"))
+                    break
+                else:
+                    print("当前无可用代理, 等一会儿 ")
+                    time.sleep(3)
+            return resp.text
         else:
-            r = requests.get('http://172.17.0.4:8888/get')
-        proxy = r.text
-        return proxy
+            while True:
+                count = requests.get(PROXY_URL.format("count"))
+                if count:
+                    resp = requests.get(PROXY_URL.format("get"))
+                    break
+                else:
+                    print("当前无可用代理, 等一会儿 ")
+                    time.sleep(3)
+            return resp.text
 
     def _delete_detail_404(self, url):
         delete_sql = f"delete from `{self.table}` where link = {url};"
@@ -209,9 +235,9 @@ class CArticleLoder(object):
         return links
 
     def _select_rest_all_links(self):
-        select_all_sql = f"select link from {self.table} where article is NULL;"
-        links = self.sql_pool.select_many(select_all_sql, size=20)
-        # links = self.sql_pool.select_all(select_all_sql)
+        select_all_sql = f"select id, link from {self.table} where article is NULL;"
+        # links = self.sql_pool.select_many(select_all_sql, size=20)
+        links = self.sql_pool.select_all(select_all_sql)
         return links
 
     def transferContent(self, content):
@@ -434,9 +460,38 @@ class Schedule(object):
                 print(k)
                 self._start_ins_detail(k)
 
+    def last_update_200(self):
+        c = CArticleLoder("")
+        links = c._select_rest_all_links()
+        # print(links)
+        # [{'id': 1717, 'link': 'http://caifuhao.eastmoney.com/news/20200203193311525228570'},
+        final_fail_ids = []
+        count = 0
+        for info in links:
+            print(info)
+            detail_page = c._get_detail(info['link'])
+            if detail_page:
+                article = c._parse_detail(detail_page)
+                ret = c._update_detail(info['link'], article)
+                print(ret)
+                if ret:
+                    print("更新成功 ")
+                    count += 1
+                else:
+                    print("更新失败")
+                if count > 9:
+                    c.sql_pool.end()
+                    count = 0
+                    print("提交 ")
+            else:
+                final_fail_ids.append(info['link'])
+
+        print(final_fail_ids)
+
 
 if __name__ == "__main__":
     s = Schedule()
+    s.last_update_200()
     # print(len(s.keys))   # 3923
     # print(s.keys.index('华邦健康'))
     # print(s.keys[500])
