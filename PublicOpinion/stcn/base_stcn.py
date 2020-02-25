@@ -124,6 +124,35 @@ class STCN_Base(object):
         finally:
             self.sql_pool.end()
 
+    def _add_article(self, item: dict):
+        link = item.get("link")
+        if link:
+            detail_page = self._get(link)
+            if detail_page:
+                article = self._parse_detail(detail_page)
+                if article:
+                    item['article'] = article
+                    return True
+        return False
+
+    def _start(self):
+        list_body = self._get(self.list_url)
+        if list_body:
+            items = self._parse_list_body(list_body)
+            count = 0
+            for item in items:
+                ret = self._save(item)
+                if ret:
+                    count += 1
+                    print("保存成功: {}".format(item))
+                else:
+                    print("保存失败: {}".format(item))
+                if count > 9:
+                    self.sql_pool.end()
+                    print("提交 .. ")
+                    count = 0
+            self.sql_pool.dispose()
+
     def __del__(self):
         try:
             self.sql_pool.dispose()
