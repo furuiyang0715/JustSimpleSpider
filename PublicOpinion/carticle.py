@@ -13,6 +13,7 @@ from urllib.parse import urlencode
 
 import pymysql
 import requests
+import threadpool
 from lxml import html
 
 sys.path.append("./../")
@@ -34,6 +35,9 @@ class CArticle(object):
         self.local = LOCAL
         # 股票代码中文简称
         self.key = key
+
+        print(self.key, "\n\n\n")
+
         # 请求的起始 url
         self.start_url = 'http://api.so.eastmoney.com/bussiness/Web/GetSearchList?'
         self.page_size = 10
@@ -369,17 +373,32 @@ class Schedule(object):
         conn.close()
         return dc_info
 
+    def start(self, key):
+        c = CArticle(key=key)
+        c._start()
+
+    def run(self):
+        now = lambda: time.time()
+        start_time = now()
+        pool = threadpool.ThreadPool(4)
+        requests = threadpool.makeRequests(self.start, self.keys)
+        [pool.putRequest(req) for req in requests]
+        pool.wait()
+        print("用时: {}".format(now() - start_time))
+
 
 if __name__ == "__main__":
     s = Schedule()
-    print(s.dc_info())
+    # print(s.dc_info())
+    # print(s.keys)
 
-    sys.exit(0)
+    s.run()
+    # sys.exit(0)
 
 
-    c = CArticle(key='格力电器')
+    # c = CArticle(key='格力电器')
     # print(c.proxy)
-    c._start()
+    # c._start()
 
     # c.use_proxy = 0
     # detail_page = c._get_detail("http://caifuhao.eastmoney.com/news/20200224214426245917460")
