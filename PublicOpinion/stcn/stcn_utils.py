@@ -83,6 +83,25 @@ def parse_list_items_2(doc):
     return items
 
 
+def parse_list_items_3(doc):
+    items = []
+    columns = doc.xpath("//ul[@id='news_list2']/li")
+    num = 0
+    for column in columns:
+        num += 1
+        # print(column.tag)
+        title = column.xpath("./a/@title")[0]
+        link = column.xpath("./a/@href")[0]
+        pub_date = column.xpath("./span")[0].text_content()
+        pub_date = '{} {}'.format(pub_date[:10], pub_date[10:])
+        item = dict()
+        item['title'] = title
+        item['link'] = link
+        item['pub_date'] = pub_date
+        items.append(item)
+    return items
+
+
 def parse_list_items(doc):
     '''
 <ul class="news_list">

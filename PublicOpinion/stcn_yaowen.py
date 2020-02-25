@@ -315,61 +315,6 @@ class STCN_Column(STCN_YaoWen):
 
 # ==================================================================================================
 
-class STCN_Kuaixun(STCN_Base):
-
-    def __init__(self):
-        super(STCN_Kuaixun, self).__init__()
-        self.format_url = "http://kuaixun.stcn.com/index_{}.shtml"
-
-    def _parse_list_body(self, body):
-        doc = html.fromstring(body)
-        items = []
-        # 列表文章
-        columns = doc.xpath("//ul[@id='news_list2']/li")
-        num = 0
-        for column in columns:
-            num += 1
-            # print(column.tag)
-            title = column.xpath("./a/@title")[0]
-            link = column.xpath("./a/@href")[0]
-            pub_date = column.xpath("./span")[0].text_content()
-            # print(pub_date)
-            pub_time = column.xpath("./i")[0].text_content()
-            # print(pub_time)
-            pub_date = '{} {}'.format(pub_date, pub_time)
-            item = dict()
-            item['title'] = title
-            item['link'] = link
-            item['pub_date'] = pub_date
-            detail_body = self._get(link)
-            if detail_body:
-                article = self._parse_detail(detail_body)
-                if article:
-                    item['article'] = self._process_content(article)
-                    print(item)
-                    items.append(item)
-        # print(num)
-        return items
-
-    def _start(self):
-        for page in range(1, 21):
-            print("\nThe page is {}".format(page))
-            list_url = self.format_url.format(page)
-            list_body = self._get(list_url)
-            if list_body:
-                items = self._parse_list_body(list_body)
-                ret = self._save_many(items)
-                if ret:
-                    print("批量保存数据成功 ")
-
-                else:
-                    for item in items:
-                        # print(item)
-                        ret = self._save(item)
-                        if not ret:
-                            print("保存单个失败 ")
-                    self.sql_pool.end()
-
 
 class STCN_Roll(STCN_Kuaixun):
     def __init__(self):
@@ -507,7 +452,6 @@ class STCN_BanKuai(STCN_DaPan):
 
 if __name__ == "__main__":
 
-    d = STCN_Kuaixun()    # 快讯
 
     d = STCN_Roll()    # 滚动
 
