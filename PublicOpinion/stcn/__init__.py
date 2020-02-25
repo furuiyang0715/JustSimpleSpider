@@ -2,7 +2,8 @@
 
 # 划分依据一
 
-# 要闻: http://news.stcn.com/ [yaowen.py]
+###  要闻: http://news.stcn.com/ [yaowen.py]
+# 要闻-国内 http://news.stcn.com/guonei/1.shtml [guonei.py]
 #
 # 快讯 http://kuaixun.stcn.com/index_1.shtml [kuaixun.py]
 #
@@ -12,7 +13,7 @@
 #
 # 评论 http://news.stcn.com/xwpl/1.shtml [xwpl.py]
 #
-# 观察 http://news.stcn.com/sbgc/1.shtml
+# 观察 http://news.stcn.com/sbgc/1.shtml 同 要闻-时报观察
 #
 # 专栏 http://space.stcn.com/ [space.py]
 #
@@ -65,4 +66,50 @@
 # 深股通 http://sgt.stcn.com/
 
 # 划分依据二
+
+###  要闻 http://news.stcn.com/  【重复】
+
+# 要闻-国内 http://news.stcn.com/guonei/1.shtml
+
+# 要闻-海外 http://news.stcn.com/xwhw/1.shtml
+
+# 要闻-滚动  http://news.stcn.com/roll/index_1.shtml 【重复】
+
+# 要闻-深度 http://news.stcn.com/sdbd/1.shtml【重复】
+
+# 要闻-评论 http://news.stcn.com/xwpl/1.shtml 【重复】
+
+# 要闻-时报观察 http://news.stcn.com/sbgc/1.shtml
+
+# 要闻-创投 http://news.stcn.com/xwct/1.shtml
+
+# 要闻-人物 http://news.stcn.com/renwu/1.shtml
+
+# 要闻-时报动态 http://news.stcn.com/sbdt/1.shtml
+
+### 快讯 http://news.stcn.com/sbdt/1.shtml 【重复】
+
+### 专栏 http://space.stcn.com/ 【重复】
+
+### 股市 http://stock.stcn.com/ 【重复】
+
+### 公司 http://company.stcn.com/ 【重复】
+
+### 研报 http://kuaixun.stcn.com/list/kxyb_1.shtml 【重复】
+
+### 机构 http://finance.stcn.com/ 【重复】
+
+### 数据 http://data.stcn.com/djsj/1.shtml
+
+### 舆情 http://yq.stcn.com/
+# 舆情聚焦 http://yq.stcn.com/yqjj/
+
+# 舆情速览  http://yq.stcn.com/yqsl/
+
+# 舆情研究 http://yq.stcn.com/yqyj/
+
+# 上市公司舆情榜 http://yq.stcn.com/ssgsyqb/
+
+# 中心动态 http://yq.stcn.com/zxdt/
+
 
