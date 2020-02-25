@@ -60,3 +60,29 @@ sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name yuqing \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/yuqing:v1 
 
 ```
+
+
+```shell script
+  
+    sudo docker run -itd --name mm1 --env KEY='' --env START=317 \
+    --env END=400 \
+    registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/ca:v1 
+    
+    sudo docker run -itd --name mm2 --env KEY='' --env START=400 \
+    --env END=500 \
+    registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/ca:v1 
+    
+    sudo docker run -itd --name mm3 --env KEY='' --env START=500 \
+    --env END=601 \
+    registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/ca:v1 
+    
+    sudo docker run -itd --name mm4 --env KEY='' --env START=988 \
+    --env END=1000 \
+    registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/ca:v1 
+    
+    # 
+    sudo docker run -itd --name mm5 --env KEY='' --env START=1823 \
+    --env END=2000 \
+    registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/ca:v1 
+ 
+```
