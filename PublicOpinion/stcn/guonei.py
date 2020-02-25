@@ -12,7 +12,7 @@ class STCN_GuoNei(STCN_Base):
         super(STCN_GuoNei, self).__init__()
         self.format_url = "http://news.stcn.com/guonei/{}.shtml"
         self.pages = True  # 是否需要翻页
-        self.page_num = 21
+        self.page_num = 4623
 
     def _parse_list_body(self, body):
         '''
