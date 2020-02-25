@@ -575,9 +575,8 @@ class STCN_BanKuai(STCN_DaPan):
 
 
 if __name__ == "__main__":
-    d = STCN_YaoWen()    # 要闻
 
-    # d = STCN_Kuaixun()    # 快讯
+    d = STCN_Kuaixun()    # 快讯
 
     # d = STCN_Roll()    # 滚动
 
