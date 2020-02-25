@@ -313,41 +313,6 @@ class STCN_Column(STCN_YaoWen):
         # print(num)
         return items
 
-
-class STCN_Market(STCN_YaoWen):
-    def __init__(self):
-        super(STCN_Market, self).__init__()
-        self.list_url = "http://stock.stcn.com/"
-
-    def _parse_list_body(self, body):
-        # print(body)
-        doc = html.fromstring(body)
-        items = []
-        # 列表文章
-        columns = doc.xpath("//ul[@class='news_list']/li")
-        num = 0
-        for column in columns:
-            num += 1
-            # print(column.tag)
-            title = column.xpath("./p/a/@title")[0]
-            link = column.xpath("./p/a/@href")[0]
-            pub_date = column.xpath("./p[@class='sj']")[0].text_content()
-            pub_date = '{} {}'.format(pub_date[:10], pub_date[10:])
-            item = dict()
-            item['title'] = title
-            item['link'] = link
-            item['pub_date'] = pub_date
-            detail_body = self._get(link)
-            if detail_body:
-                article = self._parse_detail(detail_body)
-                if article:
-                    item['article'] = self._process_content(article)
-                    print(item)
-                    items.append(item)
-        # print(num)
-        return items
-
-
 # ==================================================================================================
 
 class STCN_Kuaixun(STCN_Base):
@@ -544,24 +509,22 @@ if __name__ == "__main__":
 
     d = STCN_Kuaixun()    # 快讯
 
-    # d = STCN_Roll()    # 滚动
+    d = STCN_Roll()    # 滚动
 
-    # d = STCN_XWPL()    # 评论
+    d = STCN_XWPL()    # 评论
 
-    # d = STCN_Column()   # 专栏
+    d = STCN_Column()   # 专栏
 
-    # d = STCN_Market()   # 股市
+    d = STCN_DaPan()   # 大盘
 
-    # d = STCN_DaPan()   # 大盘
+    d = STCN_BanKuai()   # 版块
 
-    # d = STCN_BanKuai()   # 版块
+    d = STCN_XinGu()   # 新股
 
-    # d = STCN_XinGu()   # 新股
+    d = STCN_ZhuLi()   # 主力
 
-    # d = STCN_ZhuLi()   # 主力
+    d = STCN_YanBao()   # 研报
 
-    # d = STCN_YanBao()   # 研报
-
-    # d = STCN_ZT()  # 专题  TODO 页面情况太多 暂时不做..
+    d = STCN_ZT()  # 专题  TODO 页面情况太多 暂时不做..
 
     d._start()

@@ -32,6 +32,9 @@ class STCN_Base(object):
             }
         self.sql_pool = PyMysqlPoolBase(**conf)
 
+        # 默认是不需要翻页的
+        self.pages = False
+
     def _get(self, url):
         resp = requests.get(url)
         if resp.status_code == 200:
@@ -136,22 +139,42 @@ class STCN_Base(object):
         return False
 
     def _start(self):
-        list_body = self._get(self.list_url)
-        if list_body:
-            items = self._parse_list_body(list_body)
+        if not self.pages:
+            list_body = self._get(self.list_url)
+            if list_body:
+                items = self._parse_list_body(list_body)
+                count = 0
+                for item in items:
+                    ret = self._save(item)
+                    if ret:
+                        count += 1
+                        print("保存成功: {}".format(item))
+                    else:
+                        print("保存失败: {}".format(item))
+                    if count > 9:
+                        self.sql_pool.end()
+                        print("提交 .. ")
+                        count = 0
+                self.sql_pool.dispose()
+        else:
             count = 0
-            for item in items:
-                ret = self._save(item)
-                if ret:
-                    count += 1
-                    print("保存成功: {}".format(item))
-                else:
-                    print("保存失败: {}".format(item))
-                if count > 9:
-                    self.sql_pool.end()
-                    print("提交 .. ")
-                    count = 0
-            self.sql_pool.dispose()
+            for page in range(1, self.page_num + 1):
+                print("\nThe page is {}".format(page))
+                list_url = self.format_url.format(page)
+                list_body = self._get(list_url)
+                if list_body:
+                    items = self._parse_list_body(list_body)
+                    for item in items:
+                        ret = self._save(item)
+                        if ret:
+                            count += 1
+                            print("保存成功: {}".format(item))
+                        else:
+                            print("保存失败: {}".format(item))
+                        if count > 9:
+                            self.sql_pool.end()
+                            print("提交 .. ")
+                            count = 0
 
     def __del__(self):
         try:

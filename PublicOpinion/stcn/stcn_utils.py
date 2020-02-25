@@ -56,6 +56,33 @@ def parse_list_items_1(doc):
     return items
 
 
+def parse_list_items_2(doc):
+    '''
+<ul id="news_list2">
+    <li >
+        <i>16:30</i>
+        <a href="http://kuaixun.stcn.com/2020/0225/15681508.shtml" title="浪潮与北大荒成立合资公司 注册资本5000万" target="_blank">浪潮与北大荒成立合资公司 注册资本5000万</a>
+        <span>2020-02-25</span>
+    </li>
+    '''
+    items = []
+    columns = doc.xpath("//ul[@id='news_list2']/li")
+    num = 0
+    for column in columns:
+        num += 1
+        title = column.xpath("./a/@title")[0]
+        link = column.xpath("./a/@href")[0]
+        pub_date = column.xpath("./span")[0].text_content()
+        pub_time = column.xpath("./i")[0].text_content()
+        pub_date = '{} {}'.format(pub_date, pub_time)
+        item = dict()
+        item['title'] = title
+        item['link'] = link
+        item['pub_date'] = pub_date
+        items.append(item)
+    return items
+
+
 def parse_list_items(doc):
     '''
 <ul class="news_list">
