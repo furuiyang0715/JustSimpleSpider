@@ -391,12 +391,6 @@ class STCN_XWPL(STCN_Kuaixun):
 
 
 
-class STCN_XinGu(STCN_DaPan):
-    def __init__(self):
-        super(STCN_XinGu, self).__init__()
-        self.format_url = "http://stock.stcn.com/xingu/{}.shtml"
-
-
 
 class STCN_YanBao(STCN_DaPan):
     def __init__(self):
@@ -423,8 +417,6 @@ if __name__ == "__main__":
     d = STCN_Column()   # 专栏
 
     d = STCN_BanKuai()   # 版块
-
-    d = STCN_XinGu()   # 新股
 
     d = STCN_YanBao()   # 研报
 
