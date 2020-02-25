@@ -209,10 +209,6 @@ class STCN_YaoWen(STCN_Base):
 
 
 
-class STCN_Company(STCN_YaoWen):
-    def __init__(self):
-        super(STCN_Company, self).__init__()
-        self.list_url = "http://company.stcn.com/"
 
 
 class STCN_ZT(STCN_YaoWen):
@@ -565,8 +561,6 @@ if __name__ == "__main__":
     # d = STCN_ZhuLi()   # 主力
 
     # d = STCN_YanBao()   # 研报
-
-    # d = STCN_Company()   # 公司
 
     # d = STCN_ZT()  # 专题  TODO 页面情况太多 暂时不做..
 
