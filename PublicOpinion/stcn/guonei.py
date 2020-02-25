@@ -33,5 +33,5 @@ class STCN_GuoNei(STCN_Base):
 
 
 if __name__ == "__main__":
-    dapan = STCN_GuoNei()
-    dapan._start()
+    guonei = STCN_GuoNei()
+    guonei._start()

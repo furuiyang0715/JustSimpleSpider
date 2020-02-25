@@ -4,7 +4,8 @@
 
 ###  要闻: http://news.stcn.com/ [yaowen.py]
 # 要闻-国内 http://news.stcn.com/guonei/1.shtml [guonei.py]
-#
+# 要闻-海外 http://news.stcn.com/xwhw/1.shtml [haiwai.py]
+
 # 快讯 http://kuaixun.stcn.com/index_1.shtml [kuaixun.py]
 #
 # 滚动 http://news.stcn.com/roll/index_1.shtml [roll.py]
