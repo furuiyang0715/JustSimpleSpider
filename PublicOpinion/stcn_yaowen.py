@@ -398,10 +398,6 @@ class STCN_YanBao(STCN_DaPan):
         self.format_url = "http://kuaixun.stcn.com/list/kxyb_{}.shtml"
 
 
-class STCN_BanKuai(STCN_DaPan):
-    def __init__(self):
-        super(STCN_BanKuai, self).__init__()
-        self.format_url = "http://stock.stcn.com/bankuai/{}.shtml"
 
 
 # ==================================================================================================
@@ -416,7 +412,6 @@ if __name__ == "__main__":
 
     d = STCN_Column()   # 专栏
 
-    d = STCN_BanKuai()   # 版块
 
     d = STCN_YanBao()   # 研报
 
