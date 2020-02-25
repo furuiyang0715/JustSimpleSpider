@@ -208,36 +208,6 @@ class STCN_YaoWen(STCN_Base):
                 self.sql_pool.dispose()
 
 
-class STCN_KCB(STCN_YaoWen):
-    def __init__(self):
-        super(STCN_KCB, self).__init__()
-        self.list_url = "http://kcb.stcn.com/news/index.shtml"
-
-    def _parse_list_body(self, body):
-        doc = html.fromstring(body)
-        items = []
-        columns = doc.xpath("//ul[@class='news_list']/li")
-        num = 0
-        for column in columns:
-            num += 1
-            # print(column.tag)
-            title = column.xpath("./a/@title")[0]
-            link = column.xpath("./a/@href")[0]
-            pub_date = column.xpath("./span")[0].text_content()
-            pub_date = '{} {}'.format(pub_date[:10], pub_date[10:])
-            item = dict()
-            item['title'] = title
-            item['link'] = link
-            item['pub_date'] = pub_date
-            detail_body = self._get(link)
-            if detail_body:
-                article = self._parse_detail(detail_body)
-                if article:
-                    item['article'] = self._process_content(article)
-                    print(item)
-                    items.append(item)
-        return items
-
 
 class STCN_Company(STCN_YaoWen):
     def __init__(self):
@@ -597,8 +567,6 @@ if __name__ == "__main__":
     # d = STCN_YanBao()   # 研报
 
     # d = STCN_Company()   # 公司
-
-    # d = STCN_KCB()  # 科创板
 
     # d = STCN_ZT()  # 专题  TODO 页面情况太多 暂时不做..
 
