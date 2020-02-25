@@ -250,52 +250,44 @@ class STCN_ZT(STCN_YaoWen):
         super(STCN_ZT, self).__init__()
         self.list_url = "http://zt.stcn.com/"
 
-    def _parse_list_body(self, body):
-        print(body)
-        sys.exit(0)
+    def _parse_second_list(self, body):
+        doc = html.fromstring(body)
+        ret = doc.xpath("//div[@class='hot']")[0]
+        first = {}
+        link = ret.xpath("//h2/a/@href")[0]
+        title = ret.xpath("//h2/a/@title")[0]
+        first['link'] = link
+        first['title'] = title
+        return first
+
+    def _parse_first_list(self, body):
+        links = []
         doc = html.fromstring(body)
         items = []
-        # 题头文章
         first = doc.xpath("//dl[@class='hotNews']")[0]
-        title = first.xpath("//dt/a/@title")[0]
         link = first.xpath("//dt/a/@href")[0]
-        pub_date = first.xpath("//dd[@class='sj']")[0].text_content()
-        pub_date = '{} {}'.format(pub_date[:10], pub_date[10:])
-        first = dict()
-        first['title'] = title
-        first['link'] = link
-        first['pub_date'] = pub_date
-        detail_body = self._get(link)
-        if detail_body:
-            article = self._parse_detail(detail_body)
-            if article:
-                first['article'] = article
-                items.append(first)
+        links.append(link)
 
         # 列表文章
-        columns = doc.xpath("//ul[@class='news_list']/li")
+        columns = doc.xpath("//div[@class='news_list']/dl")
         num = 0
         for column in columns:
             num += 1
-            # print(column.tag)
-            title = column.xpath("./p[@class='tit']/a/@title")[0]
-            link = column.xpath("./p[@class='tit']/a/@href")[0]
-            pub_date = column.xpath("./p[@class='sj']")[0].text_content()
-            pub_date = '{} {}'.format(pub_date[:10], pub_date[10:])
-            # print(title, link, pub_date)
-            item = dict()
-            item['title'] = title
-            item['link'] = link
-            item['pub_date'] = pub_date
-            detail_body = self._get(link)
-            if detail_body:
-                article = self._parse_detail(detail_body)
-                if article:
-                    item['article'] = self._process_content(article)
-                    # print(item)
-                    items.append(item)
+            link = column.xpath("./dd[@class='tit']/a/@href")[0]
+            links.append(link)
         print("num is ", num)
-        return items
+        return links
+
+    def _start(self):
+        first_list_page = self._get(self.list_url)
+        if first_list_page:
+            links = self._parse_first_list(first_list_page)
+            print(links)
+            for first_list_url in links:
+                second_list_page = self._get(first_list_url)
+                if second_list_page:
+                    items = self._parse_second_list(second_list_page)
+                    print(items)
 
 
 class STCN_Column(STCN_YaoWen):
@@ -609,7 +601,7 @@ if __name__ == "__main__":
 
     # d = STCN_KCB()  # 科创板
 
-    d = STCN_ZT()  # 专题
+    # d = STCN_ZT()  # 专题  TODO 页面情况太多 暂时不做..
 
     d._start()
 
