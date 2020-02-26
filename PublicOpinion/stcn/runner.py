@@ -49,8 +49,8 @@ def _run():
     ct.start()
 
     # 公司
-    d = STCN_Company()
-    d.start()
+    company = STCN_Company()
+    company.start()
 
     # 大盘
     dapan = STCN_DaPan()
@@ -97,8 +97,8 @@ def _run():
     rw._start()
 
     # 滚动
-    kuaixun = STCN_Roll()
-    kuaixun.start()
+    roll = STCN_Roll()
+    roll.start()
 
     # 时报动态
     sbdt = STCN_SBDT()
