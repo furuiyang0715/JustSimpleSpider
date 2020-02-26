@@ -7,14 +7,14 @@ from gne import GeneralNewsExtractor
 from lxml import html
 
 from PublicOpinion.configs import LOCAL_MYSQL_HOST, LOCAL_MYSQL_PORT, LOCAL_MYSQL_USER, LOCAL_MYSQL_PASSWORD, \
-    LOCAL_MYSQL_DB, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
+    LOCAL_MYSQL_DB, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, LOCAL
 from PublicOpinion.sql_pool import PyMysqlPoolBase
 
 
 class STCN_Base(object):
     def __init__(self):
         self.table = "stcn_info"
-        self.local = True
+        self.local = LOCAL
         # if self.local:
         #     conf = {
         #         "host": LOCAL_MYSQL_HOST,
