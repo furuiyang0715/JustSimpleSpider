@@ -3,6 +3,7 @@ import traceback
 
 import pymysql
 import requests
+from gne import GeneralNewsExtractor
 from lxml import html
 
 from PublicOpinion.configs import LOCAL_MYSQL_HOST, LOCAL_MYSQL_PORT, LOCAL_MYSQL_USER, LOCAL_MYSQL_PASSWORD, \
@@ -34,11 +35,17 @@ class STCN_Base(object):
 
         # 默认是不需要翻页的
         self.pages = False
+        self.extractor = GeneralNewsExtractor()
 
     def _get(self, url):
         resp = requests.get(url)
         if resp.status_code == 200:
             return resp.text
+
+    def _extract_content(self, body):
+        result = self.extractor.extract(body)
+        content = result.get("content")
+        return content
 
     def _parse_detail(self, body):
         try:
@@ -46,8 +53,11 @@ class STCN_Base(object):
             node = doc.xpath("//div[@class='txt_con']")[0]
             content = node.text_content()
         except:
-            return None
+            content = None
         else:
+            return content
+        if not content:
+            content = self._extract_content(body)
             return content
 
     def _filter_char(self, test_str):

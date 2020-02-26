@@ -102,6 +102,40 @@ def parse_list_items_3(doc):
     return items
 
 
+def parse_list_items_4(doc):
+    '''
+<div id="news_list2">
+        <dl>
+            <dt>
+                <a href="http://yq.stcn.com/2020/0217/15643794.shtml" target="_blank" title="中小企业，被“疫情”放大的“困境”和“自救之路”"><img src="2013/1216/1387175931959.jpg"></a>
+            </dt>
+
+            <dd class="yq_tit">
+                <a href="http://yq.stcn.com/2020/0217/15643794.shtml" target="_blank" title="中小企业，被“疫情”放大的“困境”和“自救之路”">
+                    <span>中小企业，被“疫情”放大的“困境”和“自救之路”</span>
+                </a>
+                <em>2020-02-17 12:53</em>
+            </dd>
+
+            <dd class="yq_exp">中小企业要开展“自救”首先要搞清楚这几年中小企业为什么会这么难？</dd>
+        </dl>
+    '''
+    items = []
+    columns = doc.xpath("//div[@id='news_list2']/dl")
+    num = 0
+    for column in columns:
+        num += 1
+        title = column.xpath("./dt/a/@title")[0]
+        link = column.xpath("./dt/a/@href")[0]
+        pub_date = column.xpath(".//dd[@class='yq_tit']/em")[0].text_content()
+        item = dict()
+        item['title'] = title
+        item['link'] = link
+        item['pub_date'] = pub_date
+        items.append(item)
+    return items
+
+
 def parse_list_items(doc):
     '''
 <ul class="news_list">

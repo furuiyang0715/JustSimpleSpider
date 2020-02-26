@@ -20,6 +20,9 @@
 ### 研报 http://kuaixun.stcn.com/list/kxyb.shtml [yanbao.py]
 ### 机构 http://finance.stcn.com/ [finance.py]
 ### 数据【独家数据】http://data.stcn.com/djsj/index.shtml [djsj.py]
+### 专题 【pass】
+### 舆情
+# 舆情聚焦 http://yq.stcn.com/yqjj/ [yqjj.py]
 
 
 # 深度 http://news.stcn.com/sdbd/1.shtml
