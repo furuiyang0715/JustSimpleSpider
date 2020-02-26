@@ -1,5 +1,7 @@
 import traceback
 
+import threadpool
+
 from PublicOpinion.stcn.bankuai import STCN_BanKuai
 from PublicOpinion.stcn.chuangtou import STCN_ChuangTou
 from PublicOpinion.stcn.company import STCN_Company
@@ -96,12 +98,12 @@ def _run():
     kuaixun.start()
 
     # 时报动态
-    sb = STCN_SBDT()
-    sb.start()
+    sbdt = STCN_SBDT()
+    sbdt.start()
 
     # 时报观察
-    sb = STCN_SBGC()
-    sb.start()
+    sbgc = STCN_SBGC()
+    sbgc.start()
 
     # 深度报道
     sd = STCN_SDBD()
@@ -163,4 +165,58 @@ def run():
         traceback.print_exc()
 
 
-run()
+# 一共有 30 个实例 开启多线程进行爬取
+def ins_start(instance):
+    instance.start()
+
+
+def thread_run():
+    bankuai = STCN_BanKuai()
+    ct = STCN_ChuangTou()
+    d = STCN_Company()
+    dapan = STCN_DaPan()
+    dj = STCN_DJSJ()
+    f = STCN_Finance()
+    gs = STCN_GSDT()
+    guonei = STCN_GuoNei()
+    haiwai = STCN_HaiWai()
+    kandianshuju = STCN_KanDianShuJu()
+    d = STCN_KCB()
+    kuaixun = STCN_Kuaixun()
+    market = STCN_Market()
+    rw = STCN_RenWu()
+    kuaixun = STCN_Roll()
+    sbdt = STCN_SBDT()
+    sbgc = STCN_SBGC()
+    sd = STCN_SDBD()
+    column = STCN_Column()
+    stcn_ssgsyqb = STCN_SSGSYQB()
+    xingu = STCN_XinGu()
+    pl = STCN_XWPL()
+    yanbao = STCN_YanBao()
+    yaowen = STCN_YaoWen()
+    yqjj = STCN_YQJJ()
+    yqsl = STCN_YQSL()
+    yqyj = STCN_YQYJ()
+    zhuli = STCN_ZhuLi()
+    zj = STCN_ZiJinLiuXiang()
+    zx = ZXDT_YQJJ()
+
+    ins_list = [
+        bankuai, ct, d, dapan, dj, f,
+        gs, guonei, haiwai, kandianshuju, d, kuaixun,
+        market, rw, kuaixun, sbdt, sbgc, sd,
+        column, stcn_ssgsyqb, xingu, pl, yanbao, yaowen,
+        yqjj, yqsl, yqyj, zhuli, zj, zx,
+    ]
+    pool = threadpool.ThreadPool(4)
+    reqs = threadpool.makeRequests(ins_start, ins_list)
+    [pool.putRequest(req) for req in reqs]
+    pool.wait()
+
+
+# 直接运行
+# run()
+
+# 线程池运行
+thread_run()
