@@ -13,6 +13,7 @@ class STCN_YQJJ(STCN_Base):
         self.format_url = "http://yq.stcn.com/yqjj/{}.shtml"
         self.pages = True  # 是否需要翻页
         self.page_num = 21
+        self.name = '舆情聚焦'
 
     def _parse_list_body(self, body):
         '''

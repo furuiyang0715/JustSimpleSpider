@@ -23,6 +23,7 @@
 ### 专题 【pass】
 ### 舆情
 # 舆情聚焦 http://yq.stcn.com/yqjj/ [yqjj.py]
+# 舆情速览 http://yq.stcn.com/yqsl/ [yqsl.py]
 
 
 # 深度 http://news.stcn.com/sdbd/1.shtml

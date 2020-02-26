@@ -136,6 +136,37 @@ def parse_list_items_4(doc):
     return items
 
 
+def parse_list_items_5(doc):
+    '''
+<ul id="news_list2">
+    <li>
+        <p class="yq_tit">
+            <a href="http://yq.stcn.com/2020/0221/15653999.shtml" target="_blank" title="光大银行开通“抗击疫情”绿色通道">
+                <span>光大银行开通“抗击疫情”绿色通道</span>
+            </a>
+            <em>2020-02-21 17:42</em>
+        </p>
+        <p class="yq_exp">光大银行深圳分行所有营业网点开通了“抗击疫情”绿色通道</p>
+    </li>
+    '''
+    items = []
+    columns = doc.xpath("//ul[@id='news_list2']/li")
+    num = 0
+    for column in columns:
+        num += 1
+        # print(column.tag)
+        title = column.xpath("./p/a/span")[0].text_content()
+        link = column.xpath("./p/a/@href")[0]
+        pub_date = column.xpath("./p/em")[0].text_content()
+        pub_date = '{} {}'.format(pub_date[:10], pub_date[10:])
+        item = dict()
+        item['title'] = title
+        item['link'] = link
+        item['pub_date'] = pub_date
+        items.append(item)
+    return items
+
+
 def parse_list_items(doc):
     '''
 <ul class="news_list">
