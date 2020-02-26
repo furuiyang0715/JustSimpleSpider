@@ -39,10 +39,4 @@
 # 公司动态 http://company.stcn.com/gsdt/1.shtml [gsdt.py]
 # 看点 http://data.stcn.com/kandianshuju/1.shtml [kandianshuju.py]
 # 独家数据 http://data.stcn.com/djsj/1.shtml [djsj.py]
-# 资金 http://data.stcn.com/zijinliuxiang/1.shtml []
-# 科创板信披 http://kcb.stcn.com/
-# 创业板信披 http://chinext.stcn.com/
-# 沪股通 http://hgt.stcn.com/
-# 深股通 http://sgt.stcn.com/
-
-
+# 资金 http://data.stcn.com/zijinliuxiang/1.shtml [zijinliuxiang.py]

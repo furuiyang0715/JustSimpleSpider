@@ -35,7 +35,7 @@ class STCN_YQYJ(STCN_Base):
         doc = html.fromstring(body)
         items = utils.parse_list_items_5(doc)
         [self._add_article(item) for item in items]
-        print(len(items))
+        # print(len(items))
         return items
 
 

@@ -13,6 +13,7 @@ class STCN_GuoNei(STCN_Base):
         self.format_url = "http://news.stcn.com/guonei/{}.shtml"
         self.pages = True  # 是否需要翻页
         self.page_num = 4623
+        self.name = '国内'
 
     def _parse_list_body(self, body):
         '''
@@ -28,7 +29,7 @@ class STCN_GuoNei(STCN_Base):
         doc = html.fromstring(body)
         items = utils.parse_list_items_1(doc)
         [self._add_article(item) for item in items]
-        print(len(items))
+        # print(len(items))
         return items
 
 

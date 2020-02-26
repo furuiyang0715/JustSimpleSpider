@@ -13,6 +13,7 @@ class STCN_Column(STCN_Base):
         super(STCN_Column, self).__init__()
         self.list_url = "http://space.stcn.com"
         self.extractor = GeneralNewsExtractor()
+        self.name = '专栏'
 
     def _get(self, url):
         resp = requests.get(url)
@@ -61,7 +62,7 @@ class STCN_Column(STCN_Base):
                     item['article'] = self._process_content(article)
                     # print(item)
                     items.append(item)
-        print(num)
+        # print(num)
         return items
 
 

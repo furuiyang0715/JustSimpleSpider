@@ -13,6 +13,7 @@ class STCN_ChuangTou(STCN_Base):
         self.format_url = "http://news.stcn.com/xwct/{}.shtml"
         self.pages = True  # 是否需要翻页
         self.page_num = 21
+        self.name = '创投'
 
     def _parse_list_body(self, body):
         '''
@@ -30,7 +31,7 @@ class STCN_ChuangTou(STCN_Base):
         doc = html.fromstring(body)
         items = utils.parse_list_items_1(doc)
         [self._add_article(item) for item in items]
-        print(len(items))
+        # print(len(items))
         return items
 
 

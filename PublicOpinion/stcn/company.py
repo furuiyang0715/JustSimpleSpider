@@ -9,6 +9,7 @@ class STCN_Company(STCN_Base):
         # 公司
         super(STCN_Company, self).__init__()
         self.list_url = "http://company.stcn.com/"
+        self.name = '公司'
 
     def _parse_list_body(self, body):
         doc = html.fromstring(body)
@@ -19,7 +20,7 @@ class STCN_Company(STCN_Base):
         [self._add_article(column) for column in columns]
         columns.append(first)
 
-        print(len(columns))
+        # print(len(columns))
         return columns
 
 

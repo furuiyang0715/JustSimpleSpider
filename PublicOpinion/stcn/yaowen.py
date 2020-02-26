@@ -11,6 +11,7 @@ class STCN_YaoWen(STCN_Base):
     def __init__(self):
         super(STCN_YaoWen, self).__init__()
         self.list_url = "http://news.stcn.com/"
+        self.name = '要闻'
 
     def _parse_list_body(self, body):
         doc = html.fromstring(body)

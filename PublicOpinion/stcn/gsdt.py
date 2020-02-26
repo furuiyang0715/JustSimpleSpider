@@ -29,7 +29,7 @@ class STCN_GSDT(STCN_Base):
         doc = html.fromstring(body)
         items = utils.parse_list_items_3(doc)
         [self._add_article(item) for item in items]
-        print(len(items))
+        # print(len(items))
         return items
 
 

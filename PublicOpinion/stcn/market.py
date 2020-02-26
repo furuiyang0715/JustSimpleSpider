@@ -12,6 +12,7 @@ class STCN_Market(STCN_Base):
     def __init__(self):
         super(STCN_Market, self).__init__()
         self.list_url = "http://stock.stcn.com/"
+        self.name = '股市'
 
     def _parse_list_body(self, body):
         # print(body)
