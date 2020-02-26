@@ -23,5 +23,5 @@ class STCN_XinGu(STCN_Base):
 
 
 if __name__ == "__main__":
-    dapan = STCN_XinGu()
-    dapan._start()
+    xingu = STCN_XinGu()
+    xingu._start()

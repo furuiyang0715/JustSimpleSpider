@@ -67,5 +67,5 @@ class STCN_Column(STCN_Base):
 
 
 if __name__ == "__main__":
-    yaowen = STCN_Column()
-    yaowen._start()
+    column = STCN_Column()
+    column._start()

@@ -23,5 +23,5 @@ class STCN_ZhuLi(STCN_Base):
 
 
 if __name__ == "__main__":
-    dapan = STCN_ZhuLi()
-    dapan._start()
+    zhuli = STCN_ZhuLi()
+    zhuli._start()

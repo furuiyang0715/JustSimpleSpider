@@ -22,5 +22,5 @@ class STCN_XWPL(STCN_Base):
 
 
 if __name__ == "__main__":
-    kuaixun = STCN_XWPL()
-    kuaixun._start()
+    pl = STCN_XWPL()
+    pl._start()

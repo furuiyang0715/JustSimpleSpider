@@ -192,3 +192,11 @@ class STCN_Base(object):
             self.sql_pool.dispose()
         except:
             pass
+
+    def start(self):
+        print("{} 开始爬取".format(self.name))
+        try:
+            self._start()
+        except:
+            traceback.print_exc()
+            print("{} 爬取失败".format(self.name))

@@ -23,5 +23,5 @@ class STCN_YanBao(STCN_Base):
 
 
 if __name__ == "__main__":
-    dapan = STCN_YanBao()
-    dapan._start()
+    yanbao = STCN_YanBao()
+    yanbao._start()
