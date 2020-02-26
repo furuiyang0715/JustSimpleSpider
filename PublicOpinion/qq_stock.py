@@ -194,7 +194,7 @@ class qqStock(object):
                             item['pub_date'] = pub_date
                             item['title'] = title
                             item['article'] = article
-                            print(item)
+                            # print(item)
                             ret = self._save(item)
                             if not ret:
                                 print("保存失败")

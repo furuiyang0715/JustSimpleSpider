@@ -25,6 +25,7 @@
 # 舆情聚焦 http://yq.stcn.com/yqjj/ [yqjj.py]
 # 舆情速览 http://yq.stcn.com/yqsl/ [yqsl.py]
 # 舆情研究 http://yq.stcn.com/yqyj/ [yqyj.py]
+# 上市公司舆情榜 http://yq.stcn.com/ssgsyqb/ [ssgsyqb.py]
 
 
 # 深度 http://news.stcn.com/sdbd/1.shtml
