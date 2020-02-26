@@ -7,6 +7,8 @@ import time
 import traceback
 import schedule
 
+from PublicOpinion.stcn import runner
+
 sys.path.append("./../")
 from PublicOpinion.qq_stock import qqStock
 from PublicOpinion.netease_money import Money163
@@ -144,6 +146,9 @@ def task():
     dt = datetime.datetime.today().strftime("%Y-%m-%d")
     with open("record.txt", "a+") as f:
         f.write("{}\r\n".format(dt))
+
+    print("开始爬取证券时报网.. ")
+    runner.thread_run()
 
     print("开始爬取网易财经")
     try:
