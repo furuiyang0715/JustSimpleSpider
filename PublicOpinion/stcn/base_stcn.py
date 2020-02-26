@@ -1,3 +1,4 @@
+import datetime
 import re
 import traceback
 
@@ -15,6 +16,9 @@ class STCN_Base(object):
     def __init__(self):
         self.table = "stcn_info"
         self.local = LOCAL
+        self.check_dt = datetime.datetime.today() - datetime.timedelta(days=2)
+        self.dt_fmt = '%Y-%m-%d'
+
         # if self.local:
         #     conf = {
         #         "host": LOCAL_MYSQL_HOST,
@@ -167,6 +171,24 @@ class STCN_Base(object):
                     return True
         return False
 
+    def _check_dt(self, pub_dt):
+        if not pub_dt:
+            return False
+
+        try:
+            pub_dt = datetime.datetime.strptime(pub_dt[:10], self.dt_fmt)
+        except:
+            traceback.print_exc()
+            return False
+
+        if pub_dt < self.check_dt:
+            print("当前天: ", pub_dt)
+            print("检查时刻: ", self.check_dt)
+            print("增量结束 .. ")
+            return True
+        else:
+            return False
+
     def _start(self):
         self._init_pool()
         if not self.pages:
@@ -175,12 +197,15 @@ class STCN_Base(object):
                 items = self._parse_list_body(list_body)
                 count = 0
                 for item in items:
+                    if self._check_dt(item.get("pub_date")):
+                        return
                     ret = self._save(item)
                     if ret:
                         count += 1
                         print("保存成功: {}".format(item))
                     else:
                         print("保存失败: {}".format(item))
+                        pass
                     if count > 9:
                         self.sql_pool.end()
                         print("提交 .. ")
@@ -196,12 +221,15 @@ class STCN_Base(object):
                 if list_body:
                     items = self._parse_list_body(list_body)
                     for item in items:
+                        if self._check_dt(item.get("pub_date")):
+                            return
                         ret = self._save(item)
                         if ret:
                             count += 1
                             print("保存成功: {}".format(item))
                         else:
                             print("保存失败: {}".format(item))
+                            pass
                         if count > 9:
                             self.sql_pool.end()
                             print("提交 .. ")
