@@ -36,7 +36,7 @@
 # 科创版 http://kcb.stcn.com/news/index.shtml [kcb.py]
 # 专题 http://zt.stcn.com/  【暂时不做】
 
-# 公司动态 http://company.stcn.com/gsdt/1.shtml
+# 公司动态 http://company.stcn.com/gsdt/1.shtml []
 # 看点 http://data.stcn.com/kandianshuju/1.shtml
 # 独家数据 http://data.stcn.com/djsj/1.shtml
 # 资金 http://data.stcn.com/zijinliuxiang/1.shtml
