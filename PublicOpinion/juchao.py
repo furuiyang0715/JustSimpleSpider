@@ -121,7 +121,7 @@ class JuChaoInfo(object):
             insert_sql, values = self._contract_sql(to_insert)
             count = self.sql_pool.insert(insert_sql, values)
         except pymysql.err.IntegrityError:
-            logger.warning("重复")
+            # logger.warning("重复")
             return 1
         except:
             logger.warning("失败")
@@ -158,7 +158,7 @@ class JuChaoInfo(object):
             item['title'] = record.get("F001V")  # 资讯标题
             item['category'] = record.get("F003V")   # 资讯类别
             item['summary'] = record.get("F002V")   # 资讯摘要
-            print(item)
+            # print(item)
             count = self._save(item)
             self.sql_pool.connection.commit()
             if not count:

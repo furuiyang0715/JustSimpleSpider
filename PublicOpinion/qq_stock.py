@@ -134,7 +134,7 @@ class qqStock(object):
             insert_sql, values = self._contract_sql(to_insert)
             count = self.sql_pool.insert(insert_sql, values)
         except pymysql.err.IntegrityError:
-            logger.warning("重复")
+            # logger.warning("重复")
             return 1
         except:
             logger.warning("失败")
@@ -152,7 +152,7 @@ class qqStock(object):
             article = self._parse_article(vurl)
             if article:
                 item['article'] = article
-                print(item)
+                # print(item)
                 ret = self._save(item)
                 if not ret:
                     print('保存失败')

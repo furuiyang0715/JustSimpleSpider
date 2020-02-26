@@ -133,7 +133,7 @@ class CNStock(object):
             insert_sql, values = self.contract_sql(to_insert)
             count = self.sql_pool.insert(insert_sql, values)
         except pymysql.err.IntegrityError:
-            logger.warning("重复")
+            # logger.warning("重复")
             return 1
         except:
             traceback.print_exc()
@@ -157,7 +157,7 @@ class CNStock(object):
                 if not link or link == "null":
                     continue
                 item['article'] = self.get_detail(link)
-                print(item)
+                # print(item)
                 ret = self._save(item)
                 count += 1
                 if ret:

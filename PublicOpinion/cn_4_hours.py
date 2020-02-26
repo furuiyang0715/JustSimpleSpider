@@ -89,7 +89,7 @@ class CNStock_2(CNStock):
                     item['link'] = detail_url
                     item['article'] = self.get_detail(detail_url)
                     item.pop("zhaiyao")
-                    print(item)
+                    # print(item)
                     ret = self._save(item)
                     count += 1
                     if ret:

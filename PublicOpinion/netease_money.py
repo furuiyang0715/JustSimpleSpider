@@ -6,6 +6,9 @@ import pymysql
 import requests
 from gne import GeneralNewsExtractor
 
+import sys
+sys.path.append('./../')
+
 from PublicOpinion.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_PASSWORD, MYSQL_USER, MYSQL_DB, LOCAL, LOCAL_MYSQL_HOST, \
     LOCAL_MYSQL_PORT, LOCAL_MYSQL_USER, LOCAL_MYSQL_PASSWORD, LOCAL_MYSQL_DB
 from PublicOpinion.sql_pool import PyMysqlPoolBase
@@ -76,7 +79,7 @@ class Money163(object):
             insert_sql, values = self.contract_sql(to_insert)
             count = self.sql_pool.insert(insert_sql, values)
         except pymysql.err.IntegrityError:
-            print("重复")
+            # print("重复")
             return 1
         except:
             print("失败")
@@ -87,7 +90,9 @@ class Money163(object):
         list_resp = requests.get(self.list_url)
         if list_resp.status_code == 200:
             body = list_resp.text
-            ret = self._parse_list(body)
+            # TODO 如果不转为 list，直接使用生成器时插入数据库会失败..
+            ret = list(self._parse_list(body))
+            count = 0
             for one in ret:
                 # print(one)
                 item = dict()
@@ -97,26 +102,37 @@ class Money163(object):
 
                 # 在返回的 json 数据中 最新的数据在最前面 定时+增量 只需要爬取大于当前时间一天之前的新闻
                 # 保险起见 设置为 2
-                dt = datetime.datetime.today() - datetime.timedelta(days=2)
+                # dt = datetime.datetime.today() - datetime.timedelta(days=1)
                 pub_date = one.get("p")
-                pt = datetime.datetime.strptime(pub_date, "%Y-%m-%d %H:%M:%S")
-                if pt < dt:
-                    print(pt)
-                    print(dt)
-                    print('网易财经增量完毕 ')
-                    return
+                # pt = datetime.datetime.strptime(pub_date, "%Y-%m-%d %H:%M:%S")
+
+                # bug fixed 因为这里是不同的栏目穿插 所以这么判断会少数据
+                # if pt < dt:
+                #     print(pt)
+                #     print(dt)
+                #     print('网易财经增量完毕 ')
+                #     return
 
                 item['pub_date'] = pub_date
                 article = self._parse_detail(one.get("l"))
+
                 if article:
                     item['article'] = article
-                    print(item)
+                    # print(item.get("title"))
                     ret = self._save(item)
                     if not ret:
                         print("保存失败 ")
                         self.error_detail.append(link)
+                    else:
+                        count += 1
                 else:
                     self.error_detail.append(link)
+
+                if count > 9:
+                    print("提交.. ")
+                    self.sql_pool.end()
+                    count = 0
+        self.sql_pool.dispose()
 
 
 if __name__ == "__main__":
