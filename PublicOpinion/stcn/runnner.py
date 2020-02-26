@@ -2,6 +2,9 @@ import traceback
 
 import threadpool
 
+import sys
+sys.path.append("./../../")
+
 from PublicOpinion.stcn.bankuai import STCN_BanKuai
 from PublicOpinion.stcn.chuangtou import STCN_ChuangTou
 from PublicOpinion.stcn.company import STCN_Company
@@ -167,13 +170,17 @@ def run():
 
 # 一共有 30 个实例 开启多线程进行爬取
 def ins_start(instance):
+    # 初始化的时间会去连接数据库
+    # 将初始化放在这里执行
+
+    # 或者在实例中 start 的时候再去 init pool
     instance.start()
 
 
 def thread_run():
     bankuai = STCN_BanKuai()
     ct = STCN_ChuangTou()
-    d = STCN_Company()
+    company = STCN_Company()
     dapan = STCN_DaPan()
     dj = STCN_DJSJ()
     f = STCN_Finance()
@@ -185,7 +192,7 @@ def thread_run():
     kuaixun = STCN_Kuaixun()
     market = STCN_Market()
     rw = STCN_RenWu()
-    kuaixun = STCN_Roll()
+    roll = STCN_Roll()
     sbdt = STCN_SBDT()
     sbgc = STCN_SBGC()
     sd = STCN_SDBD()
@@ -203,9 +210,9 @@ def thread_run():
     zx = ZXDT_YQJJ()
 
     ins_list = [
-        bankuai, ct, d, dapan, dj, f,
+        bankuai, ct, company, dapan, dj, f,
         gs, guonei, haiwai, kandianshuju, d, kuaixun,
-        market, rw, kuaixun, sbdt, sbgc, sd,
+        market, rw, roll, sbdt, sbgc, sd,
         column, stcn_ssgsyqb, xingu, pl, yanbao, yaowen,
         yqjj, yqsl, yqyj, zhuli, zj, zx,
     ]

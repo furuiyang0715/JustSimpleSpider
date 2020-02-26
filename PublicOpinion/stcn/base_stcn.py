@@ -15,6 +15,29 @@ class STCN_Base(object):
     def __init__(self):
         self.table = "stcn_info"
         self.local = True
+        # if self.local:
+        #     conf = {
+        #         "host": LOCAL_MYSQL_HOST,
+        #         "port": LOCAL_MYSQL_PORT,
+        #         "user": LOCAL_MYSQL_USER,
+        #         "password": LOCAL_MYSQL_PASSWORD,
+        #         "db": LOCAL_MYSQL_DB,
+        #     }
+        # else:
+        #     conf = {
+        #         "host": MYSQL_HOST,
+        #         "port": MYSQL_PORT,
+        #         "user": MYSQL_USER,
+        #         "password": MYSQL_PASSWORD,
+        #         "db": MYSQL_DB,
+        #     }
+        # self.sql_pool = PyMysqlPoolBase(**conf)
+
+        # 默认是不需要翻页的
+        self.pages = False
+        self.extractor = GeneralNewsExtractor()
+
+    def _init_pool(self):
         if self.local:
             conf = {
                 "host": LOCAL_MYSQL_HOST,
@@ -32,10 +55,6 @@ class STCN_Base(object):
                 "db": MYSQL_DB,
             }
         self.sql_pool = PyMysqlPoolBase(**conf)
-
-        # 默认是不需要翻页的
-        self.pages = False
-        self.extractor = GeneralNewsExtractor()
 
     def _get(self, url):
         resp = requests.get(url)
@@ -149,6 +168,7 @@ class STCN_Base(object):
         return False
 
     def _start(self):
+        self._init_pool()
         if not self.pages:
             list_body = self._get(self.list_url)
             if list_body:
