@@ -198,6 +198,7 @@ class STCN_Base(object):
                 count = 0
                 for item in items:
                     if self._check_dt(item.get("pub_date")):
+                        self.sql_pool.end()
                         return
                     ret = self._save(item)
                     if ret:
@@ -222,6 +223,7 @@ class STCN_Base(object):
                     items = self._parse_list_body(list_body)
                     for item in items:
                         if self._check_dt(item.get("pub_date")):
+                            self.sql_pool.end()
                             return
                         ret = self._save(item)
                         if ret:

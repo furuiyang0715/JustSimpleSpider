@@ -7,9 +7,8 @@ import time
 import traceback
 import schedule
 
-from PublicOpinion.stcn import runner
-
 sys.path.append("./../")
+from PublicOpinion.stcn import runner
 from PublicOpinion.qq_stock import qqStock
 from PublicOpinion.netease_money import Money163
 from PublicOpinion.configs import FIRST
