@@ -6,10 +6,10 @@ from PublicOpinion.stcn.base_stcn import STCN_Base
 from PublicOpinion.stcn import stcn_utils as utils
 
 
-class STCN_DJSJ(STCN_Base):
-    # 独家数据
+class STCN_YQJJ(STCN_Base):
+    # 舆情聚焦
     def __init__(self):
-        super(STCN_DJSJ, self).__init__()
+        super(STCN_YQJJ, self).__init__()
         self.format_url = "http://yq.stcn.com/yqjj/{}.shtml"
         self.pages = True  # 是否需要翻页
         self.page_num = 21
@@ -36,8 +36,8 @@ class STCN_DJSJ(STCN_Base):
 
 
 if __name__ == "__main__":
-    dj = STCN_DJSJ()
-    dj._start()
+    yqjj = STCN_YQJJ()
+    yqjj._start()
 
     # detail_url = "http://yq.stcn.com/2017/0210/13044959.shtml"
     # page = dj._get(detail_url)
