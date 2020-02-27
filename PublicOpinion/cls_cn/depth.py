@@ -2,6 +2,8 @@ import json
 import random
 import sys
 import time
+import traceback
+
 import requests
 from gne import GeneralNewsExtractor
 
@@ -11,15 +13,14 @@ now = lambda: int(time.time())
 
 
 class Depth(ClsBase):
-    def __init__(self):
+    def __init__(self, format_url):
         super(Depth, self).__init__()
         self.this_last_dt = None
         self.name = '财联社-深度及题材'
-        self.url_format = 'https://www.cls.cn/nodeapi/depths?last_time={}&refreshType=1&rn=20&sign=900569309a173964ce973dc61bbc2455'
+        self.url_format = format_url
         self.table = 'cls_depth_theme'
         self.extractor = GeneralNewsExtractor()
         self.fields = ['title', 'link', 'pub_date', 'article']
-        self.error_list = []
         self.error_detail = []
 
     def _get(self, url):
@@ -66,6 +67,9 @@ class Depth(ClsBase):
                 title = info.get("title")
                 if not title:
                     title = info.get("content")[:20]
+                else:
+                    if len(title) > 20:
+                        title = title[:20]
                 item['title'] = title
                 article_id = info.get("article_id")
                 item['link'] = "https://www.cls.cn/depth/{}".format(article_id)
@@ -93,6 +97,7 @@ class Depth(ClsBase):
         first_url = self.url_format.format(now())
         print("first url: ", first_url)
         self.refresh(first_url)
+        print(self.error_detail)
 
     def _create_table(self):
         create_sql = '''
@@ -113,19 +118,24 @@ class Depth(ClsBase):
         self.sql_pool.end()
         return ret
 
+    def start(self):
+        try:
+            self._start()
+        except:
+            traceback.print_exc()
+
+
+class Schedule(object):
+    def __init__(self):
+        pass
+
+    def run(self):
+        depth_url_format = 'https://www.cls.cn/nodeapi/themes?lastTime={}&rn=20&sign=5055720fe645d52baf0ead85f70d220c'
+        theme_url_format = 'https://www.cls.cn/nodeapi/depths?last_time={}&refreshType=1&rn=20&sign=900569309a173964ce973dc61bbc2455'
+        Depth(depth_url_format).start()
+        Depth(theme_url_format).start()
+
 
 if __name__ == "__main__":
-    d = Depth()
-
-    # d._init_pool()
-    # ret = d._create_table()
-    # print(ret)
-
-    # detail_url = 'https://www.cls.cn/depth/448106'
-    # ret = d._parse_detail(detail_url)
-    # print(ret)
-
-
-    d._start()
-    print(d.error_detail)
-    print(d.error_list)
+    sche = Schedule()
+    sche.run()

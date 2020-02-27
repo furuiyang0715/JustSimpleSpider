@@ -16,4 +16,5 @@ RUN pip install -r requirements.txt -i https://pypi.douban.com/simple
 
 WORKDIR /PublicOpinion/carticle
 
-ENTRYPOINT ["python", "myarticle.py"]
+#ENTRYPOINT ["python", "myarticle.py"]
+ENTRYPOINT ["python", "main.py"]
