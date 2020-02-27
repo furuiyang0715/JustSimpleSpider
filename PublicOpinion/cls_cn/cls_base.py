@@ -13,7 +13,6 @@ class ClsBase(object):
     # 财联社-基类
     def __init__(self):
         self.local = LOCAL
-        self.this_last_dt = None
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 (KHTML, '
                           'like Gecko) Chrome/79.0.3945.117 Safari/537.36'
