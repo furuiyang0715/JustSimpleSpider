@@ -22,8 +22,8 @@ class Reference(ClsBase):
         self.infos = {
             1: ['morningNewsList', 'morningNewsContent'],    # 早报
             2: ['everydayReceiveList', 'everydayContent'],     # 每日收评
-            # 3: ['analyzeList', 'analyzeContent'],     # 涨停分析
-            # 4: ['afterAfficheList', 'afterContent'],     # 盘后公告
+            3: ['analyzeList', 'analyzeContent'],     # 涨停分析
+            4: ['afterAfficheList', 'afterContent'],     # 盘后公告
             5: ['networkNewsList', 'newsContent'],     # 新闻联播
             6: ['csrcList', 'csrcContent'],     # 证监发布会
             7: ['globaMarketList', 'globaContent'],     # 环球市场
