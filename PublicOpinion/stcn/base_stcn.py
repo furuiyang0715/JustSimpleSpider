@@ -136,7 +136,7 @@ class STCN_Base(object):
         try:
             ret = self.sql_pool.insert(insert_sql, value)
         except pymysql.err.IntegrityError:
-            print("重复数据 ")
+            # print("重复数据 ")
             return 1
         except:
             traceback.print_exc()
@@ -203,9 +203,9 @@ class STCN_Base(object):
                     ret = self._save(item)
                     if ret:
                         count += 1
-                        print("保存成功: {}".format(item))
+                        # print("保存成功: {}".format(item))
                     else:
-                        print("保存失败: {}".format(item))
+                        # print("保存失败: {}".format(item))
                         pass
                     if count > 9:
                         self.sql_pool.end()

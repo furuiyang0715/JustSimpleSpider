@@ -1,5 +1,7 @@
 import datetime
 import re
+import time
+import traceback
 
 import demjson
 import pymysql
@@ -10,7 +12,7 @@ import sys
 sys.path.append('./../')
 
 from PublicOpinion.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_PASSWORD, MYSQL_USER, MYSQL_DB, LOCAL, LOCAL_MYSQL_HOST, \
-    LOCAL_MYSQL_PORT, LOCAL_MYSQL_USER, LOCAL_MYSQL_PASSWORD, LOCAL_MYSQL_DB
+    LOCAL_MYSQL_PORT, LOCAL_MYSQL_USER, LOCAL_MYSQL_PASSWORD, LOCAL_MYSQL_DB, LOCAL_PROXY_URL, PROXY_URL
 from PublicOpinion.sql_pool import PyMysqlPoolBase
 
 
@@ -86,9 +88,60 @@ class Money163(object):
         else:
             return count
 
+    def get_proxy(self):
+        if self.local:
+            return requests.get(LOCAL_PROXY_URL).text.strip()
+        else:
+            return requests.get(PROXY_URL).text.strip()
+
+    def get_list_resp(self):
+        count = 0
+        while True:
+            proxy = self.get_proxy()
+            print(">> ", proxy)
+            try:
+                list_resp = requests.get(self.list_url,
+                                         proxies={"http": proxy},
+                                         timeout=3)
+            except:
+                count += 1
+                if count > 10:
+                    return
+                time.sleep(1)
+            else:
+                if list_resp.status_code != 200:
+                    count += 1
+                    if count > 10:
+                        return
+                    time.sleep(1)
+                else:
+                    break
+        return list_resp
+
+    def __del__(self):
+        try:
+            self.sql_pool.dispose()
+        except:
+            pass
+
+    def close(self):
+        try:
+            self.sql_pool.dispose()
+        except:
+            pass
+
+    def start(self):
+        try:
+            self._start()
+        except:
+            traceback.print_exc()
+        finally:
+            self.close()
+
     def _start(self):
-        list_resp = requests.get(self.list_url)
-        if list_resp.status_code == 200:
+        list_resp = self.get_list_resp()
+        print(">>>", list_resp)
+        if list_resp and list_resp.status_code == 200:
             body = list_resp.text
             # TODO 如果不转为 list，直接使用生成器时插入数据库会失败..
             ret = list(self._parse_list(body))
@@ -137,4 +190,8 @@ class Money163(object):
 
 if __name__ == "__main__":
     m = Money163()
-    m._start()
+
+    # ret = m.get_proxy().text
+    # print(ret.strip())
+
+    m.start()

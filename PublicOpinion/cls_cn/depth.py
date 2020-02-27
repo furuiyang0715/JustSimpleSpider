@@ -127,3 +127,5 @@ if __name__ == "__main__":
 
 
     d._start()
+    print(d.error_detail)
+    print(d.error_list)

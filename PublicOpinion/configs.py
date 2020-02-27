@@ -32,6 +32,10 @@ DC_DB = env.get("DC_DB", cf.get('dc', 'DC_DB'))
 LOCAL = bool(int(env.get("LOCAL", cf.get('deploy', 'LOCAL'))))
 FIRST = bool(int(env.get("FIRST", cf.get('deploy', 'FIRST'))))
 
+# proxy
+PROXY_URL = env.get("PROXY_URL", 'https://dps.kdlapi.com/api/getdps/?orderid=934751511166930&num=1&pt=1&sep=1')
+LOCAL_PROXY_URL = env.get("LOCAL_PROXY_URL", 'http://ent.kdlapi.com/api/getproxy/?orderid=924829619838717&num=1&protocol=1&method=2&an_an=1&an_ha=1&sep=1')
+
 
 if __name__ == "__main__":
     import sys

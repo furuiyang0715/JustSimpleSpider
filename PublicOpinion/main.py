@@ -54,7 +54,7 @@ def juchao():
 
 def neteasy():
     m = Money163()
-    m._start()
+    m.start()
     with open("record.txt", "a+") as f:
         f.write("网易财经: {}\r\n".format(m.error_detail))
 
