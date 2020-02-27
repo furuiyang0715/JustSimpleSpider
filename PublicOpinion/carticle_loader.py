@@ -17,13 +17,13 @@ import sys
 sys.path.append("./../")
 from PublicOpinion.configs import MYSQL_DB, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, DC_HOST, DC_PORT, \
     DC_USER, DC_PASSWD, DC_DB, LOCAL, LOCAL_MYSQL_HOST, LOCAL_MYSQL_PORT, LOCAL_MYSQL_USER, LOCAL_MYSQL_PASSWORD, \
-    LOCAL_MYSQL_DB
+    LOCAL_MYSQL_DB, LOCAL_PROXY_URL, PROXY_URL
 from PublicOpinion.sql_pool import PyMysqlPoolBase
 
 
 logger = logging.getLogger()
-PROXY_URL = os.environ.get("PROXY_URL", "http://172.17.0.4:8888/{}")   # 远程的代理地址
-LOCAL_PROXY_URL = os.environ.get("LOCAL_PROXY_URL", "http://127.0.0.1:8888/{}")   # 本地的代理url
+# PROXY_URL = os.environ.get("PROXY_URL", "http://172.17.0.4:8888/{}")   # 远程的代理地址
+# LOCAL_PROXY_URL = os.environ.get("LOCAL_PROXY_URL", "http://127.0.0.1:8888/{}")   # 本地的代理url
 
 
 class CArticleLoder(object):
@@ -155,27 +155,33 @@ class CArticleLoder(object):
     #     return proxy
 
     def _get_proxy(self):
-        # 获取一个可用代理 如果当前没有可用的话 就 sleep 3 秒钟
         if self.local:
-            while True:
-                count = requests.get(LOCAL_PROXY_URL.format("count"))
-                if count:
-                    resp = requests.get(LOCAL_PROXY_URL.format("get"))
-                    break
-                else:
-                    print("当前无可用代理, 等一会儿 ")
-                    time.sleep(3)
-            return resp.text
+            return requests.get(LOCAL_PROXY_URL).text.strip()
         else:
-            while True:
-                count = requests.get(PROXY_URL.format("count"))
-                if count:
-                    resp = requests.get(PROXY_URL.format("get"))
-                    break
-                else:
-                    print("当前无可用代理, 等一会儿 ")
-                    time.sleep(3)
-            return resp.text
+            return requests.get(PROXY_URL).text.strip()
+
+    # def _get_proxy(self):
+    #     # 获取一个可用代理 如果当前没有可用的话 就 sleep 3 秒钟
+    #     if self.local:
+    #         while True:
+    #             count = requests.get(LOCAL_PROXY_URL.format("count"))
+    #             if count:
+    #                 resp = requests.get(LOCAL_PROXY_URL.format("get"))
+    #                 break
+    #             else:
+    #                 print("当前无可用代理, 等一会儿 ")
+    #                 time.sleep(3)
+    #         return resp.text
+    #     else:
+    #         while True:
+    #             count = requests.get(PROXY_URL.format("count"))
+    #             if count:
+    #                 resp = requests.get(PROXY_URL.format("get"))
+    #                 break
+    #             else:
+    #                 print("当前无可用代理, 等一会儿 ")
+    #                 time.sleep(3)
+    #         return resp.text
 
     def _delete_detail_404(self, url):
         delete_sql = f"delete from `{self.table}` where link = {url};"
