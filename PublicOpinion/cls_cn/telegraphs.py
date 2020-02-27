@@ -3,6 +3,9 @@ import random
 import time
 import requests
 
+# 方便测试
+import sys
+sys.path.append('./../../')
 from PublicOpinion.cls_cn.cls_base import ClsBase
 
 now = lambda: int(time.time())
@@ -46,13 +49,15 @@ class Telegraphs(ClsBase):
                 print("增量完毕 .. ")
                 return
             self.this_last_dt = dt
-            # dt - 1 是为了防止临界点重复值 尽量 insert_many 成功。
+            # dt - 1 是为了防止临界点重复值 尽量 insert_many 成功
             next_url = self.url_format.format(dt-1)
             # 随机 sleep 模拟人的加载动作
             time.sleep(random.randint(1, 3))
 
             print("next_url: ", next_url)
             # TODO 递归的性能问题
+            # 其实这个数据量应该还能承受, 递归的话逻辑会比较通顺
+            # 后续看是否改为循环
             self.refresh(next_url)
 
     def _start(self):
