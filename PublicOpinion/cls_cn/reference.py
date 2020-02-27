@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import json
+import pprint
 import re
+import sys
 
 import requests as req
 from lxml import html
@@ -17,12 +19,20 @@ class Reference(ClsBase):
         self.page_url = self.base_url.format(self.num)
         self.table = 'cls_depth_theme'
         self.fields = ['title', 'link', 'pub_date', 'article']
+        self.infos = {
+            1: ['morningNewsList', 'morningNewsContent'],    # 早报
+            2: ['everydayReceiveList', 'everydayContent'],     # 每日收评
+        }
+        self.name = self.infos.get(self.num)[0]
+        self.key = self.infos.get(self.num)[1]
 
     def _parse_list_page(self, page):
         try:
             json_data = re.findall(r'__NEXT_DATA__ = (\{.*\})', page)[0]
             py_data = json.loads(json_data)
-            news_list = py_data.get('props', {}).get('initialState', {}).get('reference', {}).get('morningNewsList')
+            # print(pprint.pformat(py_data.get('props', {}).get('initialState', {}).get('reference', {})))
+            news_list = py_data.get('props', {}).get('initialState', {}).get('reference', {}).get(self.name)
+            # print(pprint.pformat(news_list))
         except:
             return None
 
@@ -52,11 +62,11 @@ class Reference(ClsBase):
             if news_list:
                 for news in news_list:
                     item = {}
-                    current = news.get("morningNewsContent")
+                    current = news.get(self.key)
                     if current:
-                        pub_date = news.get('morningNewsContent', {}).get("ctime")
-                        title = news.get('morningNewsContent', {}).get("title")
-                        article = news.get('morningNewsContent', {}).get("content")
+                        pub_date = current.get("ctime")
+                        title = current.get("title")
+                        article = current.get("content")
                         aid = news.get('id')
                         link = 'https://api3.cls.cn/share/article/{}?os=web&sv=6.8.0&app=CailianpressWeb'.format(aid)
                         # print(pub_date)
@@ -112,7 +122,7 @@ class Reference(ClsBase):
 
 if __name__ == "__main__":
     # print(len('https://api3.cls.cn/share/article/441704?os=web&sv=6.8.0&app=CailianpressWeb'))
-    demo = Reference(1)
+    demo = Reference(2)
 
     # demo._init_pool()
     # demo._create_table()
