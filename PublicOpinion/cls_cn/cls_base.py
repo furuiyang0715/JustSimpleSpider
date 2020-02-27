@@ -125,7 +125,8 @@ class ClsBase(object):
                 if count > 9:
                     self.sql_pool.end()
                     count = 0
-            self.sql_pool.dispose()
+            # self.sql_pool.dispose()
+            self.sql_pool.end()
         else:
             print("批量成功..")
             print(items)

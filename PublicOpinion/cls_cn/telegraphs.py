@@ -17,7 +17,7 @@ class Telegraphs(ClsBase):
         self.table = 'cls_telegraphs'
 
     def refresh(self, url):
-        # 只显示一天的数据
+        # 只显示最近 24 小时的数据
         resp = requests.get(url, headers=self.headers)
         # print(resp)
         if resp.status_code == 200:
