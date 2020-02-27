@@ -22,6 +22,14 @@ class Reference(ClsBase):
         self.infos = {
             1: ['morningNewsList', 'morningNewsContent'],    # 早报
             2: ['everydayReceiveList', 'everydayContent'],     # 每日收评
+            # 3: ['analyzeList', 'analyzeContent'],     # 涨停分析
+            # 4: ['afterAfficheList', 'afterContent'],     # 盘后公告
+            5: ['networkNewsList', 'newsContent'],     # 新闻联播
+            6: ['csrcList', 'csrcContent'],     # 证监发布会
+            7: ['globaMarketList', 'globaContent'],     # 环球市场
+            8: ['forecastList', 'forecasContent'],     # 涨停预测
+            9: ['hotPlateList', 'hotPlateList'],     # 热点版块
+            10: ['threeGuessList', 'threeContent'],     # 明日 3 大猜想
         }
         self.name = self.infos.get(self.num)[0]
         self.key = self.infos.get(self.num)[1]
@@ -59,8 +67,11 @@ class Reference(ClsBase):
         if resp.status_code == 200:
             page = resp.text
             news_list = self._parse_list_page(page)
+            # print(news_list)
             if news_list:
                 for news in news_list:
+                    # print(pprint.pformat(news))
+                    # sys.exit(0)
                     item = {}
                     current = news.get(self.key)
                     if current:
@@ -122,7 +133,7 @@ class Reference(ClsBase):
 
 if __name__ == "__main__":
     # print(len('https://api3.cls.cn/share/article/441704?os=web&sv=6.8.0&app=CailianpressWeb'))
-    demo = Reference(2)
+    demo = Reference(10)
 
     # demo._init_pool()
     # demo._create_table()
