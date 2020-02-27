@@ -18,6 +18,7 @@ class Telegraphs(ClsBase):
         self.name = '财新社-电报'
         self.url_format = 'https://www.cls.cn/nodeapi/telegraphs?refresh_type=1&rn=20&last_time={}&sign=56918b10789cb8a977c518409e7f0ced'
         self.table = 'cls_telegraphs'
+        self.fields = ['title', 'pub_date', 'article']
 
     def refresh(self, url):
         # 只显示最近 24 小时的数据

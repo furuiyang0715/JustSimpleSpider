@@ -18,24 +18,46 @@ class Depth(ClsBase):
         self.url_format = 'https://www.cls.cn/nodeapi/depths?last_time={}&refreshType=1&rn=20&sign=900569309a173964ce973dc61bbc2455'
         self.table = 'cls_depth_theme'
         self.extractor = GeneralNewsExtractor()
+        self.fields = ['title', 'link', 'pub_date', 'article']
+        self.error_list = []
+        self.error_detail = []
+
+    def _get(self, url):
+        count = 0
+        while True:
+            try:
+                count += 1
+                if count > 3:
+                    return
+                resp = requests.get(url, headers=self.headers, verify=False, timeout=1)
+            except requests.exceptions.ConnectionError:
+                print("connection error, retry ")
+                time.sleep(1)
+            except requests.exceptions.ReadTimeout:
+                print("read timeout, retry")
+                time.sleep(1)
+            except:
+                return None
+            else:
+                break
+        return resp
 
     def _parse_detail(self, url):
-        resp = requests.get(url, headers=self.headers)
-        if resp.status_code == 200:
+        resp = self._get(url)
+        if resp and resp.status_code == 200:
             page = resp.text
             result = self.extractor.extract(page)
             content = result.get("content")
             return content
+        else:
+            self.error_detail.append(url)
 
     def refresh(self, url):
-        # 同样是递归地进行刷新以及调用
-        resp = requests.get(url, headers=self.headers)
-        if resp.status_code == 200:
+        # 数据一直到 2.19 在当前时间是 2.27 的情况下
+        resp = self._get(url)
+        if resp and resp.status_code == 200:
             py_data = json.loads(resp.text)
-            # print(py_data)
-            # sys.exit(0)
             infos = py_data.get("data")
-            # print(infos)
             if not infos:
                 return
             items = []
@@ -45,16 +67,15 @@ class Depth(ClsBase):
                 if not title:
                     title = info.get("content")[:20]
                 item['title'] = title
-                pub_date = info.get("ctime")
-
                 article_id = info.get("article_id")
                 item['link'] = "https://www.cls.cn/depth/{}".format(article_id)
-
+                pub_date = info.get("ctime")
                 item['pub_date'] = self.convert_dt(pub_date)
-                item['article'] = self._parse_detail(item['link'])
-                items.append(item)
+                article = self._parse_detail(item['link'])
+                if article:
+                    item['article'] = article
+                    items.append(item)
             self.save(items)
-            # print(items)
 
             dt = infos[-1].get('ctime')
             if dt == self.this_last_dt:
@@ -70,6 +91,7 @@ class Depth(ClsBase):
     def _start(self):
         self._init_pool()
         first_url = self.url_format.format(now())
+        print("first url: ", first_url)
         self.refresh(first_url)
 
     def _create_table(self):
@@ -99,9 +121,9 @@ if __name__ == "__main__":
     # ret = d._create_table()
     # print(ret)
 
-    detail_url = 'https://www.cls.cn/depth/448106'
-    ret = d._parse_detail(detail_url)
-    print(ret)
+    # detail_url = 'https://www.cls.cn/depth/448106'
+    # ret = d._parse_detail(detail_url)
+    # print(ret)
 
 
-    # d._start()
+    d._start()

@@ -38,7 +38,7 @@ class ClsBase(object):
         self.sql_pool = PyMysqlPoolBase(**conf)
 
     def convert_dt(self, time_stamp):
-        d = datetime.datetime.fromtimestamp(time_stamp)
+        d = str(datetime.datetime.fromtimestamp(time_stamp))
         return d
 
     def _contract_sql(self, to_insert):
@@ -82,11 +82,14 @@ class ClsBase(object):
         content = "".join(params).strip()
         return content
 
+    def _get_values(self, item: dict):
+        # self.fields: []  插入所需字段列表 同时与上文的 ks = sorted(ks) 对应
+        value = tuple(item.get(field) for field in sorted(self.fields))
+        return value
+
     def _save(self, item):
         insert_sql = self._contract_sql(item)
-        value = (item.get("article"),
-                 item.get("pub_date"),
-                 item.get("title"))
+        value = self._get_values(item)
         try:
             ret = self.sql_pool.insert(insert_sql, value)
         except pymysql.err.IntegrityError:
@@ -98,9 +101,7 @@ class ClsBase(object):
             return ret
 
     def _save_many(self, items):
-        values = [(item.get("article"),
-                   item.get("pub_date"),
-                   item.get("title")) for item in items]
+        values = [self._get_values(item) for item in items]   # list of tuple
         insert_many_sql = self._contract_sql(items[0])
         try:
             ret = self.sql_pool.insert_many(insert_many_sql, values)
