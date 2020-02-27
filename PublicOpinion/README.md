@@ -47,6 +47,9 @@ sudo docker run -itd --name ins4 --env KEY='' --env START=600 \
 --env END=1000 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/ca:v1 
 
+sudo docker run --env LOCAL=0 --log-opt max-size=10m --log-opt max-file=3 -itd --name ca registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/ca:v1
+
+
 ### --------------------------------------------------------------------
 
 
