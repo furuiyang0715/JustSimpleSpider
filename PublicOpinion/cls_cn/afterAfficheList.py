@@ -57,17 +57,19 @@ class afterAfficheList(Reference):
                 lst = tip.split("：")
                 c = lst[0]
                 if len(c) <= 4:
-                    code = c
-                for keyword in ["业绩快报", '年报', '收关注函', '回复关注函', '调整定增预案', '补充公告', '向下修正业绩', '五天四板']:
-                    c = c.replace(keyword, '')
+                    c = c
+                else:
+                    for keyword in ["业绩快报", '年报', '收关注函', '回复关注函', '调整定增预案', '补充公告',
+                                    '向下修正业绩', '五天四板']:
+                        c = c.replace(keyword, '')
 
-                if '连板' in c:
-                    u = re.findall('(.*连板)', c)
-                    if u:
-                        u = u[0]
-                        c = c.replace(u, '')
-                if len(c) > 8:
-                    c = c[:4]
+                    if '连板' in c:
+                        u = re.findall('(.*连板)', c)
+                        if u:
+                            u = u[0]
+                            c = c.replace(u, '')
+                    if len(c) > 8:
+                        c = c[:4]
 
                 new_infos.append((c, vls))
         return new_infos
@@ -115,6 +117,10 @@ class afterAfficheList(Reference):
         return items
 
     def _create_table(self):
+        # TODO 这里的字段比较少 但是要解决一个去重的问题
+        # 只是用 code + pub_date 进行去重的话 很可能一天之内出现这个code的两个条目 那么另外的一个就被忽略了
+        # 解决方案 （1） 全员联合唯一
+        # （2） 对文章内容进行 信息摘要 计算， 求出一个唯一值保存在数据库中
         create_sql = '''
         CREATE TABLE IF NOT EXISTS `cls_afterAfficheList`(
           `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -140,6 +146,12 @@ class afterAfficheList(Reference):
         for item in items:
             print(item)
         self.save(items)
+
+    def start(self):
+        try:
+            self._start()
+        except:
+            traceback.print_exc()
 
 
 if __name__ == "__main__":
