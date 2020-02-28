@@ -29,7 +29,7 @@ class ClsSchedule(object):
         start_time = now()
         for instance in [self.tele, self.depth_sche, self.after]:
             self.ins_start(instance)
-        print("顺序执行所用的时间是{}".format(now() - start_time))
+        print("顺序执行所用的时间是{}".format(now() - start_time))  # 大概是 537
 
     def thread_run(self):
         # 多线程运行
@@ -39,13 +39,13 @@ class ClsSchedule(object):
         req = threadpool.makeRequests(self.ins_start, [self.tele, self.depth_sche, self.after])
         [pool.putRequest(r) for r in req]
         pool.wait()
-        print("线程池执行所用的时间是{}".format(now() - start_time))
+        print("线程池执行所用的时间是{}".format(now() - start_time))  # 大概是 362
 
 
 cls = ClsSchedule()
-cls.simple_run()
+# cls.simple_run()
 
-# cls.thread_run()
+cls.thread_run()
 
 
 

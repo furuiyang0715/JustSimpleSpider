@@ -65,14 +65,13 @@ registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/yuqing:v1
 ```
 
 
-select id from netease_money where link = 'https://money.163.com/20/0226/08/F6A3O9R100259DLP.html'; 
-
-
 
 对东财进行单独的部署: 
 docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/ca:v1 .
+最好将其与其他的舆情模块进行分开部署 
+docker build -f Dockerfile.debug -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/ca:v1 .
 
-loader 的部署: 
+首次loader 的部署: 
 sudo docker run -itd --name mm1 --env KEY='' --env START=317 \
 --env END=400 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/ca:v1 

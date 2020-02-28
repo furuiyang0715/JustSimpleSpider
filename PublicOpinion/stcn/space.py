@@ -45,8 +45,10 @@ class STCN_Column(STCN_Base):
             link = column.xpath('./dd[@class="mtit"]/a/@href')[0]
 
             pub_date = column.xpath('./dd[@class="mexp"]/span')[0].text_content()
+            my_today = datetime.datetime.today()
             yesterday = datetime.datetime.today()-datetime.timedelta(days=1)
             before_yesterday = datetime.datetime.today()-datetime.timedelta(days=2)
+            pub_date = pub_date.replace("今天", my_today.strftime("%Y-%m-%d"))
             pub_date = pub_date.replace("昨天", yesterday.strftime("%Y-%m-%d"))
             pub_date = pub_date.replace("前天", before_yesterday.strftime("%Y-%m-%d"))
             # print(title, link, pub_date)

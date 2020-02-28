@@ -223,7 +223,7 @@ def thread_run():
 
 
 # 直接运行
-# run()
+run()
 
 # 线程池运行
-thread_run()
+# thread_run()
