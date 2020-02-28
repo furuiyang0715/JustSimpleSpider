@@ -138,3 +138,9 @@ class ClsBase(object):
             self.sql_pool.dispose()
         except:
             pass
+
+    def start(self):
+        try:
+            self._start()
+        except:
+            traceback.print_exc()

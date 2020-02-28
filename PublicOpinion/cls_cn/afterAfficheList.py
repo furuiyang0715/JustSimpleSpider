@@ -147,12 +147,6 @@ class afterAfficheList(Reference):
             print(item)
         self.save(items)
 
-    def start(self):
-        try:
-            self._start()
-        except:
-            traceback.print_exc()
-
 
 if __name__ == "__main__":
     demo = afterAfficheList()

@@ -125,11 +125,12 @@ class Depth(ClsBase):
             traceback.print_exc()
 
 
-class Schedule(object):
+class DepthSchedule(object):
+    # 顺序执行的
     def __init__(self):
         pass
 
-    def run(self):
+    def start(self):
         depth_url_format = 'https://www.cls.cn/nodeapi/themes?lastTime={}&rn=20&sign=5055720fe645d52baf0ead85f70d220c'
         theme_url_format = 'https://www.cls.cn/nodeapi/depths?last_time={}&refreshType=1&rn=20&sign=900569309a173964ce973dc61bbc2455'
         Depth(depth_url_format).start()
@@ -137,5 +138,5 @@ class Schedule(object):
 
 
 if __name__ == "__main__":
-    sche = Schedule()
-    sche.run()
+    sche = DepthSchedule()
+    sche.start()

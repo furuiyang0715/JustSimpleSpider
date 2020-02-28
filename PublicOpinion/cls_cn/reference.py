@@ -22,8 +22,8 @@ class Reference(ClsBase):
         self.infos = {
             1: ['morningNewsList', 'morningNewsContent'],    # 早报
             2: ['everydayReceiveList', 'everydayContent'],     # 每日收评
-            3: ['analyzeList', 'analyzeContent'],     # 涨停分析
-            4: ['afterAfficheList', 'afterContent'],     # 盘后公告
+            # 3: ['analyzeList', 'analyzeContent'],     # 涨停分析 不要的
+            4: ['afterAfficheList', 'afterContent'],     # 盘后公告 单独成表
             5: ['networkNewsList', 'newsContent'],     # 新闻联播
             6: ['csrcList', 'csrcContent'],     # 证监发布会
             7: ['globaMarketList', 'globaContent'],     # 环球市场
@@ -131,11 +131,22 @@ class Reference(ClsBase):
         self.save(items)
 
 
+class ReferenceSchedule(object):
+
+    def start(self):
+        for num in [1, 2, 5, 6, 7, 8, 9, 10]:
+            refe = Reference(num)
+            print(refe.name, "开始爬取了 ..")
+            refe.start()
+
+
 if __name__ == "__main__":
     # print(len('https://api3.cls.cn/share/article/441704?os=web&sv=6.8.0&app=CailianpressWeb'))
-    demo = Reference(10)
+    # demo = Reference(10)
+    # demo._start()
 
     # demo._init_pool()
     # demo._create_table()
 
-    demo._start()
+    refe_sche = ReferenceSchedule()
+    refe_sche.start()
