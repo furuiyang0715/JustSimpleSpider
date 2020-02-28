@@ -8,6 +8,7 @@ import traceback
 import schedule
 
 sys.path.append("./../")
+from PublicOpinion.cls_cn.cls_runner import ClsSchedule
 from PublicOpinion.stcn import runner
 from PublicOpinion.qq_stock import qqStock
 from PublicOpinion.netease_money import Money163
@@ -145,6 +146,10 @@ def task():
     dt = datetime.datetime.today().strftime("%Y-%m-%d")
     with open("record.txt", "a+") as f:
         f.write("{}\r\n".format(dt))
+
+    print("开始爬取财新社..")
+    cls = ClsSchedule()
+    cls.thread_run()
 
     print("开始爬取证券时报网.. ")
     runner.thread_run()
