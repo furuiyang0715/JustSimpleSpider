@@ -15,7 +15,8 @@ now = lambda: time.time()
 
 class Schedule(object):
     def __init__(self):
-        self.keys = sorted(self.dc_info().values())
+        # 部分 code 可能查询不出对应的中文简称 所以这里不能对其 values 进行 sorted 比较
+        self.keys = list(self.dc_info().values())
         random.shuffle(self.keys)
 
     def dc_info(self):  # {'300150.XSHE': '世纪瑞尔',
