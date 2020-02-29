@@ -140,7 +140,7 @@ def _run():
     yqjj = STCN_YQJJ()
     yqjj.start()
 
-    #  舆情速览
+    # 舆情速览
     yqsl = STCN_YQSL()
     yqsl.start()
 

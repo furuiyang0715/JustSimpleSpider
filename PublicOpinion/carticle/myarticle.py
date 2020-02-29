@@ -1,8 +1,11 @@
+import datetime
 import random
 import time
 
 import pymysql
 import threadpool
+import os
+from apscheduler.schedulers.blocking import BlockingScheduler
 
 import sys
 sys.path.append('./../../')
@@ -59,5 +62,27 @@ class Schedule(object):
         print("用时: {}".format(now() - start_time))
 
 
-sche = Schedule()
-sche.simple_run()
+# sche = Schedule()
+# sche.simple_run()
+
+# 尝试使用 apschedule 设置定时任务（：换个库新鲜一下 总之东财因为 ip 的问题一直是单独部署的
+# https://github.com/agronholm/apscheduler/blob/master/examples/schedulers/blocking.py
+
+
+def tick():
+    print('Tick! The time is: %s' % datetime.datetime.now())
+    sche = Schedule()
+    sche.simple_run()
+
+
+if __name__ == '__main__':
+    scheduler = BlockingScheduler()
+    # scheduler.add_job(tick, 'interval', seconds=3)
+    tick()
+    scheduler.add_job(tick, 'interval', hours=15)
+    print('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
+
+    try:
+        scheduler.start()
+    except (KeyboardInterrupt, SystemExit):
+        pass

@@ -103,7 +103,13 @@ class CArticleBase(object):
         if self.local:
             return requests.get(LOCAL_PROXY_URL).text.strip()
         else:
-            return requests.get(PROXY_URL).text.strip()
+            # 为了不轻易崩 ip 线上的正式环境 混用 ..
+            random_num = random.randint(0, 10)
+            if random_num % 2:
+                time.sleep(1)
+                return requests.get(PROXY_URL).text.strip()
+            else:
+                requests.get(LOCAL_PROXY_URL).text.strip()
 
     def _delete_detail_404(self, url):
         delete_sql = f"delete from `{self.table}` where link = {url};"
