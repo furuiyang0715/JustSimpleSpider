@@ -187,7 +187,8 @@ def main():
     hour_task()
 
     print("当前时间是{}, 开始【舆情】模块的增量爬取 ".format(datetime.datetime.now()))
-    schedule.every().day.at("10:00").do(task)
+    # TODO 监控系统是 9 点开始检查的 所以应该凌晨 5 点就进行检查
+    schedule.every().day.at("05:00").do(task)
     schedule.every(5).hours.do(hour_task)
 
     while True:
