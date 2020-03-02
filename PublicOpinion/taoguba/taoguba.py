@@ -256,6 +256,13 @@ class Taoguba(Base):
         return page_now, page_all
 
     def parse_detail(self, body, rid):
+        try:
+            return self._parse_detail(body, rid)
+        except Exception as e:
+            print("详情页解析失败>> {}".format(e))
+            return None
+
+    def _parse_detail(self, body, rid):
         page_now, page_all = self._parse_page_num(body)
         print(page_now, page_all)
         # 文章仅一页
@@ -276,7 +283,6 @@ class Taoguba(Base):
             return "\r\n".join(content_dict.values())
 
     def process_list(self, datas):
-        # TODO paese 捕获异常 
         records = datas.get("dto", {}).get("record")
         # print(records)
         if records:
@@ -313,11 +319,12 @@ class Taoguba(Base):
                 if detail_resp:
                     detail_page = detail_resp.text
                     article = self.parse_detail(detail_page, rid)
-                    article = self._process_content(article)
-                    item['article'] = article
-                    print(item)
-                    time.sleep(3)
-                    self.save_one(item)
+                    if article:
+                        article = self._process_content(article)
+                        item['article'] = article
+                        print(item)
+                        time.sleep(3)
+                        self.save_one(item)
 
             # 生成下一次爬取的 url 相当于翻页
             more_timestamp = records[-1].get("actionDate")
@@ -349,13 +356,25 @@ class Taoguba(Base):
 
 class TgbSchedule(ScheduleBase):
     def start(self):
-        for code, name in self.lower_keys.items():
-            print(code, name)
+        lower_keys = self.lower_keys
+        code_list = list(lower_keys.keys())
+        random.shuffle(code_list)
+
+        for code in code_list:
+            name = lower_keys.get(code)
             if not name:
                 print(">> ", code)
                 continue
             instance = Taoguba(name=name, code=code)
             instance.start()
+
+        # for code, name in self.lower_keys.items():
+        #     print(code, name)
+        #     if not name:
+        #         print(">> ", code)
+        #         continue
+        #     instance = Taoguba(name=name, code=code)
+        #     instance.start()
 
 
 if __name__ == "__main__":
