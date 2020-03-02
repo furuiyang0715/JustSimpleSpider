@@ -10,6 +10,7 @@ from urllib.parse import urlencode
 
 import pymysql
 import requests
+import threadpool
 from bs4 import BeautifulSoup
 from lxml import html
 
@@ -323,7 +324,7 @@ class Taoguba(Base):
                         article = self._process_content(article)
                         item['article'] = article
                         print(item)
-                        time.sleep(3)
+                        time.sleep(random.randint(1, 3))
                         self.save_one(item)
 
             # 生成下一次爬取的 url 相当于翻页
@@ -355,26 +356,33 @@ class Taoguba(Base):
 
 
 class TgbSchedule(ScheduleBase):
+
+    def ins_start(self, code):
+        name = self.lower_keys.get(code)
+        if not name:
+            print(">> ", code)
+            return
+        instance = Taoguba(name=name, code=code)
+        print(">>>{} {}".format(code, name))
+        instance.start()
+
     def start(self):
-        lower_keys = self.lower_keys
-        code_list = list(lower_keys.keys())
+        code_list = list(self.lower_keys.keys())
         random.shuffle(code_list)
 
-        for code in code_list:
-            name = lower_keys.get(code)
-            if not name:
-                print(">> ", code)
-                continue
-            instance = Taoguba(name=name, code=code)
-            instance.start()
-
-        # for code, name in self.lower_keys.items():
-        #     print(code, name)
+        # for code in code_list:
+        #     name = lower_keys.get(code)
         #     if not name:
         #         print(">> ", code)
         #         continue
         #     instance = Taoguba(name=name, code=code)
+        #     print(">>>{} {}".format(code, name))
         #     instance.start()
+
+        pool = threadpool.ThreadPool(4)
+        reqs = threadpool.makeRequests(self.ins_start, code_list)
+        [pool.putRequest(req) for req in reqs]
+        pool.wait()
 
 
 if __name__ == "__main__":
