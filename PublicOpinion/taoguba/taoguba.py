@@ -14,6 +14,9 @@ import threadpool
 from bs4 import BeautifulSoup
 from lxml import html
 
+import sys
+sys.path.append("./../../")
+
 from PublicOpinion.configs import LOCAL_PROXY_URL, PROXY_URL, LOCAL, LOCAL_MYSQL_HOST, LOCAL_MYSQL_PORT, \
     LOCAL_MYSQL_USER, LOCAL_MYSQL_PASSWORD, LOCAL_MYSQL_DB, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
 from PublicOpinion.sql_pool import PyMysqlPoolBase
@@ -65,7 +68,9 @@ class Base(object):
             if count > 10:
                 return None
             try:
-                resp = requests.get(url, headers=self.headers, proxies={"proxy": self._get_proxy()})
+                proxy = {"proxy": self._get_proxy()}
+                print("proxy is >> {}".format(proxy))
+                resp = requests.get(url, headers=self.headers, proxies=proxy)
             except:
                 traceback.print_exc()
                 time.sleep(0.5)
@@ -75,6 +80,8 @@ class Base(object):
                 elif resp.status_code == 404:
                     return None
                 else:
+                    print("status_code: >> {}".format(resp.status_code))
+                    time.sleep(1)
                     pass
 
     def convert_dt(self, time_stamp):
