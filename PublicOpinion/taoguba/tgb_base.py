@@ -52,10 +52,31 @@ class TaogubaBase(object):
         ex = EXCHANGE_DICT.get(exchange)
         return ''.join((ex, code)).lower()
 
+    @property
+    def lower_keys(self):  # {sz000651: "格力电器", ...}
+        try:
+            conn = pymysql.connect(host=DC_HOST, port=DC_PORT, user=DC_USER,
+                                   passwd=DC_PASSWD, db=DC_DB)
+        except Exception as e:
+            logger.warning(f"connect [datacenter.const_secumain] to get secucode info today fail, {e}")
+            raise
+
+        cur = conn.cursor()
+        cur.execute("USE datacenter;")
+        cur.execute("""select SecuCode, ChiNameAbbr from const_secumain where SecuCode \
+                   in (select distinct SecuCode from const_secumain);""")
+
+        keys = {self.convert_lower(r[0]): r[1] for r in cur.fetchall()}
+        cur.close()
+        conn.close()
+        return keys
+
 
 if __name__ == "__main__":
     base = TaogubaBase()
-    print(base.keys)
+    # print(base.keys)
 
     code = '002051.XSHE'
-    print(base.convert_lower(code))
+    # print(base.convert_lower(code))
+
+    print(base.lower_keys)
