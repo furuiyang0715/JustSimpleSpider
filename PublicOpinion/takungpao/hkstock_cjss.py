@@ -260,7 +260,6 @@ class HKStock_CJSS(Base):
             if list_resp:
                 items = self.parse_list(list_resp.text)
                 print(items)
-                print()
                 self.save(items)
 
 
