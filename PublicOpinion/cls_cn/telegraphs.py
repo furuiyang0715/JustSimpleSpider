@@ -22,7 +22,7 @@ class Telegraphs(ClsBase):
 
     def refresh(self, url):
         # 只显示最近 24 小时的数据
-        resp = requests.get(url, headers=self.headers)
+        resp = requests.get(url, headers=self.headers, verify=False, timeout=1)
         # print(resp)
         if resp.status_code == 200:
             py_data = json.loads(resp.text)
