@@ -161,6 +161,9 @@ class Base(object):
         self.sql_pool.end()
 
     def save(self, items):
+        if not items:
+            print("批量数据为空 ")
+            return
         ret = self._save_many(items)
         if not ret:
             print("批量保存失败 开始单独保存 .. ")
