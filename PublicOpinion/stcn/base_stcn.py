@@ -178,7 +178,8 @@ class STCN_Base(object):
         try:
             pub_dt = datetime.datetime.strptime(pub_dt[:10], self.dt_fmt)
         except:
-            traceback.print_exc()
+            print("截取增量时间点失败.. 重新爬取.. ")
+            # traceback.print_exc()
             return False
 
         if pub_dt < self.check_dt:
