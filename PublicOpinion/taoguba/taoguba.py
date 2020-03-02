@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import datetime
 import json
 import pprint
 import random
@@ -26,6 +27,10 @@ class Taoguba(object):
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36",
         }
+
+    def convert_dt(self, time_stamp):
+        d = str(datetime.datetime.fromtimestamp(time_stamp))
+        return d
 
     def _get_proxy(self):
         if self.local:
@@ -151,8 +156,10 @@ class Taoguba(object):
                     item = dict()
                     item['code'] = self.code
                     item['chinameabbr'] = self.name
-                    # TODO 时间格式处理
-                    item["pub_date"] = record.get("actionDate")  # 文章发布时间
+                    # TODO 时间格式处理  'pub_date': 1578294361000 -->
+                    pub_date = record.get("actionDate")
+                    pub_date = self.convert_dt(int(int(pub_date) / 1000))
+                    item["pub_date"] = pub_date  # 文章发布时间
 
                     title = record.get("subject")
                     if title == "W":
