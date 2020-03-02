@@ -283,6 +283,46 @@ class Taoguba(Base):
         print(start_url)
         self.refresh(start_url)
 
+    def process_list(self, records):
+        for record in records:
+            # 不需要转评的内容
+            if record.get("tops") and record.get("rtype") == "R":
+                continue
+
+            item = dict()
+            item['code'] = self.code
+            item['chinameabbr'] = self.name
+            # 时间格式处理  'pub_date': 1578294361000 -->
+            pub_date = record.get("actionDate")
+            pub_date = self.convert_dt(int(int(pub_date) / 1000))
+            item["pub_date"] = pub_date  # 文章发布时间
+
+            title = record.get("subject")[:64]
+            if title == "W":
+                title = record.get("body")[:60]
+
+            item['title'] = title  # 文章标题
+            codes = record.get("stockAttr")  # 文章谈及股票
+            if codes:
+                codes_str = ",".join([j.get("stockName") for j in codes])
+            else:
+                codes_str = ''
+            item['stockattr'] = codes_str
+
+            article_url = "https://www.taoguba.com.cn/Article/" + str(record.get("rID")) + "/1"
+            rid = record.get("rID")
+            print(article_url)
+            item['link'] = article_url
+            detail_resp = self.get(article_url)
+            if detail_resp:
+                detail_page = detail_resp.text
+                article = self.parse_detail(detail_page, rid)
+                article = self._process_content(article)
+                item['article'] = article
+                print(item)
+                time.sleep(10)
+                self.save_one(item)
+
     def refresh(self, start_url):
         resp = self.get(start_url)
         print(resp)
@@ -295,45 +335,7 @@ class Taoguba(Base):
             records = datas.get("dto", {}).get("record")
             # print(records)
             if records:
-                for record in records:
-                    # 不需要转评的内容
-                    if record.get("tops") and record.get("rtype") == "R":
-                        continue
-
-                    item = dict()
-                    item['code'] = self.code
-                    item['chinameabbr'] = self.name
-                    # 时间格式处理  'pub_date': 1578294361000 -->
-                    pub_date = record.get("actionDate")
-                    pub_date = self.convert_dt(int(int(pub_date) / 1000))
-                    item["pub_date"] = pub_date  # 文章发布时间
-
-                    title = record.get("subject")
-                    if title == "W":
-                        title = record.get("body")[:60]
-
-                    item['title'] = title  # 文章标题
-                    codes = record.get("stockAttr")  # 文章谈及股票
-                    if codes:
-                        codes_str = ",".join([j.get("stockName") for j in codes])
-                    else:
-                        codes_str = ''
-                    item['stockattr'] = codes_str
-
-                    article_url = "https://www.taoguba.com.cn/Article/" + str(record.get("rID")) + "/1"
-                    rid = record.get("rID")
-                    print(article_url)
-                    item['link'] = article_url
-                    detail_resp = self.get(article_url)
-                    if detail_resp:
-                        detail_page = detail_resp.text
-                        article = self.parse_detail(detail_page, rid)
-                        # TODO 文本处理
-                        article = self._process_content(article)
-                        item['article'] = article
-                        print(item)
-                        time.sleep(10)
-                        self.save_one(item)
+                self.process_list(records)
 
 
 class TgbSchedule(ScheduleBase):
