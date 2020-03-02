@@ -7,7 +7,7 @@ from PublicOpinion.configs import DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB
 logger = logging.getLogger()
 
 
-class TaogubaBase(object):
+class ScheduleBase(object):
 
     @property
     def keys(self):  # {'300150.XSHE': '世纪瑞尔',
@@ -73,7 +73,7 @@ class TaogubaBase(object):
 
 
 if __name__ == "__main__":
-    base = TaogubaBase()
+    base = ScheduleBase()
     # print(base.keys)
 
     code = '002051.XSHE'

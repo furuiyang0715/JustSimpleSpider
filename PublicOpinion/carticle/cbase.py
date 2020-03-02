@@ -109,7 +109,7 @@ class CArticleBase(object):
                 time.sleep(1)
                 return requests.get(PROXY_URL).text.strip()
             else:
-                requests.get(LOCAL_PROXY_URL).text.strip()
+                return requests.get(LOCAL_PROXY_URL).text.strip()
 
     def _delete_detail_404(self, url):
         delete_sql = f"delete from `{self.table}` where link = {url};"
