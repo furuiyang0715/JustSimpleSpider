@@ -198,6 +198,7 @@ class HKStock_CJSS(Base):
     def __init__(self):
         super(HKStock_CJSS, self).__init__()
         self.page = 11
+        self.name = '财经时事'
         self.first_url = 'http://finance.takungpao.com/hkstock/cjss/index.html'
         self.format_url = "http://finance.takungpao.com/hkstock/cjss/index_{}.html"
         self.extractor = GeneralNewsExtractor()
