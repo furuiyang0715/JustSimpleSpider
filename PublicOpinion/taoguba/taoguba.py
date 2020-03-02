@@ -275,55 +275,58 @@ class Taoguba(Base):
                 page_now = str(int(page_now) + 1)
             return "\r\n".join(content_dict.values())
 
-    def _start(self):
-        tstamp = int(time.time()) * 1000  # js 中的时间戳 第一次这个值选用当前时间
-        query_params = self.make_query_params(tstamp)
-        print(query_params)
-        start_url = self.refresh_url + urlencode(query_params)
-        print(start_url)
-        self.refresh(start_url)
+    def process_list(self, datas):
+        # TODO paese 捕获异常 
+        records = datas.get("dto", {}).get("record")
+        # print(records)
+        if records:
+            for record in records:
+                # 不需要转评的内容
+                if record.get("tops") and record.get("rtype") == "R":
+                    continue
 
-    def process_list(self, records):
-        for record in records:
-            # 不需要转评的内容
-            if record.get("tops") and record.get("rtype") == "R":
-                continue
+                item = dict()
+                item['code'] = self.code
+                item['chinameabbr'] = self.name
+                # 时间格式处理  'pub_date': 1578294361000 -->
+                pub_date = record.get("actionDate")
+                pub_date = self.convert_dt(int(int(pub_date) / 1000))
+                item["pub_date"] = pub_date  # 文章发布时间
 
-            item = dict()
-            item['code'] = self.code
-            item['chinameabbr'] = self.name
-            # 时间格式处理  'pub_date': 1578294361000 -->
-            pub_date = record.get("actionDate")
-            pub_date = self.convert_dt(int(int(pub_date) / 1000))
-            item["pub_date"] = pub_date  # 文章发布时间
+                title = record.get("subject")[:64]
+                if title == "W":
+                    title = record.get("body")[:60]
 
-            title = record.get("subject")[:64]
-            if title == "W":
-                title = record.get("body")[:60]
+                item['title'] = title  # 文章标题
+                codes = record.get("stockAttr")  # 文章谈及股票
+                if codes:
+                    codes_str = ",".join([j.get("stockName") for j in codes])
+                else:
+                    codes_str = ''
+                item['stockattr'] = codes_str
 
-            item['title'] = title  # 文章标题
-            codes = record.get("stockAttr")  # 文章谈及股票
-            if codes:
-                codes_str = ",".join([j.get("stockName") for j in codes])
-            else:
-                codes_str = ''
-            item['stockattr'] = codes_str
+                article_url = "https://www.taoguba.com.cn/Article/" + str(record.get("rID")) + "/1"
+                rid = record.get("rID")
+                print(article_url)
+                item['link'] = article_url
+                detail_resp = self.get(article_url)
+                if detail_resp:
+                    detail_page = detail_resp.text
+                    article = self.parse_detail(detail_page, rid)
+                    article = self._process_content(article)
+                    item['article'] = article
+                    print(item)
+                    time.sleep(3)
+                    self.save_one(item)
 
-            article_url = "https://www.taoguba.com.cn/Article/" + str(record.get("rID")) + "/1"
-            rid = record.get("rID")
-            print(article_url)
-            item['link'] = article_url
-            detail_resp = self.get(article_url)
-            if detail_resp:
-                detail_page = detail_resp.text
-                article = self.parse_detail(detail_page, rid)
-                article = self._process_content(article)
-                item['article'] = article
-                print(item)
-                time.sleep(10)
-                self.save_one(item)
+            # 生成下一次爬取的 url 相当于翻页
+            more_timestamp = records[-1].get("actionDate")
+            more_url = self.refresh_url + urlencode(self.make_query_params(more_timestamp))
+            print("more: >>", more_url)
+            self.refresh(more_url)
 
     def refresh(self, start_url):
+        # 该函数与process_list互相调用
         resp = self.get(start_url)
         print(resp)
         if resp:
@@ -332,10 +335,16 @@ class Taoguba(Base):
             if not datas.get("status"):
                 print(datas.get("errorMessage"))
                 return
-            records = datas.get("dto", {}).get("record")
-            # print(records)
-            if records:
-                self.process_list(records)
+            else:
+                self.process_list(datas)
+
+    def _start(self):
+        tstamp = int(time.time()) * 1000  # js 中的时间戳 第一次这个值选用当前时间
+        query_params = self.make_query_params(tstamp)
+        print(query_params)
+        start_url = self.refresh_url + urlencode(query_params)
+        print(start_url)
+        self.refresh(start_url)
 
 
 class TgbSchedule(ScheduleBase):
