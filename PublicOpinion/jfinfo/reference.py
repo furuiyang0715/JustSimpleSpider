@@ -220,6 +220,7 @@ class Reference(Base):
         self.table = 'jfinfo'    # 巨丰资讯
         self.fields = ['link', 'title', 'pub_date', 'article']
         self.max_page = 639
+        self.name = '巨丰内参'
 
     @staticmethod
     def _process_pub_dt(pub_date: str, year: None):

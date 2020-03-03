@@ -9,6 +9,7 @@ class HKInfo(Reference):
         self.index_url = 'http://www.jfinfo.com/reference/HK'
         self.more_url = 'http://www.jfinfo.com/articles_categories/more?page={}&category_id=83'
         self.max_page = 49
+        self.name = '港股资讯'
 
 
 if __name__ == "__main__":

@@ -9,6 +9,7 @@ class Research(Reference):
         self.index_url = 'http://www.jfinfo.com/research'
         self.more_url = 'http://www.jfinfo.com/articles_categories/more?page={}&category_id=23'
         self.max_page = 185
+        self.name = '巨丰研究院'
 
 
 if __name__ == "__main__":
