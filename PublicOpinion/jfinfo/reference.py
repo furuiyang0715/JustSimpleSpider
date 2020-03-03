@@ -219,6 +219,7 @@ class Reference(Base):
         self.extractor = GeneralNewsExtractor()
         self.table = 'jfinfo'    # 巨丰资讯
         self.fields = ['link', 'title', 'pub_date', 'article']
+        self.max_page = 639
 
     @staticmethod
     def _process_pub_dt(pub_date: str, year: None):
@@ -338,7 +339,7 @@ class Reference(Base):
             print(len(index_items))   # 20
             self.save(index_items)
 
-        for num in range(639, 640):   # 目测目前有 639 页
+        for num in range(1, self.max_page + 1):   # 目测目前有 639 页
             print(">>> ", num)
             more_url = self.more_url.format(num)
             print(more_url)
