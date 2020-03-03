@@ -32,3 +32,13 @@ CREATE TABLE `takungpao` (
   UNIQUE KEY `link` (`link`),
   KEY `pub_date` (`pub_date`)
 ) ENGINE=InnoDB AUTO_INCREMENT=299 DEFAULT CHARSET=utf8mb4 COMMENT='大公报-财经类';
+
+
+部署
+docker build -f Dockerfile_1 -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/yuqing2:v1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/yuqing2:v1
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/yuqing2:v1
+sudo docker run -itd --name yuqing2 --env LOCAL=0 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/yuqing2:v1
+
+本地部署
+sudo docker run -itd --name yuqing2 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/yuqing2:v1
