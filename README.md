@@ -83,6 +83,26 @@
         - 涨停预测 forecastList 
         - 热点版块 hotPlateList 
         - 明日 3 大猜想 threeGuessList 
+
+- 大公报财经[takungpao]
+    - 港股频道 
+        - 财经时事 PublicOpinion/takungpao/hkstock_cjss.py
+        - 公司要闻 PublicOpinion/takungpao/hkstock_gsyw.py
+        - 机构视点 PublicOpinion/takungpao/hkstock_jgsd.py
+        - 全球股市 PublicOpinion/takungpao/hkstock_qqgs.py
+        - 国际聚焦 PublicOpinion/takungpao/hkstock_gjjj.py 
+        - 经济一周 PublicOpinion/takungpao/hkstock_jjyz.py 
+    - 风口: PublicOpinion/takungpao/takungpao_fk.py 
+    - 旅游: PublicOpinion/takungpao/takungpao_travel.py 
+    - 首页财经 
+        - 中国经济 
+        - 香港财经 
+        - 国际经济 
+        - 经济观察家 
+        - 港股 
+        - 地产 
+        - 商业 
+        - 新经济浪潮 
     
 
 ## 官媒 GovSpiders
