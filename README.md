@@ -95,14 +95,14 @@
     - 风口: PublicOpinion/takungpao/takungpao_fk.py 
     - 旅游: PublicOpinion/takungpao/takungpao_travel.py 
     - 首页财经 
-        - 中国经济 
-        - 香港财经 
-        - 国际经济 
-        - 经济观察家 
-        - 港股 
-        - 地产 
-        - 商业 
-        - 新经济浪潮 
+        - 中国经济  PublicOpinion/takungpao/zhongguojingji.py 
+        - 香港财经  PublicOpinion/takungpao/hkcaijing.py 
+        - 国际经济  PublicOpinion/takungpao/guojijingji.py 
+        - 经济观察家  PublicOpinion/takungpao/economic_observer.py 
+        - 港股  PublicOpinion/takungpao/hk_stock.py 
+        - 地产  PublicOpinion/takungpao/dichan.py 
+        - 商业  PublicOpinion/takungpao/business.py 
+        - 新经济浪潮  PublicOpinion/takungpao/economic_observer.py 
     
 
 ## 官媒 GovSpiders
