@@ -218,6 +218,7 @@ class Reference(Base):
         }
         self.extractor = GeneralNewsExtractor()
         self.table = 'jfinfo'    # 巨丰资讯
+        self.fields = ['link', 'title', 'pub_date', 'article']
 
     @staticmethod
     def _process_pub_dt(pub_date: str, year: None):
@@ -335,7 +336,7 @@ class Reference(Base):
             index_page = index_resp.text
             index_items = self._parse_index(index_page)
             print(len(index_items))   # 20
-            # self.save(index_items)
+            self.save(index_items)
 
         for num in range(639, 640):   # 目测目前有 639 页
             print(">>> ", num)
@@ -347,7 +348,7 @@ class Reference(Base):
                 items = self._parse_more(more_page)
                 print(len(items))   # 19
                 print()
-                # self.save(items)
+                self.save(items)
 
 
 if __name__ == "__main__":
