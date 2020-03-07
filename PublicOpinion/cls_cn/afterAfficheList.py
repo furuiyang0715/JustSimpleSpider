@@ -43,6 +43,13 @@ class afterAfficheList(Reference):
             return None
         return infos
 
+    def parse_code_detail(self, infos):
+        try:
+            return self._parse_code_detail(infos)
+        except:
+            traceback.print_exc()
+            return []
+
     def _parse_code_detail(self, infos):
         """
 
@@ -95,12 +102,13 @@ class afterAfficheList(Reference):
                         link = 'https://api3.cls.cn/share/article/{}?os=web&sv=6.8.0&app=CailianpressWeb'.format(aid)
 
                         article = self._parse_app_page(link)
-                        more_infos = self._parse_code_detail(article)
-                        for info in more_infos:
-                            ditem = {}
-                            ditem['code'], ditem['article'] = info
-                            ditem['pub_date'] = pub_date
-                            items.append(ditem)
+                        if article:
+                            more_infos = self.parse_code_detail(article)
+                            for info in more_infos:
+                                ditem = {}
+                                ditem['code'], ditem['article'] = info
+                                ditem['pub_date'] = pub_date
+                                items.append(ditem)
 
                     else:
                         pub_date = news.get("ctime")
@@ -108,12 +116,13 @@ class afterAfficheList(Reference):
                         aid = news.get('id')
                         link = 'https://api3.cls.cn/share/article/{}?os=web&sv=6.8.0&app=CailianpressWeb'.format(aid)
                         article = self._parse_app_page(link)
-                        more_infos = self._parse_code_detail(article)
-                        for info in more_infos:
-                            ditem = {}
-                            ditem['code'], ditem['article'] = info
-                            ditem['pub_date'] = pub_date
-                            items.append(ditem)
+                        if article:
+                            more_infos = self.parse_code_detail(article)
+                            for info in more_infos:
+                                ditem = {}
+                                ditem['code'], ditem['article'] = info
+                                ditem['pub_date'] = pub_date
+                                items.append(ditem)
         return items
 
     def _create_table(self):
