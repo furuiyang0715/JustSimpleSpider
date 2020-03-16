@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import pprint
-from urllib.parse import urljoin
-
 import requests
+
+from urllib.parse import urljoin
 from lxml import html
 
 from GovSpiders.base_spider import BaseSpider
@@ -95,7 +95,6 @@ if __name__ == "__main__":
     runner = GovStatsShuJuJieDu()
     runner._start(1)
 
-
     # list_page = runner.fetch_page("http://www.stats.gov.cn/tjsj/sjjd/index.html")
     # print(list_page)
 
@@ -105,5 +104,3 @@ if __name__ == "__main__":
     # detail_page = runner.fetch_page("http://www.stats.gov.cn/tjsj/sjjd/202002/t20200217_1726708.html")
     # article = runner._parse_detail_page(detail_page)
     # print(article)
-
-

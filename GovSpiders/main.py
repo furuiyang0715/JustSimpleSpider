@@ -56,8 +56,9 @@ def task():
         else:
             chinabank_shujufenxi._start(1)
 
-        print("[中国银行]-[数据解读]失败列表页: ".format(chinabank_shujufenxi.error_list))
-        print("[中国银行]-[数据解读]失败详情页: ".format(chinabank_shujufenxi.error_detail))
+        print("[中国银行]-[数据解读]失败列表页: {}".format(chinabank_shujufenxi.error_list))
+        print("[中国银行]-[数据解读]失败详情页: {} ".format(chinabank_shujufenxi.error_detail))
+        print("[中国银行]-[数据解读]本次插入个数: {}: ".format(chinabank_shujufenxi.nums))
     except:
         traceback.print_exc()
         print("模块[中国银行]-[数据解读]开启失败\n")
@@ -72,8 +73,9 @@ def task():
         else:
             chinabank_xinwenfabu._start(1)
 
-        print("[中国银行]-[新闻发布]失败列表页: ".format(chinabank_xinwenfabu.error_list))
-        print("[中国银行]-[新闻发布]失败列表页: ".format(chinabank_xinwenfabu.error_detail))
+        print("[中国银行]-[新闻发布]失败列表页: {}".format(chinabank_xinwenfabu.error_list))
+        print("[中国银行]-[新闻发布]失败列表页: {} ".format(chinabank_xinwenfabu.error_detail))
+        print("[中国银行]-[新闻发布]本次插入个数: {} ".format(chinabank_xinwenfabu.nums))
     except:
         traceback.print_exc()
         print("模块[中国银行]-[新闻发布]开启失败\n")
@@ -90,8 +92,9 @@ def task():
         else:
             gov_shujujiedu._start(1)
 
-        print("[国家统计局]-[数据解读]失败列表页: ".format(gov_shujujiedu.error_list))
-        print("[国家统计局]-[数据解读]失败列表页: ".format(gov_shujujiedu.error_detail))
+        print("[国家统计局]-[数据解读]失败列表页: {} ".format(gov_shujujiedu.error_list))
+        print("[国家统计局]-[数据解读]失败列表页: {} ".format(gov_shujujiedu.error_detail))
+        print("[国家统计局]-[数据解读]本次插入个数 : {} ".format(gov_shujujiedu.nums))
     except:
         traceback.print_exc()
         print("[国家统计局]-[数据解读] 开启失败\n")
@@ -106,8 +109,9 @@ def task():
         else:
             gov_tongjidongtai._start(1)
 
-        print("[国家统计局]-[统计动态]失败列表页: ".format(gov_tongjidongtai.error_list))
-        print("[国家统计局]-[统计动态]失败列表页: ".format(gov_tongjidongtai.error_detail))
+        print("[国家统计局]-[统计动态]失败列表页: {} ".format(gov_tongjidongtai.error_list))
+        print("[国家统计局]-[统计动态]失败列表页: {} ".format(gov_tongjidongtai.error_detail))
+        print("[国家统计局]-[统计动态]本次插入个数: {} ".format(gov_tongjidongtai.nums))
     except:
         traceback.print_exc()
         print("[国家统计局]-[统计动态] 开启失败\n")
@@ -122,8 +126,9 @@ def task():
         else:
             gov_xinwenfabuhui._start(1)
 
-        print("[国家统计局]-[新闻发布会]失败列表页: ".format(gov_xinwenfabuhui.error_list))
-        print("[国家统计局]-[新闻发布会]失败列表页: ".format(gov_xinwenfabuhui.error_detail))
+        print("[国家统计局]-[新闻发布会]失败列表页: {} ".format(gov_xinwenfabuhui.error_list))
+        print("[国家统计局]-[新闻发布会]失败列表页: {} ".format(gov_xinwenfabuhui.error_detail))
+        print("[国家统计局]-[新闻发布会]本次插入个数: {} ".format(gov_xinwenfabuhui.nums))
     except:
         traceback.print_exc()
         print("[国家统计局]-[新闻发布会] 开启失败\n")
@@ -137,8 +142,9 @@ def task():
         else:
             gov_zuixinfabu._start(1)
 
-        print("[国家统计局]-[最新发布]失败列表页: ".format(gov_zuixinfabu.error_list))
-        print("[国家统计局]-[最新发布]失败列表页: ".format(gov_zuixinfabu.error_detail))
+        print("[国家统计局]-[最新发布]失败列表页: {}".format(gov_zuixinfabu.error_list))
+        print("[国家统计局]-[最新发布]失败列表页: {}".format(gov_zuixinfabu.error_detail))
+        print("[国家统计局]-[最新发布]本次插入个数: {}".format(gov_zuixinfabu.nums))
     except:
         traceback.print_exc()
         print("[国家统计局]-[最新发布] 开启失败\n")

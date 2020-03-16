@@ -64,6 +64,7 @@ class BaseSpider(object):
 
         self.error_list = []
         self.error_detail = []
+        self.nums = 0
 
     def _check_selenium_status(self):
         """
@@ -207,11 +208,13 @@ class BaseSpider(object):
         try:
             ret = self.sql_client.insert(insert_sql, values)
         except pymysql.err.IntegrityError:
-            logger.warning("重复", to_insert)
+            # logger.warning("重复", to_insert)
             return 1
         except:
             traceback.print_exc()
         else:
+            print("本次新增记录{}".format(item))
+            self.nums += 1
             return ret
 
     def _get_page_url(self, page_num):
@@ -268,7 +271,7 @@ class BaseSpider(object):
                 article = self.process_detail(link)
                 if article:
                     item['article'] = article
-                    # print(item)
+                    print(item)
                     ret = self.save(item)
                     if not ret:
                         self.error_detail.append(item.get("link"))
