@@ -61,6 +61,24 @@ class GovStatsShuJuJieDu(BaseSpider):
             item_list.append(item)
         return item_list
 
+    def _create_table(self):
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `gov_stats` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `pub_date` datetime NOT NULL COMMENT '发布时间',
+          `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章标题',
+          `link` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章详情页链接',
+          `article` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '详情页内容',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `link` (`link`),
+          KEY `pub_date` (`pub_date`),
+          KEY `update_time` (`UPDATETIMEJZ`)
+        ) ENGINE=InnoDB AUTO_INCREMENT=1714 DEFAULT CHARSET=utf8mb4 COMMENT='国家统计局'; 
+        '''
+        self.sql_client.insert(sql)
+
     def _parse_detail_page(self, detail_page):
         doc = html.fromstring(detail_page)
         try:
@@ -93,7 +111,7 @@ class GovStatsShuJuJieDu(BaseSpider):
 
 if __name__ == "__main__":
     runner = GovStatsShuJuJieDu()
-    runner._start(1)
+    runner.start(1)
 
     # list_page = runner.fetch_page("http://www.stats.gov.cn/tjsj/sjjd/index.html")
     # print(list_page)

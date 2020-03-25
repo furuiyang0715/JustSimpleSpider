@@ -44,7 +44,7 @@ class GovStatsXinWenFaBuHui(GovStatsShuJuJieDu):
 
 if __name__ == "__main__":
     runner = GovStatsXinWenFaBuHui()
-    runner._start(1)
+    runner.start(1)
 
     # list_page = runner.fetch_page("http://www.stats.gov.cn/tjsj/xwfbh/fbhwd/index.html")
     # print(list_page)

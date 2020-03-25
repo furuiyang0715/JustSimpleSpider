@@ -48,6 +48,6 @@ if __name__ == "__main__":
     # items = runner._parse_list_page(list_page)
     # print(items)
 
-    runner._start(1)
+    runner.start(1)
     print(runner.error_detail)
     print(runner.error_list)

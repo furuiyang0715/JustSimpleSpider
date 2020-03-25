@@ -264,14 +264,12 @@ class BaseSpider(object):
     def _start(self, page_num):
         print("page num is {}\n".format(page_num))
         items = self.process_list(page_num)
-        print(items)
         if items:
             for item in items:
                 link = item["link"]
                 article = self.process_detail(link)
                 if article:
                     item['article'] = article
-                    print(item)
                     ret = self.save(item)
                     if not ret:
                         self.error_detail.append(item.get("link"))
@@ -279,6 +277,13 @@ class BaseSpider(object):
                     self.error_detail.append(link)
         else:
             self.error_list.append(self._get_page_url(page_num))
+
+    def start(self, page_num):
+        try:
+            self._create_table()
+            self._start(page_num)
+        except:
+            traceback.print_exc()
 
 
 if __name__ == "__main__":

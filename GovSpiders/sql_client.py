@@ -32,7 +32,7 @@ class PyMysqlBase(object):
         self.connection.commit()
         return count
 
-    def insert(self, sql, params):
+    def insert(self, sql, params=None):
         with self.connection.cursor() as cursor:
             ret = cursor.execute(sql, params)
         self.connection.commit()

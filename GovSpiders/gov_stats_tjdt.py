@@ -62,4 +62,4 @@ if __name__ == "__main__":
     # ret = runner._parse_detail_page(detail_page)
     # print(ret)
 
-    runner._start(1)
+    runner.start(1)

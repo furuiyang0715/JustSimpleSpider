@@ -63,6 +63,24 @@ class ChinaBankShuJuJieDu(BaseSpider, ChinaBankMixin):
         self.table = 'chinabank'
         self.start_url = 'http://www.pbc.gov.cn/diaochatongjisi/116219/116225/11871/index{}.html'
 
+    def _create_table(self):
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `chinabank` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `pub_date` datetime NOT NULL COMMENT '发布时间',
+          `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章标题',
+          `link` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章详情页链接',
+          `article` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '详情页内容',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `link` (`link`),
+          KEY `pub_date` (`pub_date`),
+          KEY `update_time` (`UPDATETIMEJZ`)
+        ) ENGINE=InnoDB AUTO_INCREMENT=15688 DEFAULT CHARSET=utf8mb4 COMMENT='中国银行'; 
+        '''
+        self.sql_client.insert(sql)
+
 
 class ChinaBankXinWenFaBu(BaseSpider, ChinaBankMixin):
     def __init__(self):
@@ -71,15 +89,33 @@ class ChinaBankXinWenFaBu(BaseSpider, ChinaBankMixin):
         self.table = "chinabank"
         self.start_url = "http://www.pbc.gov.cn/goutongjiaoliu/113456/113469/11040/index{}.html"
 
+    def _create_table(self):
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `chinabank` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `pub_date` datetime NOT NULL COMMENT '发布时间',
+          `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章标题',
+          `link` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章详情页链接',
+          `article` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '详情页内容',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `link` (`link`),
+          KEY `pub_date` (`pub_date`),
+          KEY `update_time` (`UPDATETIMEJZ`)
+        ) ENGINE=InnoDB AUTO_INCREMENT=15688 DEFAULT CHARSET=utf8mb4 COMMENT='中国银行'; 
+        '''
+        self.sql_client.insert(sql)
+
 
 if __name__ == "__main__":
     demo = ChinaBankShuJuJieDu()
-    demo._start(1)
+    demo.start(1)
     print(demo.error_list)
     print(demo.error_detail)
 
-    # demo = ChinaBankXinWenFaBu()
-    # demo._start(1)
-    # print(demo.error_list)
-    # print(demo.error_detail)
+    demo = ChinaBankXinWenFaBu()
+    demo.start(1)
+    print(demo.error_list)
+    print(demo.error_detail)
 
