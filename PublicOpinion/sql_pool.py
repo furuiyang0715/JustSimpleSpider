@@ -56,7 +56,7 @@ class PyMysqlPoolBase(object):
             count = self.cursor.execute(sql, param)
         return count
 
-    def insert(self, sql, params):
+    def insert(self, sql, params=None):
         """
         @summary: 更新数据表记录
         @param sql: SQL 格式及条件，使用 (%s,%s)

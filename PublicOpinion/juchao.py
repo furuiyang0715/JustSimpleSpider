@@ -11,7 +11,8 @@ from PublicOpinion.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASS
     LOCAL_MYSQL_HOST, LOCAL_MYSQL_USER, LOCAL_MYSQL_PORT, LOCAL_MYSQL_PASSWORD, LOCAL
 from PublicOpinion.sql_pool import PyMysqlPoolBase
 
-logger = logging.getLogger()
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 class JuChaoInfo(object):
@@ -121,11 +122,12 @@ class JuChaoInfo(object):
             insert_sql, values = self._contract_sql(to_insert)
             count = self.sql_pool.insert(insert_sql, values)
         except pymysql.err.IntegrityError:
-            # logger.warning("重复")
+            logger.info("重复 {}".format(to_insert))
             return 1
         except:
             logger.warning("失败")
         else:
+            logger.info("保存成功 {}".format(to_insert))
             return count
 
     def get_list(self, url):
@@ -139,14 +141,47 @@ class JuChaoInfo(object):
                 yield record
 
     def __del__(self):
-        self.sql_pool.dispose()
+        try:
+            self.sql_pool.dispose()
+        except:
+            pass
+
+    def _create_table(self):
+        sql = '''
+         CREATE TABLE IF NOT EXISTS `juchao_info` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `code` varchar(8) NOT NULL COMMENT '证券代码',
+          `pub_date` datetime NOT NULL COMMENT '发布时间',
+          `title` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '资讯标题',
+          `category` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '资讯类别',
+          `summary` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '资讯摘要',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `code_title` (`code`,`title`),
+          KEY `pub_date` (`pub_date`),
+          KEY `update_time` (`UPDATETIMEJZ`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='巨潮AI资讯'; 
+        '''
+        self.sql_pool.insert(sql)
+        self.sql_pool.end()
 
     def start(self):
-        records = list(self.get_list(self.zuixin_url))
-        records += list(self.get_list(self.stock_url))
-        records += list(self.get_list(self.fund_url))
-        records += list(self.get_list(self.datas_url))
-        # print(len(records))
+        self._create_table()
+
+        zuixin_records = self.get_list(self.zuixin_url)
+        self.process_records(zuixin_records, 1128)
+
+        stock_records = self.get_list(self.stock_url)
+        self.process_records(stock_records, 1078)
+
+        fund_records = self.get_list(self.fund_url)
+        self.process_records(fund_records, 1126)
+
+        datas_records = self.get_list(self.datas_url)
+        self.process_records(datas_records, 1127)
+
+    def process_records(self, records, type_code):
         num = 0
         for record in records:
             item = dict()
@@ -158,7 +193,10 @@ class JuChaoInfo(object):
             item['title'] = record.get("F001V")  # 资讯标题
             item['category'] = record.get("F003V")   # 资讯类别
             item['summary'] = record.get("F002V")   # 资讯摘要
-            # print(item)
+            # item['pdf_link'] = record.get("F004V")    # pdf 链接
+            # code = record.get("SECCODE")    # 文章编号
+            # link = "http://webapi.cninfo.com.cn/#/aidetail?type=sysapi/p_sysapi{}&scode={}".format(type_code, code)
+            # item['link'] = link
             count = self._save(item)
             self.sql_pool.connection.commit()
             if not count:
@@ -169,12 +207,7 @@ class JuChaoInfo(object):
                 num = 0
                 self.sql_pool.connection.commit()
 
-        # print("insert error list: {}".format(self.error_detail))
-        # with open("error.txt", "a+") as f:
-        #     f.write("{}".format(self.error_detail))
-
 
 if __name__ == "__main__":
     runner = JuChaoInfo()
-    # runner._get(runner.zuixin_url)
     runner.start()
