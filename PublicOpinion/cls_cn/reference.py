@@ -95,7 +95,7 @@ class Reference(ClsBase):
                         title = news.get("title")
                         aid = news.get('id')
                         link = 'https://api3.cls.cn/share/article/{}?os=web&sv=6.8.0&app=CailianpressWeb'.format(aid)
-                        item['title'] = title
+                        item['title'] = title[:30]
                         item['pub_date'] = self.convert_dt(pub_date)
                         item['link'] = link
                         article = self._parse_app_page(link)
@@ -110,7 +110,7 @@ class Reference(ClsBase):
           `id` int(11) NOT NULL AUTO_INCREMENT,
           `pub_date` datetime NOT NULL COMMENT '发布时间',
           `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章标题',
-          `link` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章详情页链接',
+          `link` varchar(256) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章详情页链接',
           `article` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '详情页内容',
           `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
           `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -125,19 +125,12 @@ class Reference(ClsBase):
 
     def _start(self):
         self._init_pool()
+        self._create_table()
         items = self.get_list_json()
         # print(items)
         # for item in items:
         #     print(item)
         self.save(items)
-
-    def start(self):
-        try:
-            self._init_pool()
-            self._create_table()
-            self._start()
-        except:
-            traceback.print_exc()
 
 
 class ReferenceSchedule(object):

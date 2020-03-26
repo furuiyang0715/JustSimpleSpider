@@ -98,7 +98,7 @@ class ClsBase(object):
         except:
             traceback.print_exc()
         else:
-            print("新增数据 {}".format(item))
+            print("\n新增数据 {}".format(item))
             return ret
 
     def _save_many(self, items):

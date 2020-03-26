@@ -42,10 +42,11 @@ class ClsSchedule(object):
         print("线程池执行所用的时间是{}".format(now() - start_time))  # 大概是 362
 
 
-cls = ClsSchedule()
-# cls.simple_run()
+if __name__ == "__main__":
+    cls = ClsSchedule()
+    # cls.simple_run()
 
-cls.thread_run()
+    cls.thread_run()
 
 
 

@@ -147,10 +147,10 @@ def task():
     with open("record.txt", "a+") as f:
         f.write("{}\r\n".format(dt))
 
-    print("开始爬取财联社..")
-    cls = ClsSchedule()
-    cls.thread_run()
-    print("爬取财联社结束.. ")
+    # print("开始爬取财联社..")
+    # cls = ClsSchedule()
+    # cls.thread_run()
+    # print("爬取财联社结束.. ")
 
     print("开始爬取证券时报网.. ")
     runner.thread_run()

@@ -94,6 +94,7 @@ class Depth(ClsBase):
 
     def _start(self):
         self._init_pool()
+        self._create_table()
         first_url = self.url_format.format(now())
         print("first url: ", first_url)
         self.refresh(first_url)
@@ -117,12 +118,6 @@ class Depth(ClsBase):
         ret = self.sql_pool._exec_sql(create_sql)
         self.sql_pool.end()
         return ret
-
-    def start(self):
-        try:
-            self._start()
-        except:
-            traceback.print_exc()
 
 
 class DepthSchedule(object):

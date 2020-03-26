@@ -37,7 +37,7 @@ class Telegraphs(ClsBase):
                 title = info.get("title")
                 if not title:
                     title = info.get("content")[:20]
-                item['title'] = title
+                item['title'] = title[:30]
                 pub_date = info.get("ctime")
                 content = info.get("content")
                 item['pub_date'] = self.convert_dt(pub_date)
@@ -56,13 +56,14 @@ class Telegraphs(ClsBase):
             time.sleep(random.randint(1, 3))
 
             print("next_url: ", next_url)
-            # TODO 递归的性能问题
+            # TODO 递归的性能问题 解决超时问题
             # 其实这个数据量应该还能承受, 递归的话逻辑会比较通顺
             # 后续看是否改为循环
             self.refresh(next_url)
 
     def _start(self):
         self._init_pool()
+        self._create_table()
         first_url = self.url_format.format(now())
         self.refresh(first_url)
 
@@ -96,4 +97,4 @@ if __name__ == "__main__":
     # print(ret)
     # sys.exit(0)
 
-    tele._start()
+    tele.start()

@@ -151,6 +151,7 @@ class afterAfficheList(Reference):
 
     def _start(self):
         self._init_pool()
+        self._create_table()
         items = self.get_list_json()
         # print(items)
         # for item in items:
