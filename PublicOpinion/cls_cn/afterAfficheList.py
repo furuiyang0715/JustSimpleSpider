@@ -39,7 +39,8 @@ class afterAfficheList(Reference):
                 article = node.text_content()
                 infos.append((code, article))
         except:
-            traceback.print_exc()
+            # traceback.print_exc()
+            print("解析失败的页面链接是 {}".format(link))
             return None
         return infos
 
@@ -152,14 +153,14 @@ class afterAfficheList(Reference):
         self._init_pool()
         items = self.get_list_json()
         # print(items)
-        for item in items:
-            print(item)
+        # for item in items:
+        #     print(item)
         self.save(items)
 
 
 if __name__ == "__main__":
     demo = afterAfficheList()
-    demo._start()
+    demo.start()
 
     # demo._init_pool()
     # demo._create_table()

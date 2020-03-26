@@ -4,6 +4,7 @@ import json
 import pprint
 import re
 import sys
+import traceback
 
 import requests as req
 from lxml import html
@@ -129,6 +130,14 @@ class Reference(ClsBase):
         # for item in items:
         #     print(item)
         self.save(items)
+
+    def start(self):
+        try:
+            self._init_pool()
+            self._create_table()
+            self._start()
+        except:
+            traceback.print_exc()
 
 
 class ReferenceSchedule(object):
