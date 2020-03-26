@@ -105,19 +105,21 @@ class Reference(ClsBase):
         return items
 
     def _create_table(self):
+        # ALTER TABLE cls_depth_theme MODIFY link varchar(256);
+        # AUTO_INCREMENT=34657 自增长的开始值
         create_sql = '''
         CREATE TABLE IF NOT EXISTS `cls_depth_theme`(
           `id` int(11) NOT NULL AUTO_INCREMENT,
           `pub_date` datetime NOT NULL COMMENT '发布时间',
           `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章标题',
-          `link` varchar(256) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章详情页链接',
+          `link` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章详情页链接',
           `article` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '详情页内容',
           `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
           `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           PRIMARY KEY (`id`),
           UNIQUE KEY `link` (`link`),
           KEY `pub_date` (`pub_date`)
-        ) ENGINE=InnoDB AUTO_INCREMENT=34657 DEFAULT CHARSET=utf8mb4 COMMENT='财联社-深度及题材' ; 
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='财联社-深度及题材' ; 
         '''
         ret = self.sql_pool._exec_sql(create_sql)
         self.sql_pool.end()

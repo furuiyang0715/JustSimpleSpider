@@ -119,7 +119,7 @@ class Depth(ClsBase):
           PRIMARY KEY (`id`),
           UNIQUE KEY `link` (`link`),
           KEY `pub_date` (`pub_date`)
-        ) ENGINE=InnoDB AUTO_INCREMENT=34657 DEFAULT CHARSET=utf8mb4 COMMENT='财联社-深度及题材' ; 
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='财联社-深度及题材' ; 
         '''
         ret = self.sql_pool._exec_sql(create_sql)
         self.sql_pool.end()

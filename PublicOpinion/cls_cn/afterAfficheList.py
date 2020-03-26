@@ -143,7 +143,7 @@ class afterAfficheList(Reference):
           UNIQUE KEY `code_date` (`code`, `pub_date`),
           KEY `pub_date` (`pub_date`),
           KEY `code` (`code`)
-        ) ENGINE=InnoDB AUTO_INCREMENT=34657 DEFAULT CHARSET=utf8mb4 COMMENT='财联社-盘后公告' ; 
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='财联社-盘后公告' ; 
         '''
         ret = self.sql_pool._exec_sql(create_sql)
         self.sql_pool.end()
