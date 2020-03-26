@@ -44,9 +44,9 @@ class ClsSchedule(object):
 
 if __name__ == "__main__":
     cls = ClsSchedule()
-    # cls.simple_run()
+    cls.simple_run()
 
-    cls.thread_run()
+    # cls.thread_run()
 
 
 

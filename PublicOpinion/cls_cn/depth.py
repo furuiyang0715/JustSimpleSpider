@@ -97,7 +97,13 @@ class Depth(ClsBase):
         self._create_table()
         first_url = self.url_format.format(now())
         print("first url: ", first_url)
-        self.refresh(first_url)
+        for i in range(3):
+            try:
+                self.refresh(first_url)
+            except:
+                print("超时重试")
+            else:
+                break
         print(self.error_detail)
 
     def _create_table(self):

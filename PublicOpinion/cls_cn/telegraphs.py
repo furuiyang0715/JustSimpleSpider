@@ -65,7 +65,13 @@ class Telegraphs(ClsBase):
         self._init_pool()
         self._create_table()
         first_url = self.url_format.format(now())
-        self.refresh(first_url)
+        for i in range(3):
+            try:
+                self.refresh(first_url)
+            except:
+                print("超时重试")
+            else:
+                break
 
     def _create_table(self):
         create_sql = '''
