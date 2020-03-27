@@ -242,7 +242,76 @@ class EMLGTNanBeiXiangZiJin(object):
         except:
             traceback.print_exc()
 
+    def sync_south(self):
+        # 根据时间获取不同的数据
+        start_time = datetime.datetime.now() - datetime.timedelta(days=12)
+        end_time = datetime.datetime.now()
+        # table_name = 'lgt_south_money_data'
+        fields_map = {
+            "Date": "DateTime",
+            "HKHFlow": "ShHkFlow",
+            "HKHBalance": "ShHkBalance",
+            "HKZFlow": "SzHkFlow",
+            'HKZBalance': "SzHkBalance",
+            'SouthMoney': "Netinflow",
+            "ID": "CMFID",
+            "UPDATETIMEJZ": "CMFTime",
+        }
+        as_str = "select "
+        for key, value in fields_map.items():
+            as_str += "{} as {},".format(key, value)
+
+        as_str = as_str.strip(",")
+        as_str += " from {} where Date > '{}' and Date < '{}'; ".format(self.south_table_name, start_time, end_time)
+        print(as_str)
+        south_datas = self.sql_pool.select_all(as_str)
+        print(south_datas)
+
 
 if __name__ == "__main__":
     eml = EMLGTNanBeiXiangZiJin()
-    eml.start()
+    # eml.start()
+    # 频率的话 30 s 一次比较好
+
+    eml._init_pool()
+    eml.sync_south()
+
+
+'''正式库中的情况: 
+          id: 1
+    DateTime: 2019-09-20 09:58:00
+    ShHkFlow: 35798.8300
+ ShHkBalance: 4164201.1700
+    SzHkFlow: 31718.1800
+ SzHkBalance: 4168281.8200
+   Netinflow: 67517.0100
+    Category: 1
+      HashID: b2184e8e63b17eee4e9283081792c9c2
+       CMFID: 485012
+     CMFTime: 2019-09-20 09:59:37
+CREATETIMEJZ: 2019-09-20 09:59:58
+UPDATETIMEJZ: 2019-09-20 09:59:58
+1 row in set (0.02 sec)
+'''
+
+'''
+CREATE TABLE `hkland_flow` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `DateTime` datetime NOT NULL COMMENT '交易时间',
+  `ShHkFlow` decimal(19,4) NOT NULL COMMENT '沪股通/港股通(沪)当日资金流向(万）',
+  `ShHkBalance` decimal(19,4) NOT NULL COMMENT '沪股通/港股通(沪)当日资金余额（万）',
+  `SzHkFlow` decimal(19,4) NOT NULL COMMENT '深股通/港股通(深)当日资金流向(万）',
+  `SzHkBalance` decimal(19,4) NOT NULL COMMENT '深股通/港股通(深)当日资金余额（万）',
+  `Netinflow` decimal(19,4) NOT NULL COMMENT '南北向资金,当日净流入',
+  `Category` tinyint(4) NOT NULL COMMENT '类别:1 南向, 2 北向',
+  `HashID` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT '哈希ID',
+  `CMFID` bigint(20) unsigned DEFAULT NULL COMMENT '源表来源ID',
+  `CMFTime` datetime DEFAULT NULL COMMENT 'Come From Time',
+  `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+  `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_key2` (`DateTime`,`Category`),
+  UNIQUE KEY `unique_key` (`CMFID`,`Category`),
+  KEY `DateTime` (`DateTime`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=270198 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通-实时资金流向'
+'''
