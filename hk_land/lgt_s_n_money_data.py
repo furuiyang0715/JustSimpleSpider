@@ -2,6 +2,8 @@ import datetime
 import json
 import pprint
 import re
+import traceback
+from decimal import Decimal
 
 import pymysql
 import requests as req
@@ -50,25 +52,66 @@ class EMLGTNanBeiXiangZiJin(object):
             }
         self.sql_pool = PyMysqlPoolBase(**conf)
 
+    def select_n2s_datas(self):
+        """获取南向数据"""
+        start_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.min)
+        end_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.max)
+        sql = '''select * from {} where Date >= '{}' and Date <= '{}';'''.format(
+            self.south_table_name, start_dt, end_dt)
+        south_datas = self.sql_pool.select_all(sql)
+        for data in south_datas:
+            # data.pop("id")
+            data.pop("CREATETIMEJZ")
+            data.pop("UPDATETIMEJZ")
+        return south_datas
+
     def process_n2s(self, py_data):
         """处理陆港通南向数据"""
         n2s = py_data.get("n2s")
         n2s_date = py_data.get("n2sDate")
         _cur_year = datetime.datetime.now().year   # FIXME 不太严谨
         _cur_moment_str = str(_cur_year) + "-" + n2s_date
+        logger.info("获取到的南向数据的时间是 {}".format(_cur_moment_str))
 
+        items = []
         for data_str in n2s:
             data = data_str.split(",")
             item = dict()
             dt_moment = _cur_moment_str + " " + data[0]
-            item['Date'] = dt_moment  # 时间点 补全当天的完整时间
-            item['HKHFlow'] = data[1] if data[1] != '-' else 0  # 港股通（沪）南向资金流
-            item['HKHBalance'] = data[2] if data[2] != "-" else 0  # 港股通(沪) 当日资金余额
-            item['HKZFlow'] = data[3] if data[3] != "-" else 0  # 港股通(深) 南向资金流
-            item['HKZBalance'] = data[4] if data[4] != "-" else 0  # 港股通(深) 当日资金余额
-            item['SouthMoney'] = data[5] if data[5] != "-" else 0  # 南向资金
+            item['Date'] = datetime.datetime.strptime(dt_moment, "%Y-%m-%d %H:%M")  # 时间点 补全当天的完整时间
+            item['HKHFlow'] = Decimal(data[1]) if data[1] != '-' else 0  # 港股通（沪）南向资金流
+            item['HKHBalance'] = Decimal(data[2]) if data[2] != "-" else 0  # 港股通(沪) 当日资金余额
+            item['HKZFlow'] = Decimal(data[3]) if data[3] != "-" else 0  # 港股通(深) 南向资金流
+            item['HKZBalance'] = Decimal(data[4]) if data[4] != "-" else 0  # 港股通(深) 当日资金余额
+            item['SouthMoney'] = Decimal(data[5]) if data[5] != "-" else 0  # 南向资金
             item['Category'] = '南向资金'
-            self._save(item, self.south_table_name)
+            items.append(item)
+
+        to_delete = []
+        to_insert = []
+
+        already_sourth_datas = self.select_n2s_datas()
+        for r in already_sourth_datas:
+            d_id = r.pop("id")
+            if not r in items:
+                to_delete.append(d_id)
+
+        for r in items:
+            if not r in already_sourth_datas:
+                to_insert.append(r)
+
+        # print(len(already_sourth_datas))
+        # print(len(items))
+        #
+        # print(to_insert)
+        # print(len(to_insert))
+        #
+        # print(to_delete)
+        # print(len(to_delete))
+
+        for item in to_insert:
+            self._save(item,  self.south_table_name)
+        # 讲道理是不用做删除这一步了
 
     def process_s2n(self, py_data):
         """处理陆港通北向数据"""
@@ -76,6 +119,7 @@ class EMLGTNanBeiXiangZiJin(object):
         s2n_date = py_data.get("s2nDate")
         _cur_year = datetime.datetime.now().year   # FIXME 不太严谨
         _cur_moment_str = str(_cur_year) + "-" + s2n_date
+        logger.info("获取到的北向数据的时间是 {}".format(_cur_moment_str))
 
         for data_str in s2n:
             data = data_str.split(",")
@@ -98,18 +142,20 @@ class EMLGTNanBeiXiangZiJin(object):
             vs.append(to_insert.get(k))
         fields_str = "(" + ",".join(ks) + ")"
         values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
-        base_sql = '''INSERT INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str + ''';'''
+        # base_sql = '''INSERT INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str + ''';'''
+        # TODO 不断刷入最新的数据
+        base_sql = '''REPLACE INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str + ''';'''
         return base_sql, tuple(vs)
 
     def _save(self, to_insert, table):
         try:
             insert_sql, values = self.contract_sql(to_insert, table)
             count = self.sql_pool.insert(insert_sql, values)
-        except pymysql.err.IntegrityError:
-            logger.warning("重复 ")
         except:
+            traceback.print_exc()
             logger.warning("失败")
         else:
+            logger.info("更入新数据 {}".format(to_insert))
             self.sql_pool.end()
             return count
 
@@ -156,8 +202,8 @@ class EMLGTNanBeiXiangZiJin(object):
         self._init_pool()
         self._create_table()
         py_data = self.get_response_data()
-        logger.info("开始处理陆港通北向数据")
-        self.process_s2n(py_data)
+        # logger.info("开始处理陆港通北向数据")
+        # self.process_s2n(py_data)
 
         print()
         print()
