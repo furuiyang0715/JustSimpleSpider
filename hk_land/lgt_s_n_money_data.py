@@ -2,6 +2,8 @@ import datetime
 import json
 import pprint
 import re
+
+import pymysql
 import requests as req
 import logging
 
@@ -9,11 +11,8 @@ from hk_land.configs import LOCAL, LOCAL_MYSQL_HOST, LOCAL_MYSQL_PORT, LOCAL_MYS
     LOCAL_MYSQL_DB, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
 from hk_land.sql_pool import PyMysqlPoolBase
 
-logging.basicConfig(level=logging.DEBUG,
-                    filename='output.log',
-                    datefmt='%Y/%m/%d %H:%M:%S',
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d - %(module)s - %(message)s')
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 
@@ -69,8 +68,7 @@ class EMLGTNanBeiXiangZiJin(object):
             item['HKZBalance'] = data[4] if data[4] != "-" else 0  # 港股通(深) 当日资金余额
             item['SouthMoney'] = data[5] if data[5] != "-" else 0  # 南向资金
             item['Category'] = '南向资金'
-            print(item)
-            # self.save(item)
+            self._save(item, self.south_table_name)
 
     def process_s2n(self, py_data):
         """处理陆港通北向数据"""
@@ -90,12 +88,34 @@ class EMLGTNanBeiXiangZiJin(object):
             item['SZBalance'] = data[4] if data[4] != '-' else 0
             item['NorthMoney'] = data[5] if data[5] != '-' else 0
             item['Category'] = '北向资金'
-            print(item)
-            # self.save(item)
+            self._save(item, self.north_table_name)
+
+    def contract_sql(self, to_insert: dict, table: str):
+        ks = []
+        vs = []
+        for k in to_insert:
+            ks.append(k)
+            vs.append(to_insert.get(k))
+        fields_str = "(" + ",".join(ks) + ")"
+        values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
+        base_sql = '''INSERT INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str + ''';'''
+        return base_sql, tuple(vs)
+
+    def _save(self, to_insert, table):
+        try:
+            insert_sql, values = self.contract_sql(to_insert, table)
+            count = self.sql_pool.insert(insert_sql, values)
+        except pymysql.err.IntegrityError:
+            logger.warning("重复 ")
+        except:
+            logger.warning("失败")
+        else:
+            self.sql_pool.end()
+            return count
 
     def _create_table(self):
         sql_n = '''
-        CREATE TABLE IF NOT EXISTS `lgt_north_money_data` (
+        CREATE TABLE IF NOT EXISTS `{}` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
           `Date` datetime NOT NULL COMMENT '日期',
           `SHFlow` decimal(19,4) DEFAULT NULL COMMENT '沪股通当日资金流向(万）',
@@ -109,10 +129,10 @@ class EMLGTNanBeiXiangZiJin(object):
           PRIMARY KEY (`id`),
           UNIQUE KEY `unique_key` (`Date`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆股通-北向资金-东财'; 
-        '''
+        '''.format(self.north_table_name)
 
         sql_s = '''
-         CREATE TABLE IF NOT EXISTS `lgt_south_money_data` (
+         CREATE TABLE IF NOT EXISTS `{}` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
           `Date` datetime NOT NULL COMMENT '日期',
           `HKHFlow` decimal(19,4) DEFAULT NULL COMMENT '港股通（沪）当日资金流向(万）',
@@ -126,7 +146,8 @@ class EMLGTNanBeiXiangZiJin(object):
           PRIMARY KEY (`id`),
           UNIQUE KEY `unique_key` (`Date`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆股通-南向资金-东财'; 
-        '''
+        '''.format(self.south_table_name)
+
         self.sql_pool.insert(sql_n)
         self.sql_pool.insert(sql_s)
         self.sql_pool.end()
