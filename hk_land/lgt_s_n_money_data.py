@@ -9,8 +9,8 @@ import pymysql
 import requests as req
 import logging
 
-from hk_land.configs import LOCAL, LOCAL_MYSQL_HOST, LOCAL_MYSQL_PORT, LOCAL_MYSQL_USER, LOCAL_MYSQL_PASSWORD, \
-    LOCAL_MYSQL_DB, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
+from hk_land.configs import (LOCAL, LOCAL_MYSQL_HOST, LOCAL_MYSQL_PORT, LOCAL_MYSQL_USER, LOCAL_MYSQL_PASSWORD,
+                             LOCAL_MYSQL_DB, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB)
 from hk_land.sql_pool import PyMysqlPoolBase
 
 
@@ -53,7 +53,7 @@ class EMLGTNanBeiXiangZiJin(object):
         self.sql_pool = PyMysqlPoolBase(**conf)
 
     def select_n2s_datas(self):
-        """获取南向数据"""
+        """获取已有的南向数据"""
         start_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.min)
         end_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.max)
         sql = '''select * from {} where Date >= '{}' and Date <= '{}';'''.format(
@@ -64,6 +64,19 @@ class EMLGTNanBeiXiangZiJin(object):
             data.pop("CREATETIMEJZ")
             data.pop("UPDATETIMEJZ")
         return south_datas
+
+    def select_s2n_datas(self):
+        """获取已有的北向数据"""
+        start_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.min)
+        end_dt = datetime.datetime.combine(datetime.datetime.now(), datetime.time.max)
+        sql = '''select * from {} where Date >= '{}' and Date <= '{}';'''.format(
+            self.north_table_name, start_dt, end_dt)
+        north_datas = self.sql_pool.select_all(sql)
+        for data in north_datas:
+            # data.pop("id")
+            data.pop("CREATETIMEJZ")
+            data.pop("UPDATETIMEJZ")
+        return north_datas
 
     def process_n2s(self, py_data):
         """处理陆港通南向数据"""
@@ -100,18 +113,9 @@ class EMLGTNanBeiXiangZiJin(object):
             if not r in already_sourth_datas:
                 to_insert.append(r)
 
-        # print(len(already_sourth_datas))
-        # print(len(items))
-        #
-        # print(to_insert)
-        # print(len(to_insert))
-        #
-        # print(to_delete)
-        # print(len(to_delete))
-
         for item in to_insert:
             self._save(item,  self.south_table_name)
-        # 讲道理是不用做删除这一步了
+        # 讲道理是不用做删除这一步
 
     def process_s2n(self, py_data):
         """处理陆港通北向数据"""
@@ -121,17 +125,34 @@ class EMLGTNanBeiXiangZiJin(object):
         _cur_moment_str = str(_cur_year) + "-" + s2n_date
         logger.info("获取到的北向数据的时间是 {}".format(_cur_moment_str))
 
+        items = []
         for data_str in s2n:
             data = data_str.split(",")
             item = dict()
             dt_moment = _cur_moment_str + " " + data[0]
-            item['Date'] = dt_moment  # 时间点 补全当天的完整时间
-            item['SHFlow'] = data[1] if data[1] != "-" else 0  # 沪股通 北上资金流
-            item['SHBalance'] = data[2] if data[2] != "-" else 0  #
-            item['SZFlow'] = data[3] if data[3] != '-' else 0
-            item['SZBalance'] = data[4] if data[4] != '-' else 0
-            item['NorthMoney'] = data[5] if data[5] != '-' else 0
+            item['Date'] = datetime.datetime.strptime(dt_moment, "%Y-%m-%d %H:%M")  # 时间点 补全当天的完整时间
+            item['SHFlow'] = Decimal(data[1]) if data[1] != "-" else 0  # 沪股通 北上资金流
+            item['SHBalance'] = Decimal(data[2]) if data[2] != "-" else 0  #
+            item['SZFlow'] = Decimal(data[3]) if data[3] != '-' else 0
+            item['SZBalance'] = Decimal(data[4]) if data[4] != '-' else 0
+            item['NorthMoney'] = Decimal(data[5]) if data[5] != '-' else 0
             item['Category'] = '北向资金'
+            items.append(item)
+
+        to_delete = []
+        to_insert = []
+
+        already_north_datas = self.select_s2n_datas()
+        for r in already_north_datas:
+            d_id = r.pop("id")
+            if not r in items:
+                to_delete.append(d_id)
+
+        for r in items:
+            if not r in already_north_datas:
+                to_insert.append(r)
+
+        for item in to_insert:
             self._save(item, self.north_table_name)
 
     def contract_sql(self, to_insert: dict, table: str):
@@ -142,8 +163,6 @@ class EMLGTNanBeiXiangZiJin(object):
             vs.append(to_insert.get(k))
         fields_str = "(" + ",".join(ks) + ")"
         values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
-        # base_sql = '''INSERT INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str + ''';'''
-        # TODO 不断刷入最新的数据
         base_sql = '''REPLACE INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str + ''';'''
         return base_sql, tuple(vs)
 
@@ -202,8 +221,8 @@ class EMLGTNanBeiXiangZiJin(object):
         self._init_pool()
         self._create_table()
         py_data = self.get_response_data()
-        # logger.info("开始处理陆港通北向数据")
-        # self.process_s2n(py_data)
+        logger.info("开始处理陆港通北向数据")
+        self.process_s2n(py_data)
 
         print()
         print()
@@ -217,7 +236,13 @@ class EMLGTNanBeiXiangZiJin(object):
         except:
             pass
 
+    def start(self):
+        try:
+            self._start()
+        except:
+            traceback.print_exc()
+
 
 if __name__ == "__main__":
     eml = EMLGTNanBeiXiangZiJin()
-    eml._start()
+    eml.start()
