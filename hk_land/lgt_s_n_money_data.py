@@ -1,4 +1,5 @@
 import datetime
+import hashlib
 import json
 import pprint
 import re
@@ -243,10 +244,8 @@ class EMLGTNanBeiXiangZiJin(object):
             traceback.print_exc()
 
     def sync_south(self):
-        # 根据时间获取不同的数据
         start_time = datetime.datetime.now() - datetime.timedelta(days=12)
         end_time = datetime.datetime.now()
-        # table_name = 'lgt_south_money_data'
         fields_map = {
             "Date": "DateTime",
             "HKHFlow": "ShHkFlow",
@@ -263,18 +262,64 @@ class EMLGTNanBeiXiangZiJin(object):
 
         as_str = as_str.strip(",")
         as_str += " from {} where Date > '{}' and Date < '{}'; ".format(self.south_table_name, start_time, end_time)
-        print(as_str)
         south_datas = self.sql_pool.select_all(as_str)
-        print(south_datas)
+        return south_datas
+
+    def hash_row(self, data):
+        values = sorted([str(value) for value in data.values()])
+        hash_str = ''
+        for value in values:
+            hash_str += value
+        md5 = hashlib.md5()
+        md5.update(hash_str.encode())
+        hash_value = md5.hexdigest()
+        data["HashID"] = hash_value
+        return data
+
+    def _create_pro_table(self):
+        """创建正式库的表"""
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `hkland_flow` (
+          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+          `DateTime` datetime NOT NULL COMMENT '交易时间',
+          `ShHkFlow` decimal(19,4) NOT NULL COMMENT '沪股通/港股通(沪)当日资金流向(万）',
+          `ShHkBalance` decimal(19,4) NOT NULL COMMENT '沪股通/港股通(沪)当日资金余额（万）',
+          `SzHkFlow` decimal(19,4) NOT NULL COMMENT '深股通/港股通(深)当日资金流向(万）',
+          `SzHkBalance` decimal(19,4) NOT NULL COMMENT '深股通/港股通(深)当日资金余额（万）',
+          `Netinflow` decimal(19,4) NOT NULL COMMENT '南北向资金,当日净流入',
+          `Category` tinyint(4) NOT NULL COMMENT '类别:1 南向, 2 北向',
+          `HashID` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT '哈希ID',
+          `CMFID` bigint(20) unsigned DEFAULT NULL COMMENT '源表来源ID',
+          `CMFTime` datetime DEFAULT NULL COMMENT 'Come From Time',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `unique_key2` (`DateTime`,`Category`),
+          UNIQUE KEY `unique_key` (`CMFID`,`Category`),
+          KEY `DateTime` (`DateTime`) USING BTREE
+        ) ENGINE=InnoDB AUTO_INCREMENT=270198 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='陆港通-实时资金流向'; 
+        
+        '''
+
+
+    def pro_process_s_datas(self, south_datas):
+        for data in south_datas:
+            self.hash_row(data)
+            data['Category'] = 1
+            print(data)
 
 
 if __name__ == "__main__":
     eml = EMLGTNanBeiXiangZiJin()
     # eml.start()
     # 频率的话 30 s 一次比较好
-
     eml._init_pool()
-    eml.sync_south()
+    s_datas = eml.sync_south()
+    eml.pro_process_s_datas(s_datas)
+
+
+
+
 
 
 '''正式库中的情况: 
