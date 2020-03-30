@@ -154,7 +154,7 @@ class HoldShares(object):
           `SecuCode` varchar(10) COLLATE utf8_bin NOT NULL COMMENT '股票交易代码',
           `SecuName` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT '股票名称',
           `Holding` decimal(19,2) DEFAULT NULL COMMENT '于中央结算系统的持股量',
-          `Percent` decimal(9,4) DEFAULT NULL COMMENT '占于{}上市及交易的A股总数的百分比（%）',
+          `Percent` decimal(9,4) DEFAULT NULL COMMENT '{}',
           `Date` date DEFAULT NULL COMMENT '日期',
           `ItemID` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT 'itemid',
           `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
@@ -168,6 +168,47 @@ class HoldShares(object):
         spider = self._init_pool(self.spider_cfg)
         spider.insert(sql)
         spider.dispose()
+
+    # 生成正式库中的两个 hkland_shares hkland_hkshares
+    # 后续数据流程略
+    def _create_product_table(self):
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `hkland_shares` (
+          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+          `SecuCode` varchar(16) COLLATE utf8_bin NOT NULL COMMENT '股票交易代码',
+          `InnerCode` int(11) NOT NULL COMMENT '内部编码',
+          `SecuAbbr` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT '股票简称',
+          `Date` datetime NOT NULL COMMENT '自然日',
+          `HKTradeDay` datetime NOT NULL COMMENT '港交所交易日',
+          `Percent` decimal(20,4) DEFAULT NULL COMMENT '占A股总股本的比例（%）',
+          `ShareNum` decimal(20,0) DEFAULT NULL COMMENT '股票数量(股)',
+          `HashID` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT 'HashID',
+          `CMFTime` datetime NOT NULL COMMENT '日期',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `un` (`Date`,`HKTradeDay`,`SecuCode`),
+          UNIQUE KEY `un2` (`InnerCode`,`Date`) USING BTREE
+        ) ENGINE=InnoDB AUTO_INCREMENT=3343800 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='沪/深股通持股记录'; 
+        '''
+
+        sql2 = '''
+        CREATE TABLE IF NOT EXISTS `hkland_hkshares` (
+          `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+          `SecuCode` varchar(16) COLLATE utf8_bin NOT NULL COMMENT '股票交易代码',
+          `InnerCode` int(11) NOT NULL COMMENT '内部编码',
+          `SecuAbbr` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT '股票简称',
+          `Date` datetime NOT NULL COMMENT '日期',
+          `Percent` decimal(20,4) DEFAULT NULL COMMENT '占已发行港股的比例（%）',
+          `ShareNum` decimal(20,0) DEFAULT NULL COMMENT '股票数量（股）',
+          `HashID` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT 'HashID',
+          `CMFTime` datetime NOT NULL COMMENT '日期',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `un` (`Date`,`SecuCode`)
+        ) ENGINE=InnoDB AUTO_INCREMENT=569820 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='港股通持股记录-港股'; 
+        '''
 
 
 if __name__ == "__main__":
