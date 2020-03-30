@@ -301,22 +301,21 @@ class EMLGTNanBeiXiangZiJin(object):
         
         '''
 
-
     def pro_process_s_datas(self, south_datas):
         for data in south_datas:
             self.hash_row(data)
             data['Category'] = 1
             print(data)
+            # 将其插入正式数据库
 
 
 if __name__ == "__main__":
     eml = EMLGTNanBeiXiangZiJin()
-    # eml.start()
+    eml.start()
     # 频率的话 30 s 一次比较好
-    eml._init_pool()
-    s_datas = eml.sync_south()
-    eml.pro_process_s_datas(s_datas)
-
+    # eml._init_pool()
+    # s_datas = eml.sync_south()
+    # eml.pro_process_s_datas(s_datas)
 
 
 
