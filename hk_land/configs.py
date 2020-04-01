@@ -7,20 +7,6 @@ cf = configparser.ConfigParser()
 thisdir = os.path.dirname(__file__)
 cf.read(os.path.join(thisdir, '.conf'))
 
-# mysql
-MYSQL_HOST = env.get("MYSQL_HOST", cf.get('mysql', 'MYSQL_HOST'))
-MYSQL_PORT = int(env.get("MYSQL_PORT", cf.get('mysql', 'MYSQL_PORT')))
-MYSQL_USER = env.get("MYSQL_USER", cf.get('mysql', 'MYSQL_USER'))
-MYSQL_PASSWORD = env.get("MYSQL_PASSWORD", cf.get('mysql', 'MYSQL_PASSWORD'))
-MYSQL_DB = env.get("MYSQL_DB", cf.get('mysql', 'MYSQL_DB'))
-
-# local mysql
-LOCAL_MYSQL_HOST = env.get("LOCAL_MYSQL_HOST", cf.get('mysql', 'LOCAL_MYSQL_HOST'))
-LOCAL_MYSQL_PORT = int(env.get("LOCAL_MYSQL_PORT", cf.get('mysql', 'LOCAL_MYSQL_PORT')))
-LOCAL_MYSQL_USER = env.get("LOCAL_MYSQL_USER", cf.get('mysql', 'LOCAL_MYSQL_USER'))
-LOCAL_MYSQL_PASSWORD = env.get("LOCAL_MYSQL_PASSWORD", cf.get('mysql', 'LOCAL_MYSQL_PASSWORD'))
-LOCAL_MYSQL_DB = env.get("LOCAL_MYSQL_DB", cf.get('mysql', 'LOCAL_MYSQL_DB'))
-
 # datacenter
 DC_HOST = env.get("DC_HOST", cf.get('dc', 'DC_HOST'))
 DC_PORT = int(env.get("DC_PORT", cf.get('dc', 'DC_PORT')))
@@ -32,9 +18,43 @@ DC_DB = env.get("DC_DB", cf.get('dc', 'DC_DB'))
 LOCAL = bool(int(env.get("LOCAL", cf.get('deploy', 'LOCAL'))))
 FIRST = bool(int(env.get("FIRST", cf.get('deploy', 'FIRST'))))
 
-# proxy
-PROXY_URL = env.get("PROXY_URL", 'https://dps.kdlapi.com/api/getdps/?orderid=934751511166930&num=1&pt=1&sep=1')
-LOCAL_PROXY_URL = env.get("LOCAL_PROXY_URL", 'http://ent.kdlapi.com/api/getproxy/?orderid=924829619838717&num=1&protocol=1&method=2&an_an=1&an_ha=1&sep=1')
+
+# test
+TEST_MYSQL_HOST = env.get("TEST_MYSQL_HOST", cf.get('test', 'TEST_MYSQL_HOST'))
+TEST_MYSQL_PORT = int(env.get("TEST_MYSQL_PORT", cf.get('test', 'TEST_MYSQL_PORT')))
+TEST_MYSQL_USER = env.get("TEST_MYSQL_USER", cf.get('test', 'TEST_MYSQL_USER'))
+TEST_MYSQL_PASSWORD = env.get("TEST_MYSQL_PASSWORD", cf.get('test', 'TEST_MYSQL_PASSWORD'))
+TEST_MYSQL_DB = env.get("TEST_MYSQL_DB", cf.get('test', 'TEST_MYSQL_DB'))
+
+
+# spider
+if LOCAL:
+    SPIDER_MYSQL_HOST = TEST_MYSQL_HOST
+    SPIDER_MYSQL_PORT = TEST_MYSQL_PORT
+    SPIDER_MYSQL_USER = TEST_MYSQL_USER
+    SPIDER_MYSQL_PASSWORD = TEST_MYSQL_PASSWORD
+    SPIDER_MYSQL_DB = TEST_MYSQL_DB
+else:
+    SPIDER_MYSQL_HOST = env.get("SPIDER_MYSQL_HOST", cf.get('spider', 'SPIDER_MYSQL_HOST'))
+    SPIDER_MYSQL_PORT = int(env.get("SPIDER_MYSQL_PORT", cf.get('spider', 'SPIDER_MYSQL_PORT')))
+    SPIDER_MYSQL_USER = env.get("SPIDER_MYSQL_USER", cf.get('spider', 'SPIDER_MYSQL_USER'))
+    SPIDER_MYSQL_PASSWORD = env.get("SPIDER_MYSQL_PASSWORD", cf.get('spider', 'SPIDER_MYSQL_PASSWORD'))
+    SPIDER_MYSQL_DB = env.get("SPIDER_MYSQL_DB", cf.get('spider', 'SPIDER_MYSQL_DB'))
+
+
+# product
+if LOCAL:
+    PRODUCT_MYSQL_HOST = TEST_MYSQL_HOST
+    PRODUCT_MYSQL_PORT = TEST_MYSQL_PORT
+    PRODUCT_MYSQL_USER = TEST_MYSQL_USER
+    PRODUCT_MYSQL_PASSWORD = TEST_MYSQL_PASSWORD
+    PRODUCT_MYSQL_DB = TEST_MYSQL_DB
+else:
+    PRODUCT_MYSQL_HOST = env.get("PRODUCT_MYSQL_HOST", cf.get('product', 'PRODUCT_MYSQL_HOST'))
+    PRODUCT_MYSQL_PORT = env.get("PRODUCT_MYSQL_PORT", cf.get('product', 'PRODUCT_MYSQL_PORT'))
+    PRODUCT_MYSQL_USER = env.get("PRODUCT_MYSQL_USER", cf.get('product', 'PRODUCT_MYSQL_USER'))
+    PRODUCT_MYSQL_PASSWORD = env.get("PRODUCT_MYSQL_PASSWORD", cf.get('product', 'PRODUCT_MYSQL_PASSWORD'))
+    PRODUCT_MYSQL_DB = env.get("PRODUCT_MYSQL_DB", cf.get('product', 'PRODUCT_MYSQL_DB'))
 
 
 if __name__ == "__main__":
