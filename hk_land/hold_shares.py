@@ -7,7 +7,9 @@ import traceback
 import requests
 import opencc
 from lxml import html
-from hk_land.configs import LOCAL_MYSQL_HOST, LOCAL_MYSQL_PORT, LOCAL_MYSQL_USER, LOCAL_MYSQL_PASSWORD, LOCAL_MYSQL_DB
+from hk_land.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD,
+                             SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER,
+                             PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB)
 from hk_land.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -17,19 +19,19 @@ logger = logging.getLogger(__name__)
 class HoldShares(object):
     """滬股通及深股通持股紀錄按日查詢"""
     spider_cfg = {   # 爬虫库
-        "host": LOCAL_MYSQL_HOST,
-        "port": LOCAL_MYSQL_PORT,
-        "user": LOCAL_MYSQL_USER,
-        "password": LOCAL_MYSQL_PASSWORD,
-        "db": LOCAL_MYSQL_DB,
+        "host": SPIDER_MYSQL_HOST,
+        "port": SPIDER_MYSQL_PORT,
+        "user": SPIDER_MYSQL_USER,
+        "password": SPIDER_MYSQL_PASSWORD,
+        "db": SPIDER_MYSQL_DB,
     }
 
     product_cfg = {    # 正式库
-        "host": LOCAL_MYSQL_HOST,
-        "port": LOCAL_MYSQL_PORT,
-        "user": LOCAL_MYSQL_USER,
-        "password": LOCAL_MYSQL_PASSWORD,
-        "db": LOCAL_MYSQL_DB,
+        "host": PRODUCT_MYSQL_HOST,
+        "port": PRODUCT_MYSQL_PORT,
+        "user": PRODUCT_MYSQL_USER,
+        "password": PRODUCT_MYSQL_PASSWORD,
+        "db": PRODUCT_MYSQL_DB,
     }
 
     def __init__(self, type):
