@@ -189,7 +189,7 @@ class HoldShares(object):
           PRIMARY KEY (`id`),
           UNIQUE KEY `un` (`Date`,`HKTradeDay`,`SecuCode`),
           UNIQUE KEY `un2` (`InnerCode`,`Date`) USING BTREE
-        ) ENGINE=InnoDB AUTO_INCREMENT=3343800 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='沪/深股通持股记录'; 
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='沪/深股通持股记录'; 
         '''
 
         sql2 = '''
@@ -207,7 +207,7 @@ class HoldShares(object):
           `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           PRIMARY KEY (`id`),
           UNIQUE KEY `un` (`Date`,`SecuCode`)
-        ) ENGINE=InnoDB AUTO_INCREMENT=569820 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='港股通持股记录-港股'; 
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='港股通持股记录-港股'; 
         '''
 
 

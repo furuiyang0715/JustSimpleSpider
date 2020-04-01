@@ -115,3 +115,38 @@
     - 统计动态
     - 新闻发布会
     - 最新发布
+
+## 陆股通 
+- 实时数据 
+    - 网址： http://data.eastmoney.com/hsgt/index.html 
+    - 爬虫表： lgt_south_money_data; lgt_north_money_data 
+    - 数据中心表: hkland_flow 
+- 陆港通-每日持股明细
+    - 网址： https://www.hkexnews.hk/sdw/search/mutualmarket_c.aspx?t=sh&t=sh 
+    - 爬虫表： hold_shares_sz, hold_shares_sh, hold_shares_hk 
+    - 数据中心表: hkland_shares hkland_hkshares 
+- 陆港通历史数据 
+    - 网址: http://data.eastmoney.com/hsgt/index.html 
+    - 爬虫表： lgt_historical_data 
+    - 数据中心表： hkland_historytradestat 
+- 陆港通十大成交股  
+    - 网址： http://data.eastmoney.com/hsgt/index.html 
+    - 爬虫表: lgt_ten_traded_shares 
+    - 数据中心表: hkland_toptrade 
+- 交易日历 
+    - 上交所： 
+        - 网址： http://www.sse.com.cn/services/hkexsc/home/ 
+        - 爬虫表： trading_calendar_sh
+        - 数据中心表： calendar_hkland_shsz 
+    - 深交所： 
+        - 网址： http://www.szse.cn/szhk/index.html 
+        - 爬虫表： trading_calendar_sz 
+        - 数据中心表： calendar_hkland_shsz 
+    - 港交所： 
+        - 网址： https://sc.hkex.com.hk/TuniS/www.hkex.com.hk/News/HKEX-Calendar 
+        - 爬虫表： trading_calendar_hk 
+        - 数据中心表： calendar_hkland_hk 
+- 陆股通持股统计 
+    - 网址：  https://www.hkexnews.hk/sdw/search/mutualmarket_c.aspx?t=sh&t=sh 
+    - 爬虫表： hold_shares_sh  hold_shares_sz 
+    - 数据中心表： hkland_hkscc 
