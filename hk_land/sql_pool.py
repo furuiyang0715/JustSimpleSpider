@@ -46,7 +46,7 @@ class PyMysqlPoolBase(object):
                              use_unicode=True,
                              charset="utf8",
                              cursorclass=DictCursor)
-        print("已经成功从连接池中获取连接")
+        # print("已经成功从连接池中获取连接")
         return _pool.connection()
 
     def _exec_sql(self, sql, param=None):

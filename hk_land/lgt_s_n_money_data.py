@@ -129,8 +129,10 @@ class EMLGTNanBeiXiangZiJin(object):
             if not r in already_sourth_datas:
                 to_insert.append(r)
 
+        update_fields = ['HKHFlow', 'HKHBalance', 'HKZFlow', 'HKZBalance', 'SouthMoney']
+
         for item in to_insert:
-            self._save(item,  self.south_table_name)
+            self._save(item,  self.south_table_name, update_fields)
 
     def process_s2n(self, py_data):
         """处理陆港通北向数据"""
@@ -167,10 +169,12 @@ class EMLGTNanBeiXiangZiJin(object):
             if not r in already_north_datas:
                 to_insert.append(r)
 
-        for item in to_insert:
-            self._save(item, self.north_table_name)
+        update_fields = ['SHFlow', 'SHBalance', 'SZFlow', 'SZBalance', 'NorthMoney']
 
-    def contract_sql(self, to_insert: dict, table: str):
+        for item in to_insert:
+            self._save(item, self.north_table_name, update_fields)
+
+    def contract_sql(self, to_insert: dict, table: str, update_fields: list):
         ks = []
         vs = []
         for k in to_insert:
@@ -178,13 +182,32 @@ class EMLGTNanBeiXiangZiJin(object):
             vs.append(to_insert.get(k))
         fields_str = "(" + ",".join(ks) + ")"
         values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
-        base_sql = '''REPLACE INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str + ''';'''
-        return base_sql, tuple(vs)
+        base_sql = '''INSERT INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str
+        on_update_sql = ''' ON DUPLICATE KEY UPDATE '''
+        update_vs = []
+        for update_field in update_fields:
+            on_update_sql += '{}=%s,'.format(update_field)
+            update_vs.append(to_insert.get(update_field))
+        on_update_sql = on_update_sql.rstrip(",")
+        sql = base_sql + on_update_sql + """;"""
+        vs.extend(update_vs)
+        return sql, tuple(vs)
 
-    def _save(self, to_insert, table):
+    # def contract_sql(self, to_insert: dict, table: str):
+    #     ks = []
+    #     vs = []
+    #     for k in to_insert:
+    #         ks.append(k)
+    #         vs.append(to_insert.get(k))
+    #     fields_str = "(" + ",".join(ks) + ")"
+    #     values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
+    #     base_sql = '''REPLACE INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str + ''';'''
+    #     return base_sql, tuple(vs)
+
+    def _save(self, to_insert, table, update_fields: list):
         spider = self._init_pool(self.spider_cfg)
         try:
-            insert_sql, values = self.contract_sql(to_insert, table)
+            insert_sql, values = self.contract_sql(to_insert, table, update_fields)
             count = spider.insert(insert_sql, values)
         except:
             traceback.print_exc()
@@ -339,17 +362,18 @@ class EMLGTNanBeiXiangZiJin(object):
         product.insert(sql)
         product.dispose()
 
-    def psave(self, to_insert, table):
+    def psave(self, to_insert, table, update_fields):
         product = self._init_pool(self.product_cfg)
         try:
-            insert_sql, values = self.contract_sql(to_insert, table)
+            insert_sql, values = self.contract_sql(to_insert, table, update_fields)
             count = product.insert(insert_sql, values)
         except:
             traceback.print_exc()
             logger.warning("失败")
             count = None
         else:
-            logger.info("更入新数据 {}".format(to_insert))
+            if count != 0:
+                logger.info("更入新数据 {}".format(to_insert))
         finally:
             product.dispose()
         return count
@@ -357,16 +381,17 @@ class EMLGTNanBeiXiangZiJin(object):
     def sync(self):
         self._create_pro_table()
         south_datas = self.sync_south()
+        update_fields = ['DateTime', 'ShHkFlow', 'ShHkBalance', 'SzHkFlow', 'SzHkBalance', 'Netinflow', 'Category', 'HashID']
         for data in south_datas:
             self.hash_row(data)
             data['Category'] = 1
-            self.psave(data, self.product_table_name)
+            self.psave(data, self.product_table_name, update_fields)
 
         north_datas = self.sync_north()
         for data in north_datas:
             self.hash_row(data)
             data['Category'] = 2
-            self.psave(data, self.product_table_name)
+            self.psave(data, self.product_table_name, update_fields)
 
 
 if __name__ == "__main__":
