@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import datetime
 import re
 import traceback
 
@@ -17,6 +17,7 @@ class afterAfficheList(Reference):
         self.name = 'afterAfficheList'
         self.key = 'afterContent'
         self.fields = ['code', 'pub_date', 'article']
+        self.desc = '财联社-盘后公告'
 
     def _parse_app_page(self, link):
         '''
@@ -138,10 +139,13 @@ class afterAfficheList(Reference):
         return ret
 
     def _start(self):
+        now_dt = lambda: datetime.datetime.now()
+        print('{} {} 开始运行'.format(now_dt(), self.desc))
         self._init_pool()
         self._create_table()
         items = self.get_list_json()
         self.save(items)
+        print("{} 运行结束".format(now_dt(), self.desc))
 
 
 if __name__ == "__main__":

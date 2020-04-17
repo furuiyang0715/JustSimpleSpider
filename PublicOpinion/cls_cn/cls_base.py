@@ -106,7 +106,8 @@ class ClsBase(object):
         try:
             ret = self.sql_pool.insert_many(insert_many_sql, values)
         except pymysql.err.IntegrityError:
-            print("批量中有重复数据")
+            # print("批量中有重复数据")
+            return None
         except:
             traceback.print_exc()
         else:
@@ -117,7 +118,7 @@ class ClsBase(object):
     def save(self, items):
         ret = self._save_many(items)
         if not ret:
-            print("批量保存失败 开始单独保存 .. ")
+            # print("批量保存失败 开始单独保存")
             count = 0
             for item in items:
                 ret = self._save(item)

@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
-
+import datetime
 import json
-import pprint
 import re
-import sys
-import traceback
 
 import requests as req
 from lxml import html
-
 from PublicOpinion.cls_cn.cls_base import ClsBase
 
 
@@ -68,11 +64,8 @@ class Reference(ClsBase):
         if resp.status_code == 200:
             page = resp.text
             news_list = self._parse_list_page(page)
-            # print(news_list)
             if news_list:
                 for news in news_list:
-                    # print(pprint.pformat(news))
-                    # sys.exit(0)
                     item = {}
                     current = news.get(self.key)
                     if current:
@@ -81,10 +74,6 @@ class Reference(ClsBase):
                         article = current.get("content")
                         aid = news.get('id')
                         link = 'https://api3.cls.cn/share/article/{}?os=web&sv=6.8.0&app=CailianpressWeb'.format(aid)
-                        # print(pub_date)
-                        # print(title)
-                        # print(article)
-                        # print(link)
                         item['title'] = title
                         item['pub_date'] = self.convert_dt(pub_date)
                         item['link'] = link
@@ -105,8 +94,6 @@ class Reference(ClsBase):
         return items
 
     def _create_table(self):
-        # ALTER TABLE cls_depth_theme MODIFY link varchar(256);
-        # AUTO_INCREMENT=34657 自增长的开始值
         create_sql = '''
         CREATE TABLE IF NOT EXISTS `cls_depth_theme`(
           `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -121,7 +108,7 @@ class Reference(ClsBase):
           KEY `pub_date` (`pub_date`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='财联社-深度及题材' ; 
         '''
-        ret = self.sql_pool._exec_sql(create_sql)
+        ret = self.sql_pool.insert(create_sql)
         self.sql_pool.end()
         return ret
 
@@ -129,9 +116,6 @@ class Reference(ClsBase):
         self._init_pool()
         self._create_table()
         items = self.get_list_json()
-        # print(items)
-        # for item in items:
-        #     print(item)
         self.save(items)
 
 
@@ -140,17 +124,13 @@ class ReferenceSchedule(object):
     def start(self):
         for num in [1, 2, 5, 6, 7, 8, 9, 10]:
             refe = Reference(num)
-            print(refe.name, "开始爬取了 ..")
-            refe.start()
+            print(refe.name, "开始爬取")
+            refe._start()
 
 
 if __name__ == "__main__":
-    # print(len('https://api3.cls.cn/share/article/441704?os=web&sv=6.8.0&app=CailianpressWeb'))
-    # demo = Reference(10)
-    # demo._start()
-
-    # demo._init_pool()
-    # demo._create_table()
-
+    now_dt = lambda: datetime.datetime.now()
+    print('{} {} 开始运行'.format(now_dt(), "参考"))
     refe_sche = ReferenceSchedule()
     refe_sche.start()
+    print('{} {} 运行结束'.format(now_dt(), '参考'))

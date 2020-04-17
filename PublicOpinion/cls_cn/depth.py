@@ -1,3 +1,4 @@
+import datetime
 import json
 import random
 import sys
@@ -33,10 +34,10 @@ class Depth(ClsBase):
                     return
                 resp = requests.get(url, headers=self.headers, verify=False, timeout=1)
             except requests.exceptions.ConnectionError:
-                print("connection error, retry ")
+                # print("connection error, retry ")
                 time.sleep(1)
             except requests.exceptions.ReadTimeout:
-                print("read timeout, retry")
+                # print("read timeout, retry")
                 time.sleep(1)
             except:
                 return None
@@ -90,22 +91,26 @@ class Depth(ClsBase):
             # dt - 1 是为了防止临界点重复值 尽量 insert_many 成功。
             next_url = self.url_format.format(dt-1)
             time.sleep(random.randint(1, 3))
-            print("next_url: ", next_url)
+            # print("next_url: ", next_url)
             self.refresh(next_url)
 
     def _start(self):
         self._init_pool()
         self._create_table()
         first_url = self.url_format.format(now())
-        print("FIRST URL: ", first_url)
+        now_dt = lambda: datetime.datetime.now()
+        print("{} {} {} 开始运行".format(now_dt(), self.name, self.url_format[: len("https://www.cls.cn/nodeapi/themes")]))
         for i in range(3):
             try:
                 self.refresh(first_url)
             except:
                 print("超时重试")
             else:
+                print("成功")
                 break
         print("请求失败的列表是: {}".format(self.error_detail))
+        print("{} {} {} 运行结束".format(now_dt(), self.name, self.url_format[: len("https://www.cls.cn/nodeapi/themes")]))
+        print()
 
     def _create_table(self):
         create_sql = '''
@@ -122,7 +127,7 @@ class Depth(ClsBase):
           KEY `pub_date` (`pub_date`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='财联社-深度及题材' ; 
         '''
-        ret = self.sql_pool._exec_sql(create_sql)
+        ret = self.sql_pool.insert(create_sql)
         self.sql_pool.end()
         return ret
 
@@ -131,8 +136,8 @@ class DepthSchedule(object):
     def start(self):
         depth_url_format = 'https://www.cls.cn/nodeapi/themes?lastTime={}&rn=20&sign=5055720fe645d52baf0ead85f70d220c'
         theme_url_format = 'https://www.cls.cn/nodeapi/depths?last_time={}&refreshType=1&rn=20&sign=900569309a173964ce973dc61bbc2455'
-        Depth(depth_url_format).start()
-        Depth(theme_url_format).start()
+        Depth(depth_url_format)._start()
+        Depth(theme_url_format)._start()
 
 
 if __name__ == "__main__":
