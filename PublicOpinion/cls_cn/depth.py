@@ -5,6 +5,7 @@ import time
 import traceback
 
 import requests
+requests.packages.urllib3.disable_warnings()
 from gne import GeneralNewsExtractor
 
 sys.path.append("./../../")
@@ -83,7 +84,7 @@ class Depth(ClsBase):
 
             dt = infos[-1].get('ctime')
             if dt == self.this_last_dt:
-                print("增量完毕 .. ")
+                print("增量完毕")
                 return
             self.this_last_dt = dt
             # dt - 1 是为了防止临界点重复值 尽量 insert_many 成功。
@@ -96,7 +97,7 @@ class Depth(ClsBase):
         self._init_pool()
         self._create_table()
         first_url = self.url_format.format(now())
-        print("first url: ", first_url)
+        print("FIRST URL: ", first_url)
         for i in range(3):
             try:
                 self.refresh(first_url)
@@ -104,7 +105,7 @@ class Depth(ClsBase):
                 print("超时重试")
             else:
                 break
-        print(self.error_detail)
+        print("请求失败的列表是: {}".format(self.error_detail))
 
     def _create_table(self):
         create_sql = '''
@@ -127,10 +128,6 @@ class Depth(ClsBase):
 
 
 class DepthSchedule(object):
-    # 顺序执行的
-    def __init__(self):
-        pass
-
     def start(self):
         depth_url_format = 'https://www.cls.cn/nodeapi/themes?lastTime={}&rn=20&sign=5055720fe645d52baf0ead85f70d220c'
         theme_url_format = 'https://www.cls.cn/nodeapi/depths?last_time={}&refreshType=1&rn=20&sign=900569309a173964ce973dc61bbc2455'

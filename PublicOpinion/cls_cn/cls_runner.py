@@ -27,7 +27,11 @@ class ClsSchedule(object):
     def simple_run(self):
         # 顺序执行
         start_time = now()
-        for instance in [self.tele, self.depth_sche, self.after]:
+        for instance in [
+            self.tele,
+            self.depth_sche,
+            self.after,
+        ]:
             self.ins_start(instance)
         print("顺序执行所用的时间是{}".format(now() - start_time))  # 大概是 537
 

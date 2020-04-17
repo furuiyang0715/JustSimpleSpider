@@ -10,6 +10,7 @@ from PublicOpinion.cls_cn.reference import Reference
 
 
 class afterAfficheList(Reference):
+    """盘后公告"""
     def __init__(self):
         super(afterAfficheList, self).__init__(4)
         self.table = 'cls_afterAfficheList'
@@ -20,7 +21,6 @@ class afterAfficheList(Reference):
     def _parse_app_page(self, link):
         '''
 <div class="content">
-
     <p><strong>今日聚焦</strong></p>
     <p><strong>【乐视网业绩快报：计提负债超98亿 2019年亏损112.81亿】</strong>乐视网发布业绩快报，报告期公司实现营业总收入4.90亿元，较去年同期下降 69.01%；归属于上市公司股东的净利润为-112.82亿元，较去年同期减少175.46%。计提乐视体育、乐视云案件负债约98亿余元。</p>
     <p><strong>【分众传媒业绩快报：中国广告市场需求疲软 2019年净利润同比下降67.8%】</strong>分众传媒发布业绩快报，2019年总营收为121.36亿，同比下降16.6%；净利润为18.75亿，同比下降67.8%。主要原因为，受宏观经济影响，2019年中国广告市场需求疲软，行业景气度欠佳。</p>
@@ -37,7 +37,6 @@ class afterAfficheList(Reference):
                 article = node.text_content()
                 infos.append((code, article))
         except:
-            # traceback.print_exc()
             print("解析失败的页面链接是 {}".format(link))
             return None
         return infos
@@ -120,10 +119,6 @@ class afterAfficheList(Reference):
         return items
 
     def _create_table(self):
-        # TODO 这里的字段比较少 但是要解决一个去重的问题
-        # 只是用 code + pub_date 进行去重的话 很可能一天之内出现这个code的两个条目 那么另外的一个就被忽略了
-        # 解决方案 （1） 全员联合唯一
-        # （2） 对文章内容进行 信息摘要 计算， 求出一个唯一值保存在数据库中
         create_sql = '''
         CREATE TABLE IF NOT EXISTS `cls_afterAfficheList`(
           `id` int(11) NOT NULL AUTO_INCREMENT,

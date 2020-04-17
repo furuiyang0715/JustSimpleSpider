@@ -93,12 +93,11 @@ class ClsBase(object):
         try:
             ret = self.sql_pool.insert(insert_sql, value)
         except pymysql.err.IntegrityError:
-            print("重复数据  ", end=",")
             return 1
         except:
             traceback.print_exc()
         else:
-            print("\n新增数据 {}".format(item))
+            print("新增数据 {}".format(item))
             return ret
 
     def _save_many(self, items):
@@ -121,13 +120,11 @@ class ClsBase(object):
             print("批量保存失败 开始单独保存 .. ")
             count = 0
             for item in items:
-                # print(item)
-                self._save(item)
+                ret = self._save(item)
                 count += 1
                 if count > 9:
                     self.sql_pool.end()
                     count = 0
-            # self.sql_pool.dispose()
             self.sql_pool.end()
         else:
             print("批量成功, 新增数据个数{}".format(len(items)))
