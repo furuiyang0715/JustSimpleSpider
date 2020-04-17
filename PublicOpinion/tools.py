@@ -7,7 +7,7 @@ import base64
 import urllib.parse
 import requests as re
 
-from hkland_flow.configs import SECRET, TOKEN
+from PublicOpinion.configs import SECRET, TOKEN
 
 
 def get_url():
