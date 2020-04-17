@@ -211,13 +211,14 @@ if __name__ == "__main__":
     m.start()
 
 '''
-docker build -f Dockerfile.netease -t netease:v1 .
-docker push netease:v1
-sudo docker pull netease:v1
+docker build -f Dockerfile.netease -t registry.cn-shenzhen.aliyuncs.com/jzdev/spider/netease:v1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/spider/netease:v1
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/spider/netease:v1
+
 # local
-docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name netease netease:v1
+docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name netease registry.cn-shenzhen.aliyuncs.com/jzdev/spider/netease:v1
 
 # remote
 sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name netease \
---env LOCAL=0 netease:v1
+--env LOCAL=0 registry.cn-shenzhen.aliyuncs.com/jzdev/spider/netease:v1
 '''
