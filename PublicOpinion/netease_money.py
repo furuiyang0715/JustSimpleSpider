@@ -2,6 +2,7 @@ import datetime
 import re
 import time
 import traceback
+import logging
 
 import demjson
 import pymysql
@@ -9,6 +10,8 @@ import requests
 from gne import GeneralNewsExtractor
 
 import sys
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 sys.path.append('./../')
 
 from PublicOpinion.configs import (MYSQL_HOST, MYSQL_PORT, MYSQL_PASSWORD, MYSQL_USER, MYSQL_DB, LOCAL,
@@ -85,8 +88,7 @@ class Money163(object):
             vs.append(to_insert.get(k))
         fields_str = "(" + ",".join(ks) + ")"
         values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
-        base_sql = '''INSERT INTO `{}`.`{}` '''.format(
-            self.db, self.table) + fields_str + ''' values ''' + values_str + ''';'''
+        base_sql = '''INSERT INTO `{}` '''.format(self.table) + fields_str + ''' values ''' + values_str + ''';'''
         return base_sql, tuple(vs)
 
     def _save(self, to_insert, client):
@@ -98,6 +100,7 @@ class Money163(object):
         except:
             traceback.print_exc()
         else:
+            logger.info("更入新数据 {}".format(to_insert))
             client.end()
             return count
 
