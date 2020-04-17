@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-import pprint
+
 import re
-import sys
 import traceback
 
 import requests as req
@@ -11,7 +10,6 @@ from PublicOpinion.cls_cn.reference import Reference
 
 
 class afterAfficheList(Reference):
-    # 以 code 和 pub_date 作为联合唯一索引
     def __init__(self):
         super(afterAfficheList, self).__init__(4)
         self.table = 'cls_afterAfficheList'
@@ -53,7 +51,6 @@ class afterAfficheList(Reference):
 
     def _parse_code_detail(self, infos):
         """
-
         :param infos:  list of tuple
         :return:
         """
@@ -88,12 +85,8 @@ class afterAfficheList(Reference):
         if resp.status_code == 200:
             page = resp.text
             news_list = self._parse_list_page(page)
-            # print(news_list)
             if news_list:
                 for news in news_list:
-                    # print(pprint.pformat(news))
-                    # sys.exit(0)
-                    # item = {}
                     current = news.get(self.key)
                     if current:
                         pub_date = current.get("ctime")
@@ -106,7 +99,7 @@ class afterAfficheList(Reference):
                         if article:
                             more_infos = self.parse_code_detail(article)
                             for info in more_infos:
-                                ditem = {}
+                                ditem = dict()
                                 ditem['code'], ditem['article'] = info
                                 ditem['pub_date'] = pub_date
                                 items.append(ditem)
@@ -120,7 +113,7 @@ class afterAfficheList(Reference):
                         if article:
                             more_infos = self.parse_code_detail(article)
                             for info in more_infos:
-                                ditem = {}
+                                ditem = dict()
                                 ditem['code'], ditem['article'] = info
                                 ditem['pub_date'] = pub_date
                                 items.append(ditem)
@@ -145,7 +138,7 @@ class afterAfficheList(Reference):
           KEY `code` (`code`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='财联社-盘后公告' ; 
         '''
-        ret = self.sql_pool._exec_sql(create_sql)
+        ret = self.sql_pool.insert(create_sql)
         self.sql_pool.end()
         return ret
 
@@ -153,22 +146,9 @@ class afterAfficheList(Reference):
         self._init_pool()
         self._create_table()
         items = self.get_list_json()
-        # print(items)
-        # for item in items:
-        #     print(item)
         self.save(items)
 
 
 if __name__ == "__main__":
     demo = afterAfficheList()
-    demo.start()
-
-    # demo._init_pool()
-    # demo._create_table()
-
-    # link = 'https://api3.cls.cn/share/article/448830?os=web&sv=6.8.0&app=CailianpressWeb'
-    # ret = demo._parse_app_page(link)
-    # ret2 = demo._parse_code_detail(ret)
-    # # print(ret2)
-    # for r in ret2:
-    #     print(r)
+    demo._start()

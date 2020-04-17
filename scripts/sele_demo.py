@@ -23,7 +23,8 @@ import pprint
 
 # https://docs.qq.com/doc/DZGNueENmTklhdHFo
 # url = 'https://docs.qq.com/dop-api/opendoc?normal=1&id=DZXNSSnJudmRtclpr'
-url = 'https://docs.qq.com/dop-api/opendoc?normal=1&id=DZGNueENmTklhdHFo'
+# url = 'https://docs.qq.com/dop-api/opendoc?normal=1&id=DZGNueENmTklhdHFo'
+url = 'https://docs.qq.com/dop-api/opendoc?normal=1&id=DZXNSSnJudmRtclpr&tdsourcetag=s_macqq_aiomsg&jumpuin=2564493603'
 
 text = re.get(url, headers=headers).text
 _start = text.find("{")
