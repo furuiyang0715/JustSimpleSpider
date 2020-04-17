@@ -7,6 +7,7 @@ import logging
 import demjson
 import pymysql
 import requests
+import schedule
 from gne import GeneralNewsExtractor
 
 import sys
@@ -207,8 +208,23 @@ class Money163(object):
 
 
 if __name__ == "__main__":
-    m = Money163()
-    m.start()
+    # m = Money163()
+    # m.start()
+
+
+    def task():
+        m = Money163()
+        m.start()
+
+    def main():
+        task()
+        schedule.every(24).hours.do(task)
+
+        while True:
+            schedule.run_pending()
+            time.sleep(1800)
+
+    main()
 
 '''
 docker build -f Dockerfile.netease -t registry.cn-shenzhen.aliyuncs.com/jzdev/spider/netease:v1 .
