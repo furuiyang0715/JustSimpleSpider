@@ -202,8 +202,22 @@ class Money163(object):
             except:
                 pass
             logger.info("爬取失败的链接列表是{}".format(self.error_detail))
+        else:
+            raise Exception("请求无响应")
 
 
 if __name__ == "__main__":
     m = Money163()
     m.start()
+
+'''
+docker build -f Dockerfile.netease -t netease:v1 .
+docker push netease:v1
+sudo docker pull netease:v1
+# local
+docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name netease netease:v1
+
+# remote
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd --name netease \
+--env LOCAL=0 netease:v1
+'''
