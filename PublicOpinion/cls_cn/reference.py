@@ -115,12 +115,18 @@ class Reference(ClsBase):
     def _start(self):
         self._init_pool()
         self._create_table()
-        items = self.get_list_json()
-        self.save(items)
+        for i in range(3):
+            try:
+                items = self.get_list_json()
+                self.save(items)
+            except:
+                print("失败重试")
+            else:
+                print("运行成功 ")
+                break
 
 
 class ReferenceSchedule(object):
-
     def start(self):
         for num in [1, 2, 5, 6, 7, 8, 9, 10]:
             refe = Reference(num)
