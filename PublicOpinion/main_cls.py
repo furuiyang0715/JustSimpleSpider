@@ -35,23 +35,17 @@ def catch_exceptions(cancel_on_failure=False):
     return catch_exceptions_decorator
 
 
-@catch_exceptions(cancel_on_failure=True)
+# @catch_exceptions(cancel_on_failure=True)
 def task():
-    print("开始爬取财联社..")
     cls = ClsSchedule()
     cls.simple_run()
-    print("爬取财联社结束.. ")
 
 
 def main():
-    print('财联社模块启动时开启一次爬取.')
     task()
-
-    print("当前时间是{}, 开始【财联社】模块的增量爬取 ".format(datetime.datetime.now()))
     schedule.every(10).hours.do(task)
 
     while True:
-        print("【财联社】当前调度系统中的任务列表是{}".format(schedule.jobs))
         schedule.run_pending()
         time.sleep(1800)
 

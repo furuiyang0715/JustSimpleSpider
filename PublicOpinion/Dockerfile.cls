@@ -10,8 +10,6 @@ WORKDIR /PublicOpinion
 
 ADD . /PublicOpinion
 
-WORKDIR /PublicOpinion
-
 RUN pip install -r requirements.txt -i https://pypi.douban.com/simple
 
 ENTRYPOINT ["python", "main_cls.py"]
