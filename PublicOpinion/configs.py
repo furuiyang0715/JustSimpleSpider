@@ -31,6 +31,8 @@ DC_DB = env.get("DC_DB", cf.get('dc', 'DC_DB'))
 # deploy
 LOCAL = bool(int(env.get("LOCAL", cf.get('deploy', 'LOCAL'))))
 FIRST = bool(int(env.get("FIRST", cf.get('deploy', 'FIRST'))))
+SECRET = env.get("SECRET", cf.get('deploy', 'SECRET'))
+TOKEN = env.get("TOKEN", cf.get('deploy', 'TOKEN'))
 
 # proxy
 PROXY_URL = env.get("PROXY_URL", 'https://dps.kdlapi.com/api/getdps/?orderid=934751511166930&num=1&pt=1&sep=1')
