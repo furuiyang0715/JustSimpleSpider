@@ -1,9 +1,11 @@
+import threading
 import time
 import csv
 import os
 import traceback
 
 import requests
+import threadpool
 from bs4 import BeautifulSoup
 
 base_url = 'http://baike.baidu.com/view/{}.html'
@@ -21,9 +23,9 @@ headers = {
 }
 
 
-def fetch_keywords(nums):
+def fetch_keywords(start, end):
     items = []
-    for i in range(1, nums):
+    for i in range(start, end+1):
         item = dict()
         item['KeyId'] = i
         url = base_url.format(i)
@@ -45,6 +47,7 @@ def fetch_keywords(nums):
 
 def write_dicttocsv(csv_file, csv_columns, dict_data):
     try:
+        # with open(csv_file, 'a+') as csvfile:
         with open(csv_file, 'w') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
             writer.writeheader()
@@ -55,12 +58,36 @@ def write_dicttocsv(csv_file, csv_columns, dict_data):
         print("写入错误")
 
 
-def main():
+# def spider(info: tuple):
+#     csv_columns = ['KeyId', 'KeyWord']
+#     items = fetch_keywords(info[0], info[1])
+#     current_path = os.getcwd()
+#     csv_file = current_path + "/csv/key_words_{}_{}.csv".format(info[0], info[1])
+#     write_dicttocsv(csv_file, csv_columns, items)
+#
+#
+# def main():
+#     _list = [(i*10000+1, i*10000+10000) for i in range(17)]
+#     _pool = threadpool.ThreadPool(4)
+#     _requests = threadpool.makeRequests(spider, _list)
+#     [_pool.putRequest(req) for req in _requests]
+#     _pool.wait()
+
+
+def spider(start):
     csv_columns = ['KeyId', 'KeyWord']
-    items = fetch_keywords(30)
+    items = fetch_keywords(start, start+10000)
     current_path = os.getcwd()
-    csv_file = current_path + "/key_words.csv"
+    csv_file = current_path + "/csv/key_words_{}_{}.csv".format(start, start+10000)
     write_dicttocsv(csv_file, csv_columns, items)
+
+
+def main():
+    _list = [i*10000+1 for i in range(17)]
+    _pool = threadpool.ThreadPool(4)
+    _requests = threadpool.makeRequests(spider, _list)
+    [_pool.putRequest(req) for req in _requests]
+    _pool.wait()
 
 
 main()
