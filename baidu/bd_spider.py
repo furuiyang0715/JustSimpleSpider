@@ -88,7 +88,21 @@ def main():
 
 
 interval = 1000
-START = 70
-END = 80
+START = int(os.environ.get("START", 70))
+END = int(os.environ.get("END", 80))
 
 main()
+
+
+'''
+docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/baidukeyword:v1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/baidukeyword:v1
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/baidukeyword:v1
+
+# local 
+docker run -itd --name bdkw \
+-v /Users/furuiyang/gitzip/JustSimpleSpider/baidu:/baidu \
+--env START=80 \
+--env END=90 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/baidukeyword:v1
+'''
