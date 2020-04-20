@@ -87,7 +87,7 @@ def main():
     print("用时: {} 秒".format(now() - t1))
 
 
-interval = 1000
+interval = int(os.environ.get("INTERVAL", 1000))
 START = int(os.environ.get("START", 70))
 END = int(os.environ.get("END", 80))
 
@@ -102,7 +102,15 @@ sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/baidukeyword:v1
 # local 
 docker run -itd --name bdkw \
 -v /Users/furuiyang/gitzip/JustSimpleSpider/baidu:/baidu \
---env START=80 \
---env END=90 \
+--env START=90 \
+--env END=100 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/baidukeyword:v1
+
+
+docker run -itd --name bdkw20_30_w \
+-v /home/furuiyang/baidu:/baidu \
+--env START=20 \
+--env END=30 \
+--env INTERVAL=10000 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/baidukeyword:v1
 '''

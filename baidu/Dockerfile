@@ -10,6 +10,8 @@ WORKDIR /baidu
 
 ADD . /baidu
 
+WORKDIR /baidu
+
 RUN pip install -r requirements.txt -i https://pypi.douban.com/simple
 
 ENTRYPOINT ["python", "bd_spider.py"]
