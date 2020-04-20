@@ -81,7 +81,9 @@ def spider(start):
     csv_columns = ['KeyId', 'KeyWord']
     items = fetch_keywords(start, start+interval-1)
     current_path = os.getcwd()
-    csv_file = current_path + "/csv/csv_10001_20000/key_words_{}_{}.csv".format(start, start + interval - 1)
+    # csv_file = current_path + "/csv/csv_10001_20000/key_words_{}_{}.csv".format(start, start + interval - 1)
+    # csv_file = current_path + "/csv/csv_20001_30000/key_words_{}_{}.csv".format(start, start + interval - 1)
+    csv_file = current_path + "/csv/csv_30001_40000/key_words_{}_{}.csv".format(start, start + interval - 1)
     write_dicttocsv(csv_file, csv_columns, items)
 
 
@@ -92,12 +94,15 @@ def main():
     """
     range(0, 10)   0-9  1-10000
     range(10, 20) 10-19 10001-20000
-    range(20, 30) 20-39 20001-30000
+    range(20, 30) 20-29 20001-30000
+    range(30, 40) 30-39 30001-40000
     ...
 
     """
     t1 = now()
-    _list = [i*interval+1 for i in range(10, 20)]
+    # _list = [i*interval+1 for i in range(10, 20)]
+    # _list = [i*interval+1 for i in range(20, 30)]
+    _list = [i*interval+1 for i in range(30, 40)]
     _pool = threadpool.ThreadPool(5)
     _requests = threadpool.makeRequests(spider, _list)
     [_pool.putRequest(req) for req in _requests]
