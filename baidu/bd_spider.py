@@ -47,7 +47,6 @@ def fetch_keywords(start, end):
 
 def write_dicttocsv(csv_file, csv_columns, dict_data):
     try:
-        # with open(csv_file, 'a+') as csvfile:
         with open(csv_file, 'w') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
             writer.writeheader()
@@ -62,7 +61,7 @@ def spider(_start):
     csv_columns = ['KeyId', 'KeyWord']
     items = fetch_keywords(_start, _start+interval-1)
     current_path = os.getcwd()
-    os.makedirs("/csv/csv_{}_{}", exist_ok=True)
+    os.makedirs(current_path + "/csv/csv_{}_{}".format(START*interval+1, END*interval), exist_ok=True)
     csv_file = current_path + "/csv/csv_{}_{}/key_words_{}_{}.csv".format(START*interval+1, END*interval, _start, _start + interval - 1)
     write_dicttocsv(csv_file, csv_columns, items)
 
@@ -89,8 +88,8 @@ def main():
 
 
 interval = 1000
-START = 60
-END = 70
+START = 40
+END = 50
 
 
 main()
