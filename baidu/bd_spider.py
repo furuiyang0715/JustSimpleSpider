@@ -58,32 +58,12 @@ def write_dicttocsv(csv_file, csv_columns, dict_data):
         print("写入错误")
 
 
-# def spider(info: tuple):
-#     csv_columns = ['KeyId', 'KeyWord']
-#     items = fetch_keywords(info[0], info[1])
-#     current_path = os.getcwd()
-#     csv_file = current_path + "/csv/key_words_{}_{}.csv".format(info[0], info[1])
-#     write_dicttocsv(csv_file, csv_columns, items)
-#
-#
-# def main():
-#     _list = [(i*10000+1, i*10000+10000) for i in range(17)]
-#     _pool = threadpool.ThreadPool(4)
-#     _requests = threadpool.makeRequests(spider, _list)
-#     [_pool.putRequest(req) for req in _requests]
-#     _pool.wait()
-
-
-interval = 1000
-
-
-def spider(start):
+def spider(_start):
     csv_columns = ['KeyId', 'KeyWord']
-    items = fetch_keywords(start, start+interval-1)
+    items = fetch_keywords(_start, _start+interval-1)
     current_path = os.getcwd()
-    # csv_file = current_path + "/csv/csv_10001_20000/key_words_{}_{}.csv".format(start, start + interval - 1)
-    # csv_file = current_path + "/csv/csv_20001_30000/key_words_{}_{}.csv".format(start, start + interval - 1)
-    csv_file = current_path + "/csv/csv_30001_40000/key_words_{}_{}.csv".format(start, start + interval - 1)
+    os.makedirs("/csv/csv_{}_{}", exist_ok=True)
+    csv_file = current_path + "/csv/csv_{}_{}/key_words_{}_{}.csv".format(START*interval+1, END*interval, _start, _start + interval - 1)
     write_dicttocsv(csv_file, csv_columns, items)
 
 
@@ -100,14 +80,17 @@ def main():
 
     """
     t1 = now()
-    # _list = [i*interval+1 for i in range(10, 20)]
-    # _list = [i*interval+1 for i in range(20, 30)]
-    _list = [i*interval+1 for i in range(30, 40)]
-    _pool = threadpool.ThreadPool(5)
+    _list = [i*interval+1 for i in range(START, END)]
+    _pool = threadpool.ThreadPool(4)
     _requests = threadpool.makeRequests(spider, _list)
     [_pool.putRequest(req) for req in _requests]
     _pool.wait()
     print("用时: {} 秒".format(now() - t1))
+
+
+interval = 1000
+START = 60
+END = 70
 
 
 main()
