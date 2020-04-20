@@ -88,8 +88,7 @@ def main():
 
 
 interval = 1000
-START = 40
-END = 50
-
+START = 70
+END = 80
 
 main()
