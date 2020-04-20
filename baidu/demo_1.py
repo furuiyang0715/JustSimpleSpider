@@ -74,16 +74,19 @@ def write_dicttocsv(csv_file, csv_columns, dict_data):
 #     _pool.wait()
 
 
+interval = 1000
+
+
 def spider(start):
     csv_columns = ['KeyId', 'KeyWord']
-    items = fetch_keywords(start, start+10000)
+    items = fetch_keywords(start, start+interval-1)
     current_path = os.getcwd()
-    csv_file = current_path + "/csv/key_words_{}_{}.csv".format(start, start+10000)
+    csv_file = current_path + "/csv/key_words_{}_{}.csv".format(start, start+interval-1)
     write_dicttocsv(csv_file, csv_columns, items)
 
 
 def main():
-    _list = [i*10000+1 for i in range(17)]
+    _list = [i*interval+1 for i in range(10)]
     _pool = threadpool.ThreadPool(4)
     _requests = threadpool.makeRequests(spider, _list)
     [_pool.putRequest(req) for req in _requests]
