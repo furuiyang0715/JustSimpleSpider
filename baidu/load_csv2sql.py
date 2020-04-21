@@ -2,6 +2,8 @@ import sys
 
 import pymysql
 
+from baidu.configs import MYSQL_PASSWORD
+
 
 def create_table():
     sql = '''
@@ -41,21 +43,17 @@ def csv_to_mysql(load_sql, host, port, user, password):
 def main():
     # Execution Example
     csv_file = '/Users/furuiyang/gitzip/JustSimpleSpider/baidu/demo.csv'
-    # csv_file = '/Users/furuiyang/gitzip/JustSimpleSpider/baidu/csv/csv_1_10000/key_words_1001_2000.csv'
-    # csv_file = '/Users/furuiyang/gitzip/JustSimpleSpider/baidu/key_words_1_1000.csv'
     db = 'test_furuiyang'
     table = 'baidukeyword'
-    load_sql = """
-LOAD DATA LOCAL INFILE '{}' INTO TABLE {}.{} character set utf8 \
-FIELDS TERMINATED BY ',' \
-ENCLOSED BY '"' \
-IGNORE 1 LINES;""".format(csv_file, db, table)
+    # TODO
+    # load_sql = """LOAD DATA LOCAL INFILE '{}' INTO TABLE {}.{} character set utf8 FIELDS TERMINATED BY ',' LINES TERMINATED BY '{}' ENCLOSED BY '"' IGNORE 1 LINES;""".format(csv_file, db, table, r"\r\n")
+    load_sql = """LOAD DATA LOCAL INFILE '{}' INTO TABLE {}.{} character set utf8 FIELDS TERMINATED BY ',' ENCLOSED BY '"' IGNORE 1 LINES;""".format(csv_file, db, table)
 
     print(load_sql)
-    host = 'localhost'
-    port = 3306
-    user = ''
-    password = ''
+    host = '14.152.49.155'
+    port = 8998
+    user = 'rootb'
+    password = MYSQL_PASSWORD
     csv_to_mysql(load_sql, host, port, user, password)
 
 
