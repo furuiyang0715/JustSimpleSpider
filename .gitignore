@@ -114,3 +114,4 @@ notes.MD
 *.log.*
 temp/*
 *temp.txt
+*.scel
