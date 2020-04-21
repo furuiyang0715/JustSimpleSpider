@@ -5,7 +5,8 @@ import paramiko
 
 pravie_key_path = '/Users/furuiyang/.ssh/id_rsa'
 key = paramiko.RSAKey.from_private_key_file(pravie_key_path)
-t = paramiko.Transport(('139.159.155.223', 9528))
+# t = paramiko.Transport(('139.159.155.223', 9528))
+t = paramiko.Transport(('139.9.193.142', 9528))
 t.connect(username='furuiyang', pkey=key)
 sftp = paramiko.SFTPClient.from_transport(t)
 dir_path = "/Users/furuiyang/gitzip/JustSimpleSpider/baidu"

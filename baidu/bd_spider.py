@@ -107,10 +107,48 @@ docker run -itd --name bdkw \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/baidukeyword:v1
 
 
-docker run -itd --name bdkw20_30_w \
--v /home/furuiyang/baidu:/baidu \
---env START=20 \
---env END=30 \
+docker run -itd --name bdkw18_19_w \
+-v /Users/furuiyang/gitzip/JustSimpleSpider/baidu:/baidu \
+--env START=18 \
+--env END=19 \
 --env INTERVAL=10000 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/baidukeyword:v1
+
+
+docker run -itd --name bdkw50_100_w \
+-v /home/furuiyang/baidu:/baidu \
+--env START=50 \
+--env END=100 \
+--env INTERVAL=10000 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/baidukeyword:v1
+
+docker run -itd --name bdkw100_200_w \
+-v /home/furuiyang/baidu:/baidu \
+--env START=100 \
+--env END=200 \
+--env INTERVAL=10000 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/baidukeyword:v1
+
+
+docker run -itd --name bdkw200_300_w \
+-v /home/furuiyang/baidu:/baidu \
+--env START=200 \
+--env END=300 \
+--env INTERVAL=10000 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/baidukeyword:v1
+
+sudo docker run -itd --name bdkw300_400_w \
+-v /home/furuiyang/baidu:/baidu \
+--env START=300 \
+--env END=400 \
+--env INTERVAL=10000 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/baidukeyword:v1
+
+sudo docker run -itd --name bdkw400_500_w \
+-v /home/furuiyang/baidu:/baidu \
+--env START=400 \
+--env END=500 \
+--env INTERVAL=10000 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/baidukeyword:v1
+
 '''
