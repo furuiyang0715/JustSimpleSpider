@@ -65,7 +65,6 @@ class SouGSpider(object):
                             print(e)
                             print(secondclass)
                             print(thirdclass)
-                sys.exit(0)
 
         print("Total :%d, %d, %d" % (fc, sc, tc))
 
@@ -74,3 +73,6 @@ if __name__ == "__main__":
 
     sg = SouGSpider()
     sg.load()
+
+    test_file = '/Users/furuiyang/gitzip/JustSimpleSpider/soug/csv/城市信息大全/上海/SH話.scel'
+    
