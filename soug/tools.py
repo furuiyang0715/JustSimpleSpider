@@ -119,7 +119,7 @@ def scel2txt(file_name):
     with open(file_name, 'rb') as f:
         data = f.read()
 
-    print("词库名：", byte2str(data[0x130:0x338]))  # .encode('GB18030')
+    print("词库名：", byte2str(data[0x130:0x338]))
     print("词库类型：", byte2str(data[0x338:0x540]))
     print("描述信息：", byte2str(data[0x540:0xd40]))
     print("词库示例：", byte2str(data[0xd40:startPy]))
@@ -130,8 +130,17 @@ def scel2txt(file_name):
 
 
 if __name__ == '__main__':
-    test_in_file = '/Users/furuiyang/data/csv/运动休闲/武术/武术专业术语.scel'
-    test_out_file = '/Users/furuiyang/data/csv2/运动休闲/武术/武术专业术语.csv'
+    # lst = ['/Users/furuiyang/data/csv/城市信息大全/广东/珠海地域名称.scel', '/Users/furuiyang/data/csv/城市信息大全/广东/型男索女粤语词库.scel', '/Users/furuiyang/data/csv/电子游戏/网络游戏/沧海无涯.scel', '/Users/furuiyang/data/csv/电子游戏/网络游戏/传奇3.scel', '/Users/furuiyang/data/csv/电子游戏/网络游戏/大海战2.scel', '/Users/furuiyang/data/csv/娱乐/其它/流行网络小说词库.scel', '/Users/furuiyang/data/csv/生活/礼品/厦门永欣达商贸有限公司.scel', '/Users/furuiyang/data/csv/生活/日常/朱万诚1.0.scel', '/Users/furuiyang/data/csv/生活/日常/凌之轩的词库.scel', '/Users/furuiyang/data/csv/人文科学/文学/个人小说词库.scel', '/Users/furuiyang/data/csv/人文科学/文学/《飘邈之旅》.scel', '/Users/furuiyang/data/csv/农林渔畜/渔业/海洋工程与海洋环境专有名词.scel', '/Users/furuiyang/data/csv/农林渔畜/渔业/船名前缀.scel']
+    # print(len(lst))
+    # for file in lst:
+    #     ofile = os.path.split(file)[1].replace(".scel", ".csv")
+    #
+    #     for word in scel2txt(file):
+    #         with open(ofile, 'a+', encoding='utf-8')as f:
+    #             f.write(word[2] + '\n')
+
+    test_in_file = '珠海地域名称.scel'
+    test_out_file = '珠海地域名称.csv'
     for word in scel2txt(test_in_file):
         with open(test_out_file, 'a+', encoding='utf-8')as file:
             file.write(word[2] + '\n')
