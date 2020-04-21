@@ -130,8 +130,8 @@ def scel2txt(file_name):
 
 
 if __name__ == '__main__':
-    test_in_file = '/Users/furuiyang/gitzip/JustSimpleSpider/soug/csv/城市信息大全/上海/SH話.scel'
-    test_out_file = 'SH話.txt'
+    test_in_file = '/Users/furuiyang/data/csv/运动休闲/武术/武术专业术语.scel'
+    test_out_file = '/Users/furuiyang/data/csv2/运动休闲/武术/武术专业术语.csv'
     for word in scel2txt(test_in_file):
         with open(test_out_file, 'a+', encoding='utf-8')as file:
             file.write(word[2] + '\n')
