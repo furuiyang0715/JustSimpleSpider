@@ -1,4 +1,6 @@
 import datetime
+import sys
+import traceback
 
 import pymongo
 import pandas as pd
@@ -47,14 +49,29 @@ def process_datas(datas):
             raise Exception("没有对应的基金代码")
         # print(item)
         items.append(item)
+    # print(len(items))
     return items
 
 
 def insert_to_mongo(items):
     mongo_client = pymongo.MongoClient("127.0.0.1:27017")
     fund_cli = mongo_client.myfund.records
-    ret = fund_cli.insert_many(items)
-    print(ret)
+    # 以 app、时间以及买入方向作为唯一索引
+    # 在同一 app, 每一天的买入金额是汇总的
+    fund_cli.create_index([('app', 1), ("time", 1), ("code", 1), ("direction", 1)], unique=True, background=True)
+
+    # try:
+    #     ret = fund_cli.insert_many(items)
+    # except:
+    #     traceback.print_exc()
+
+    for item in items:
+        try:
+            fund_cli.insert_one(item)
+        except pymongo.errors.DuplicateKeyError:
+            print("{} 数据重复 ".format(item))
+        except:
+            traceback.print_exc()
 
 
 def main():
