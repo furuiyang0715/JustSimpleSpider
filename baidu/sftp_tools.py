@@ -20,3 +20,7 @@ for file_name in os.listdir(dir_path):
         target_file_path = os.path.join("/home/furuiyang/baidu", file_name)
         sftp.put(source_file_path, target_file_path)
 t.close()
+
+
+# 下载 从服务器到本地
+# rsync -e 'ssh -p 9528' -avz  furuiyang@139.159.155.223:/home/furuiyang/baidu/csv/csv_590001_610000 /Users/furuiyang/gitzip/JustSimpleSpider/baidu/load_csv/
