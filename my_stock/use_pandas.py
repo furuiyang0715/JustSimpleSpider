@@ -3,7 +3,7 @@ import pandas as pd
 
 # pandas 官方文档: https://pandas.pydata.org/docs/getting_started/index.html#getting-started
 
-# 读取 csv 文件
+# 读取 ppcsv 文件
 file = "buy.csv"
 datas = pd.read_csv(file, encoding='utf-8')
 print(datas)

@@ -18,7 +18,7 @@ def create_table():
 
 def csv_to_mysql(load_sql, host, port, user, password):
     '''
-    This function load a csv file to MySQL table according to
+    This function load a ppcsv file to MySQL table according to
     the load_sql statement.
     '''
     try:
@@ -32,7 +32,7 @@ def csv_to_mysql(load_sql, host, port, user, password):
         # Create cursor and execute Load SQL
         cursor = con.cursor()
         cursor.execute(load_sql)
-        print('Succuessfully loaded the table from csv.')
+        print('Succuessfully loaded the table from ppcsv.')
         con.close()
 
     except Exception as e:

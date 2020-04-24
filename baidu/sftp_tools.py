@@ -22,5 +22,9 @@ for file_name in os.listdir(dir_path):
 t.close()
 
 
-# 下载 从服务器到本地
-# rsync -e 'ssh -p 9528' -avz  furuiyang@139.159.155.223:/home/furuiyang/baidu/csv/csv_590001_610000 /Users/furuiyang/gitzip/JustSimpleSpider/baidu/load_csv/
+# 下载 从服务器 sshd1 到本地
+# rsync -e 'ssh -p 9528' -avz  furuiyang@139.159.155.223:/home/furuiyang/baidu/csv /Users/furuiyang/gitzip/JustSimpleSpider/baidu/load_csv/
+
+
+# sshpp
+# rsync -e 'ssh -p 9528' -avz  furuiyang@139.9.193.142:/home/furuiyang/baidu/csv /Users/furuiyang/gitzip/JustSimpleSpider/baidu/load_csv/

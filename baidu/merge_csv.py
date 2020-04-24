@@ -6,7 +6,7 @@ import sys
 
 FolderPath = r'/Users/furuiyang/gitzip/JustSimpleSpider/baidu/load_csv/csv_500001_600000_ok'  # 要拼接的文件夹及其完整路径，注意不要包含中文
 SaveFilePath = r'/Users/furuiyang/gitzip/JustSimpleSpider/baidu/merge_csv'  # 拼接后要保存的文件路径
-SaveFileName = r'key_words_500001_600000.csv'  # 合并后要保存的文件名
+SaveFileName = r'key_words_500001_600000.ppcsv'  # 合并后要保存的文件名
 # 获取要合并的目标文件夹中的文件列表
 file_list = os.listdir(FolderPath)
 # 读取第一个 CSV 文件并包含表头

@@ -13,7 +13,7 @@ class SouGSpider(object):
     def __init__(self):
         self.base_url = "http://pinyin.sogou.com"
         self.homepage_url = "http://pinyin.sogou.com/dict/"
-        self.base_dir = "/Users/furuiyang/gitzip/JustSimpleSpider/soug/csv"
+        self.base_dir = "/Users/furuiyang/gitzip/JustSimpleSpider/soug/ppcsv"
 
     def callbackfunc(self, blocknum, blocksize, totalsize):
         """
@@ -63,7 +63,7 @@ class SouGSpider(object):
         error_list = []
         lst = self.listfiles(source_dir)
         for file in lst:
-            n_file = file.replace(source_dir, target_dir).replace(".scel", ".csv")
+            n_file = file.replace(source_dir, target_dir).replace(".scel", ".ppcsv")
             n_file_dir = os.path.split(n_file)[0]
             os.makedirs(n_file_dir, exist_ok=True)
             print(file)
@@ -136,4 +136,4 @@ if __name__ == "__main__":
     sg = SouGSpider()
     # sg.load()
 
-    sg.trans("/Users/furuiyang/data/csv", "/Users/furuiyang/data/csv2")
+    sg.trans("/Users/furuiyang/data/ppcsv", "/Users/furuiyang/data/csv2")
