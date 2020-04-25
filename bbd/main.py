@@ -1,4 +1,3 @@
-import threading
 import time
 import csv
 import os
@@ -35,11 +34,12 @@ def fetch_one(i):
         word = soup.find('h1').get_text()
         try:
             error_info = word.encode("ISO-8859-1").decode("utf-8")
-            # 百度百科错误页
         except:
             item['KeyWord'] = word
             print(item)
             return item
+        else:
+            print("百度百科错误页")
     else:
         raise
 
@@ -74,61 +74,26 @@ def simple_spider(write_file, start, end):
     write_dicttocsv(write_file, csv_columns, items)
 
 
+start = int(os.environ.get("START", 600001))
+end = int(os.environ.get("END", 610000))
+
+
 if __name__ == "__main__":
-    t1 = now()
-    for (s, e) in [
-                   # (391001, 392000),
-                   # (392001, 393000),
-                   # (394001, 395000),
-                   # (395001, 396000),
-
-                   (396001, 397000),
-                   (397001, 398000),
-                   (398001, 399000),
-                   (399001, 400000),
-
-                   (480001, 481000),
-                   (481001, 482000),
-                   (482001, 483000),
-                   (483001, 484000),
-                   (484001, 485000),
-                   (485001, 486000),
-
-                   ]:
-        print(s, e)
-        _dir = "/Users/furuiyang/gitzip/JustSimpleSpider/baidu/csv"
-        file = os.path.join(_dir, f"key_words_{s}_{e}.csv")
-        print(file)
-        simple_spider(file, s, e)
+    _dir = "/Users/furuiyang/gitzip/JustSimpleSpider/bbd/csv"
+    for i in range(start, end, 1000):
+        t1 = now()
+        print(i, i+1000-1)
+        file = os.path.join(_dir, f"key_words_{i}_{i+1000-1}.csv")
+        simple_spider(file, i, i+1000-1)
         print("耗时:{} s".format(now() - t1))
 
 
-# def spider(_start):
-#     csv_columns = ['KeyId', 'KeyWord']
-#     items = fetch_keywords(_start, _start+interval-1)
-#     current_path = os.getcwd()
-#     os.makedirs(current_path + "/ppcsv/csv_{}_{}".format(START*interval+1, END*interval), exist_ok=True)
-#     csv_file = current_path + "/ppcsv/csv_{}_{}/key_words_{}_{}.ppcsv".format(START*interval+1, END*interval, _start, _start + interval - 1)
-#     write_dicttocsv(csv_file, csv_columns, items)
-#
-# def main():
-#     """
-#     range(0, 10)   0-9  1-10000
-#     range(10, 20) 10-19 10001-20000
-#     range(20, 30) 20-29 20001-30000
-#     range(30, 40) 30-39 30001-40000
-#     ...
-#
-#     """
-#     t1 = now()
-#     _list = [i*interval+1 for i in range(START, END)]
-#     _pool = threadpool.ThreadPool(4)
-#     _requests = threadpool.makeRequests(spider, _list)
-#     [_pool.putRequest(req) for req in _requests]
-#     _pool.wait()
-#     print("用时: {} 秒".format(now() - t1))
-#
-#
-# interval = int(os.environ.get("INTERVAL", 1000))
-# START = int(os.environ.get("START", 70))
-# END = int(os.environ.get("END", 80))
+'''
+docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/bd:v1 .
+
+sudo docker run -itd --name demo \
+-v /Users/furuiyang/gitzip/JustSimpleSpider/bbd:/bbd \
+--env START=600001 \
+--env END=610000 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/bd:v1
+'''
