@@ -1,3 +1,4 @@
+import sys
 import time
 import csv
 import os
@@ -52,6 +53,8 @@ def fetch_keywords(start, end):
             item = fetch_one(i)
         except:
             lst.append(i)
+        else:
+            items.append(item)
     print(lst)
     return items
 
@@ -70,16 +73,18 @@ def write_dicttocsv(csv_file, csv_columns, dict_data):
 
 def simple_spider(write_file, start, end):
     items = fetch_keywords(start, end)
+    print(len(items))
     csv_columns = ['KeyId', 'KeyWord']
     write_dicttocsv(write_file, csv_columns, items)
 
 
-start = int(os.environ.get("START", 600001))
-end = int(os.environ.get("END", 610000))
+start = int(os.environ.get("START", 390001))
+end = int(os.environ.get("END", 400000))
 
 
 if __name__ == "__main__":
-    _dir = "/Users/furuiyang/gitzip/JustSimpleSpider/bbd/csv"
+    _dir = "/bbd/csv/{}_{}".format(start, end)
+    os.makedirs(_dir, exist_ok=True)
     for i in range(start, end, 1000):
         t1 = now()
         print(i, i+1000-1)
@@ -91,9 +96,9 @@ if __name__ == "__main__":
 '''
 docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/bd:v1 .
 
-sudo docker run -itd --name demo \
+sudo docker run -itd --name demo_82_86 \
 -v /Users/furuiyang/gitzip/JustSimpleSpider/bbd:/bbd \
---env START=600001 \
---env END=610000 \
+--env START=820001 \
+--env END=860000 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/bd:v1
 '''
