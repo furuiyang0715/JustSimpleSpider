@@ -4,16 +4,14 @@ ENV TZ=Asia/Shanghai
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN mkdir /PublicOpinion
+RUN mkdir /carticle
 
-WORKDIR /PublicOpinion
+WORKDIR /carticle
 
-ADD . /PublicOpinion
+ADD . /carticle
 
-WORKDIR /PublicOpinion
+WORKDIR /carticle
 
 RUN pip install -r requirements.txt -i https://pypi.douban.com/simple
 
-WORKDIR /PublicOpinion/carticle
-
-ENTRYPOINT ["python", "myarticle.py"]
+ENTRYPOINT ["python", "run.py"]
