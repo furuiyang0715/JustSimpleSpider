@@ -54,7 +54,8 @@ def fetch_keywords(start, end):
         except:
             lst.append(i)
         else:
-            items.append(item)
+            if item:
+                items.append(item)
     print(lst)
     return items
 
@@ -96,9 +97,17 @@ if __name__ == "__main__":
 '''
 docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/bd:v1 .
 
-sudo docker run -itd --name demo_82_86 \
+sudo docker run -itd --name demo_1455000_1470000 \
 -v /Users/furuiyang/gitzip/JustSimpleSpider/bbd:/bbd \
---env START=820001 \
---env END=860000 \
+--env START=1455000 \
+--env END=1470000 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/bd:v1
+'''
+
+'''
+sudo docker run -itd --name demo_1594_1595 \
+-v /home/furuiyang/bbd:/bbd \
+--env START=15940001 \
+--env END=15950000 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/bd:v1
 '''
