@@ -97,7 +97,7 @@ if __name__ == "__main__":
                    ]:
         print(s, e)
         _dir = "/Users/furuiyang/gitzip/JustSimpleSpider/baidu/csv"
-        file = os.path.join(_dir, f"key_words_{s}_{e}.csv")
+        file = os.path.join(_dir, f"key_words_{s}_{e}.sshpp_csv")
         print(file)
         simple_spider(file, s, e)
         print("耗时:{} s".format(now() - t1))

@@ -84,30 +84,58 @@ end = int(os.environ.get("END", 400000))
 
 
 if __name__ == "__main__":
-    _dir = "/bbd/csv/{}_{}".format(start, end)
+    _dir = "/bbd/sshpp_csv/{}_{}".format(start, end)
     os.makedirs(_dir, exist_ok=True)
     for i in range(start, end, 1000):
         t1 = now()
         print(i, i+1000-1)
-        file = os.path.join(_dir, f"key_words_{i}_{i+1000-1}.csv")
+        file = os.path.join(_dir, f"key_words_{i}_{i+1000-1}.sshpp_csv")
         simple_spider(file, i, i+1000-1)
         print("耗时:{} s".format(now() - t1))
 
 
 '''
+
+# csv_2600001_2700000_ok
+# csv_10800001_10900000_ok
+# csv_10900001_11000000_ok
+# csv_11900001_12000000_ok
+
+
 docker build -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/bd:v1 .
 
-sudo docker run -itd --name demo_1455000_1470000 \
--v /Users/furuiyang/gitzip/JustSimpleSpider/bbd:/bbd \
---env START=1455000 \
---env END=1470000 \
+sudo docker run -itd --name demo_2600001_2700000 \
+-v /home/furuiyang/bbd:/bbd \
+--env START=2600001 \
+--env END=2700000 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/bd:v1
+
+sudo docker run -itd --name demo_10800001_10900000 \
+-v /home/furuiyang/bbd:/bbd \
+--env START=10800001 \
+--env END=10900000 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/bd:v1
+
+sudo docker run -itd --name demo_10900001_11000000 \
+-v /home/furuiyang/bbd:/bbd \
+--env START=10900001 \
+--env END=11000000 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/bd:v1
+
+sudo docker run -itd --name demo_11900001_12000000 \
+-v /home/furuiyang/bbd:/bbd \
+--env START=11900001 \
+--env END=12000000 \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/bd:v1
+
+'''
+
+
+'''
+sudo docker run -itd --name demo_11990001_12000000 \
+-v /home/furuiyang/bbd:/bbd \
+--env START=11990001 \
+--env END=12000000 \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/bd:v1
 '''
 
-'''
-sudo docker run -itd --name demo_1594_1595 \
--v /home/furuiyang/bbd:/bbd \
---env START=15940001 \
---env END=15950000 \
-registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/bd:v1
-'''

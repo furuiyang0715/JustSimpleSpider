@@ -4,9 +4,19 @@ import pandas as pd
 import os
 import sys
 
-FolderPath = r'/Users/furuiyang/gitzip/JustSimpleSpider/baidu/csv/csv_390001_400000'  # 要拼接的文件夹及其完整路径，注意不要包含中文
+
+# start = 1600
+# end = start+10
+
+# ss = "{}_{}".format(start*10000+1, end*10000)
+# FolderPath = r'/Users/furuiyang/gitzip/JustSimpleSpider/baidu/final_csv_dir/csv_{}_ok'.format(ss)   # 要拼接的文件夹及其完整路径，注意不要包含中文
+# SaveFileName = r'key_words_{}.csv'.format(ss)  # 合并后要保存的文件名
+
+
+FolderPath = r'/Users/furuiyang/gitzip/JustSimpleSpider/baidu/final_csv_dir/csv_9900001_10000000_ok'
+SaveFileName = r'key_words_9900001_10000000.csv'
+
 SaveFilePath = r'/Users/furuiyang/gitzip/JustSimpleSpider/baidu/amerge_csv'  # 拼接后要保存的文件路径
-SaveFileName = r'key_words_390001_400000.csv'  # 合并后要保存的文件名
 # 获取要合并的目标文件夹中的文件列表
 file_list = os.listdir(FolderPath)
 # 读取第一个 CSV 文件并包含表头

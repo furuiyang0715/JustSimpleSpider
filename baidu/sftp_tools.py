@@ -23,8 +23,8 @@ t.close()
 
 
 # 下载 从服务器 sshd1 到本地
-# rsync -e 'ssh -p 9528' -avz  furuiyang@139.159.155.223:/home/furuiyang/baidu/csv /Users/furuiyang/gitzip/JustSimpleSpider/baidu/load_csv/
+# rsync -e 'ssh -p 9528' -avz  furuiyang@139.159.155.223:/home/furuiyang/bbd/csv/13900001_13910000 /Users/furuiyang/gitzip/JustSimpleSpider/bbd/remote_csv
 
 
 # sshpp
-# rsync -e 'ssh -p 9528' -avz  furuiyang@139.9.193.142:/home/furuiyang/baidu/csv /Users/furuiyang/gitzip/JustSimpleSpider/baidu/load_csv/
+# rsync -e 'ssh -p 9528' -avz  furuiyang@139.9.193.142:/home/furuiyang/bbd/sshpp_csv /Users/furuiyang/gitzip/JustSimpleSpider/bbd/remote_csv
