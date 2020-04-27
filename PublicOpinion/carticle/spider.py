@@ -3,13 +3,11 @@ import json
 import logging
 import random
 import re
-import sys
 import string
 import time
 import traceback
 from urllib.parse import urlencode
 
-import pymysql
 import requests
 from lxml import html
 

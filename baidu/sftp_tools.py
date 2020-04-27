@@ -1,5 +1,4 @@
 # coding=utf-8
-# 上传文件  https://juejin.im/post/5d80daa5e51d4562165535c0
 import os
 import paramiko
 
@@ -23,8 +22,7 @@ t.close()
 
 
 # 下载 从服务器 sshd1 到本地
-# rsync -e 'ssh -p 9528' -avz  furuiyang@139.159.155.223:/home/furuiyang/bbd/csv/13900001_13910000 /Users/furuiyang/gitzip/JustSimpleSpider/bbd/remote_csv
-
+# rsync -e 'ssh -p 9528' -avz  furuiyang@139.159.155.223:/home/furuiyang/bbd/csv /Users/furuiyang/gitzip/JustSimpleSpider/bbd/remote_csv
 
 # sshpp
 # rsync -e 'ssh -p 9528' -avz  furuiyang@139.9.193.142:/home/furuiyang/bbd/sshpp_csv /Users/furuiyang/gitzip/JustSimpleSpider/bbd/remote_csv
