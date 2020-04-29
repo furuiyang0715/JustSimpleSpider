@@ -297,31 +297,35 @@ needs = {
 }
 
 
-# _map = {}
-# 从 0 到  437
-# for cate in range(438):
-for cate in needs.keys():
-    cate_url = base_url.format(cate)
-    resp = requests.get(cate_url)
-    if resp.status_code == 200:
-        page = resp.text
-        doc = html.fromstring(page)
-        cate_info = doc.xpath("//div[@class='cate_title']")[0].text_content()
-        cate_info = re.findall("“(.*)”分类下共有(.*)个词库", cate_info)[0]
-        cate_name = cate_info[0]
-        cate_total = int(cate_info[1])
-        print("'{}': '{}', ".format(cate, cate_name))
-        if needs[cate] != cate_name:
-            print(">>>>>>>>>>>>>>>>>>>>>>>", cate)
-        # _map[cate] = cate_name
-        # path = os.path.join("./origin", cate_name)
-        # os.makedirs(path, exist_ok=True)
-        # page_num = int(parse_pagenum(page))
-        # for page_num in range(1, page_num+1):
-        #     print("page is {}".format(page_num))
-        #     url = cate_url + "/default/{}".format(page_num)
-        #     page = requests.get(url).text
-        #     parse_url_and_save(page, path)
-        #     print()
-        #     print()
+def load():
+    # _map = {}
+    # 从 0 到  437
+    # for cate in range(438):
+    for cate in needs.keys():
+        cate_url = base_url.format(cate)
+        resp = requests.get(cate_url)
+        if resp.status_code == 200:
+            page = resp.text
+            doc = html.fromstring(page)
+            cate_info = doc.xpath("//div[@class='cate_title']")[0].text_content()
+            cate_info = re.findall("“(.*)”分类下共有(.*)个词库", cate_info)[0]
+            cate_name = cate_info[0]
+            cate_total = int(cate_info[1])
+            print("'{}': '{}', ".format(cate, cate_name))
+            if needs[cate] != cate_name:
+                print(">>>>>>>>>>>>>>>>>>>>>>>", cate)
+            # _map[cate] = cate_name
+            # path = os.path.join("./origin", cate_name)
+            # os.makedirs(path, exist_ok=True)
+            # page_num = int(parse_pagenum(page))
+            # for page_num in range(1, page_num+1):
+            #     print("page is {}".format(page_num))
+            #     url = cate_url + "/default/{}".format(page_num)
+            #     page = requests.get(url).text
+            #     parse_url_and_save(page, path)
+            #     print()
+            #     print()
 
+
+def trans():
+    pass
