@@ -273,3 +273,17 @@ nodes = {
 
 # FirstClassName, FirstClassCode, SecondClassName, SecondClassCode,  ThirdClassName, ThirdClassCode, WordLibrary, Word
 # 自然科学, 物理, 电学, 初中物理单位, 电能
+
+
+error_list = ['/Users/furuiyang/mydata/needs/电子游戏/沧海无涯.scel', '/Users/furuiyang/mydata/needs/电子游戏/大海战2.scel',
+              '/Users/furuiyang/mydata/needs/娱乐/鬼吹灯之寻龙诀【官方推荐】.scel', '/Users/furuiyang/mydata/needs/娱乐/流行网络小说词库.scel',
+              '/Users/furuiyang/mydata/needs/生活/朱万诚1.0.scel', '/Users/furuiyang/mydata/needs/生活/厦门永欣达商贸有限公司.scel',
+              '/Users/furuiyang/mydata/needs/生活/凌之轩的词库.scel', '/Users/furuiyang/mydata/needs/生活/淘宝看到过的品牌.scel',
+              '/Users/furuiyang/mydata/needs/广东/珠海地域名称.scel', '/Users/furuiyang/mydata/needs/广东/型男索女粤语词库.scel',
+              '/Users/furuiyang/mydata/needs/人文科学/个人小说词库.scel', '/Users/furuiyang/mydata/needs/人文科学/《飘邈之旅》.scel',
+              '/Users/furuiyang/mydata/needs/农林渔畜/海洋工程与海洋环境专有名词.scel', '/Users/furuiyang/mydata/needs/农林渔畜/船名前缀.scel',
+              '/Users/furuiyang/mydata/needs/社会科学/悠活网词汇.scel', '/Users/furuiyang/mydata/needs/社会科学/教育局股室.scel',
+              '/Users/furuiyang/mydata/needs/工程与应用科学/石油机械制造.scel', '/Users/furuiyang/mydata/needs/工程与应用科学/核能词汇.scel']
+
+print(len(error_list))   # 18
+
