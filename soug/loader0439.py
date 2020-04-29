@@ -2,6 +2,7 @@ import os
 import pprint
 import re
 import sys
+import traceback
 from urllib.request import urlretrieve
 
 import requests
@@ -327,5 +328,34 @@ def load():
             #     print()
 
 
+def mv_dirs():
+    data_dir = '/Users/furuiyang/mydata/origin'
+    for name in os.listdir(data_dir):
+        if name in needs.values():
+            command = 'mv /Users/furuiyang/mydata/origin/{}  /Users/furuiyang/gitzip/JustSimpleSpider/soug/origin/'.format(name)
+            print(command)
+            try:
+                os.system(command)
+            except:
+                traceback.print_exc()
+
+
+def _check():
+    data_dir = '/Users/furuiyang/gitzip/JustSimpleSpider/soug/origin'
+    for name in os.listdir(data_dir):
+        if name not in list(needs.values()):
+            print(name)
+        else:
+            print("ok")
+
+
 def trans():
     pass
+
+
+def main():
+    trans()
+
+
+if __name__ == "__main__":
+    main()
