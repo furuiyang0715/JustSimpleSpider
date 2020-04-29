@@ -10,6 +10,8 @@ from bs4 import BeautifulSoup
 from lxml import html
 
 
+from soug.tools import startChinese, getChinese, byte2str, startPy, getPyTable
+
 base_url = 'https://pinyin.sogou.com/dict/cate/index/{}'
 
 
@@ -349,12 +351,59 @@ def _check():
             print("ok")
 
 
-def trans():
-    pass
+def scel2txt(in_file, out_file):
+    print('-' * 60)
+    with open(in_file, 'rb') as f:
+        data = f.read()
+    print("词库名：", byte2str(data[0x130:0x338]))
+    print("词库类型：", byte2str(data[0x338:0x540]))
+    print("描述信息：", byte2str(data[0x540:0xd40]))
+    print("词库示例：", byte2str(data[0xd40:startPy]))
+    getPyTable(data[startPy:startChinese])
+    getChinese(data[startChinese:])
+
+    words = getChinese(data[startChinese:])
+    for word in words:
+        with open(out_file, 'a+', encoding='utf-8') as file:
+            file.write(word[2] + '\n')
+
+
+def trans(source_dir, target_dir):
+
+    def listfiles(ldir: str, r: bool = True):
+        lst = []
+        csv_dirs = os.listdir(ldir)
+        for one in csv_dirs:
+            one = os.path.join(ldir, one)
+            if os.path.isdir(one):
+                if r:
+                    lst.extend(listfiles(one))
+                else:
+                    pass
+            else:
+                lst.append(one)
+        return lst
+
+    error_list = []
+    lst = listfiles(source_dir)
+    for file in lst:
+        n_file = file.replace(source_dir, target_dir).replace(".scel", ".csv")
+        n_file_dir = os.path.split(n_file)[0]
+        os.makedirs(n_file_dir, exist_ok=True)
+        print(file, ">>>>>>", n_file)
+        try:
+            scel2txt(file, n_file)
+        except:
+            error_list.append(file)
+        print()
+
+    print(error_list)
 
 
 def main():
-    trans()
+    origin = '/Users/furuiyang/mydata/needs'
+    target = '/Users/furuiyang/mydata/final'
+    trans(origin, target)
 
 
 if __name__ == "__main__":
