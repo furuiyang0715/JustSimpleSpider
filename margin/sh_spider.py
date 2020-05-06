@@ -72,26 +72,35 @@ class SHMarginSpider(object):
         pool = PyMysqlPoolBase(**cfg)
         return pool
 
-    # def _create_table(self):
-    #     """创建爬虫数据库"""
-    #     sql = '''
-    #      CREATE TABLE IF NOT EXISTS `{}` (
-    #       `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-    #       `SecuCode` varchar(16) COLLATE utf8_bin NOT NULL COMMENT '股票交易代码',
-    #       `InnerCode` int(11) NOT NULL COMMENT '内部编码',
-    #       `SecuAbbr` varchar(50) COLLATE utf8_bin DEFAULT NULL COMMENT '股票简称',
-    #       `Date` datetime NOT NULL COMMENT '自然日',
-    #       `Percent` decimal(20,4) DEFAULT NULL COMMENT '占A股总股本的比例（%）',
-    #       `ShareNum` decimal(20,0) DEFAULT NULL COMMENT '股票数量(股)',
-    #       `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
-    #       `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    #       PRIMARY KEY (`id`),
-    #       UNIQUE KEY `un2` (`InnerCode`,`Date`) USING BTREE
-    #     ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='沪/深股通持股记录';
-    #     '''.format(self.spider_table)
-    #     spider = self._init_pool(self.spider_cfg)
-    #     spider.insert(sql)
-    #     spider.dispose()
+    def _drop_table(self):
+        """临时删除数据库"""
+        sql = '''drop table {}; '''.format(self.spider_table_name)
+        spider = self._init_pool(self.spider_cfg)
+        spider.insert(sql)
+        spider.dispose()
+
+    def _create_table(self):
+        """创建爬虫数据库"""
+        # fields = ['SecuMarket', 'InnerCode', 'SecuCode', 'SecuAbbr', 'SerialNumber', 'ListDate', 'TargetCategory']
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `{}` (
+          `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+          `SecuMarket` int(11) DEFAULT NULL COMMENT '证券市场',
+          `InnerCode` int(11) NOT NULL COMMENT '证券内部编码',
+          `SecuCode` varchar(10) DEFAULT NULL COMMENT '证券代码',
+          `SecuAbbr` varchar(200) DEFAULT NULL COMMENT '证券简称',
+          `SerialNumber` int(10) DEFAULT NULL COMMENT '网站清单序列号',
+          `ListDate` datetime NOT NULL COMMENT '列入时间',
+          `TargetCategory` int(11) NOT NULL COMMENT '标的类别',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `un2` (`SecuMarket`, `TargetCategory`,`ListDate`, `InnerCode`) USING BTREE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='融资融券标的证券清单';
+        '''.format(self.spider_table_name)
+        spider = self._init_pool(self.spider_cfg)
+        spider.insert(sql)
+        spider.dispose()
 
     def contract_sql(self, to_insert: dict, table: str, update_fields: list):
         ks = []
@@ -134,8 +143,41 @@ class SHMarginSpider(object):
             sql_pool.end()
             return count
 
+    def get_inner_code_map(self):
+        """
+        获取聚源内部编码映射表
+        https://dd.gildata.com/#/tableShow/27/column///
+        https://dd.gildata.com/#/tableShow/718/column///
+        """
+        juyuan = self._init_pool(self.juyuan_cfg)
+
+        # if self.type in ("sh", "sz"):
+        #     sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
+        # else:
+        #     sql = '''SELECT SecuCode,InnerCode from hk_secumain WHERE SecuCategory in (51, 3, 53, 78) and SecuMarket in (72) and ListedSector in (1, 2, 6, 7);'''
+
+        # 8 是开放式基金
+        sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2, 8) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
+        ret = juyuan.select_all(sql)
+        juyuan.dispose()
+        info = {}
+        for r in ret:
+            key = r.get("SecuCode")
+            value = r.get('InnerCode')
+            info[key] = value
+        return info
+
+    def get_inner_code(self, secu_code):
+        ret = self.inner_code_map.get(secu_code)
+        if not ret:
+            logger.warning("{} 不存在内部编码".format(secu_code))
+            raise
+        return ret
+
     def __init__(self):
         self.url = 'http://www.sse.com.cn/services/tradingservice/margin/info/againstmargin/'
+        self.spider_table_name = 'targetsecurities'
+        self.inner_code_map = self.get_inner_code_map()
 
     def start(self):
         """
@@ -143,10 +185,15 @@ class SHMarginSpider(object):
         </a></li><li><a href="#tableData_962" data-toggle="tab">融券卖出标的证券一览表
         </a></li><li><a href="#tableData_960" data-toggle="tab">融资融券可充抵保证金证券一览表
         """
+        # self._drop_table()
+        self._create_table()
         resp = requests.get(self.url)
         if resp.status_code == 200:
             page = resp.text.encode("ISO-8859-1").decode("utf-8")
             doc = html.fromstring(page)
+
+            fields = ['SecuMarket', 'InnerCode', 'SecuCode', 'SecuAbbr', 'SerialNumber', 'ListDate', 'TargetCategory']
+            spider = self._init_pool(self.spider_cfg)
 
             # 962
             datas = doc.xpath("//div[@class='table-responsive sse_table_T01 tdclickable']/table[@class='table search_']/script[@type='text/javascript']")[0].text
@@ -161,14 +208,17 @@ class SHMarginSpider(object):
                     lst_datas.append(data)
             for data in lst_datas:
                 item = dict()
-                item['SerialNumber'] = data[0]   # str
-                item['SecuCode'] = data[1]
+                item['SerialNumber'] = int(data[0])    # str
                 item['SecuAbbr'] = data[2]
-                item['ShowDate'] = show_dt
+                item['ListDate'] = show_dt
                 # 标的类别：10-融资买入标的，20-融券卖出标的
                 item['TargetCategory'] = 20
                 item['SecuMarket'] = 83
-                print(item)
+                secu_code = data[1].strip()
+                item['SecuCode'] = secu_code
+                inner_code = self.get_inner_code(secu_code)
+                item['InnerCode'] = inner_code
+                self._save(spider, item, self.spider_table_name, fields)
 
             # 961
             datas = doc.xpath("//table[@class='table search_bdzqkc search3T']/script[@type='text/javascript']")[0].text
@@ -184,14 +234,23 @@ class SHMarginSpider(object):
             # [['1', '510050 ', '50ETF '], ['2', '510180 ', '180ETF '], ...
             for data in lst_datas:
                 item = dict()
-                item['SerialNumber'] = data[0]   # str
-                item['SecuCode'] = data[1]
+                item['SerialNumber'] = int(data[0])
                 item['SecuAbbr'] = data[2]
-                item['ShowDate'] = show_dt
+                item['ListDate'] = show_dt
                 # 标的类别：10-融资买入标的，20-融券卖出标的
                 item['TargetCategory'] = 10
                 item['SecuMarket'] = 83
-                print(item)
+                secu_code = data[1].strip()
+                item['SecuCode'] = secu_code
+                inner_code = self.get_inner_code(secu_code)
+                item['InnerCode'] = inner_code
+                self._save(spider, item, self.spider_table_name, fields)
+
+            # 关闭数据库连接
+            try:
+                spider.dispose()
+            except:
+                pass
 
 
 if __name__ == "__main__":
