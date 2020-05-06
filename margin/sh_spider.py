@@ -1,6 +1,5 @@
 # coding=utf8
 import datetime
-import json
 import logging
 import re
 import sys
