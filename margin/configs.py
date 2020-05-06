@@ -28,6 +28,13 @@ TEST_MYSQL_USER = env.get("TEST_MYSQL_USER", cf.get('test', 'TEST_MYSQL_USER'))
 TEST_MYSQL_PASSWORD = env.get("TEST_MYSQL_PASSWORD", cf.get('test', 'TEST_MYSQL_PASSWORD'))
 TEST_MYSQL_DB = env.get("TEST_MYSQL_DB", cf.get('test', 'TEST_MYSQL_DB'))
 
+# 聚源
+JUY_HOST = env.get("JUY_HOST", cf.get('juyuan', 'JUY_HOST'))
+JUY_PORT = int(env.get("JUY_PORT", cf.get('juyuan', 'JUY_PORT')))
+JUY_USER = env.get("JUY_USER", cf.get('juyuan', 'JUY_USER'))
+JUY_PASSWD = env.get("JUY_PASSWD", cf.get('juyuan', 'JUY_PASSWD'))
+JUY_DB = env.get("JUY_DB", cf.get('juyuan', 'JUY_DB'))
+
 
 # spider
 if LOCAL:
