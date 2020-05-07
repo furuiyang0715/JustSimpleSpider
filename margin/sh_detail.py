@@ -20,9 +20,10 @@ class DetailSpider(MarginBase):
         self.csv_url = 'http://www.sse.com.cn/market/dealingdata/overview/margin/a/rzrqjygk{}.xls'
         self.inner_code_map = self.get_inner_code_map()
         # self.start_dt = datetime.datetime(2010, 3, 31)
-        self.year = 2014
+        self.year = 2020
         self.start_dt = datetime.datetime(self.year, 1, 1)
         self.end_dt = datetime.datetime(self.year, 12, 31)
+        self.detail_table_name = 'detailmargin'
 
     def get_inner_code_map(self):
         """
@@ -64,10 +65,13 @@ class DetailSpider(MarginBase):
         """
         dt = dt.strftime("%Y%m%d")
         url = self.csv_url.format(dt)
+        # print(">>>>>>>", url)
         try:
             urlretrieve(url, "./data_dir/{}/{}.xls".format(self.year, dt), self.callbackfunc)
         except urllib.error.HTTPError:
             logger.warning("不存在这一天的数据{}".format(dt))
+        except TimeoutError:
+            logger.warning("超时 {} ".format(dt))
         except Exception as e:
             logger.warning("下载失败 : {}".format(e))
             raise Exception
@@ -85,28 +89,38 @@ class DetailSpider(MarginBase):
             raise
         return ret
 
+    def read_xls(self, year, dt):
+        wb = xlrd.open_workbook('./data_dir/{}/{}.xls'.format(year, dt))
+        detail = wb.sheet_by_name("明细信息")
+        # 总数据量
+        rows = detail.nrows - 1
+        # 表头信息
+        heads = detail.row_values(0)
+        # print(heads)
+        # ['标的证券代码', '标的证券简称', '本日融资余额(元)', '本日融资买入额(元)', '本日融资偿还额(元)', '本日融券余量', '本日融券卖出量', '本日融券偿还量']
+
+        # | id | SecuMarket | InnerCode | SecuCode | SecuAbbr | SerialNumber | ListDate            | TargetCategory | CREATETIMEJZ        | UPDATETIMEJZ
+        # 数据
+        items = []
+        list_date = datetime.datetime.strptime(str(dt), "%Y%m%d")
+        for i in range(1, rows+1):
+            data = detail.row_values(i)
+            item = dict()
+            item['SecuMarket'] = 83
+            secu_code = data[0]
+            item['SecuCode'] = secu_code
+            item['InnerCode'] = self.get_inner_code(secu_code)
+            item['SecuAbbr'] = data[1]
+            item['SerialNumber'] = i
+            item['ListDate'] = list_date
+            item['TargetCategory'] = None
+            # print(data)
+            print(item)
+            # self._save()
+            items.append(item)
+
     def start(self):
-
-        self.load()
-
-        # # 打开已有的工作薄
-        # wb = xlrd.open_workbook('./data_dir/20200506.xls')
-        # # 明细信息表单
-        # detail = wb.sheet_by_name("明细信息")
-        # # 总数据量
-        # rows = detail.nrows - 1
-        # # 表头信息
-        # heads = detail.row_values(0)
-        # # print(heads)
-        # # ['标的证券代码', '标的证券简称', '本日融资余额(元)', '本日融资买入额(元)', '本日融资偿还额(元)', '本日融券余量', '本日融券卖出量', '本日融券偿还量']
-        # # | id | SecuMarket | InnerCode | SecuCode | SecuAbbr | SerialNumber | ListDate            | TargetCategory | CREATETIMEJZ        | UPDATETIMEJZ
-        # # 数据
-        # datas = []
-        # for i in range(1, rows+1):
-        #     data = detail.row_values(i)
-        #     datas.append(self.get_inner_code(data[0]))
-        #
-        # print(datas)
+        self.read_xls(2020, 20200430)
 
         pass
 
