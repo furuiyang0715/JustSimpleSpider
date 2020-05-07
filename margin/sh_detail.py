@@ -89,6 +89,28 @@ class DetailSpider(MarginBase):
             raise
         return ret
 
+    def _create_table(self):
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `{}` (
+          `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+          `SecuMarket` int(11) DEFAULT NULL COMMENT '证券市场',
+          `InnerCode` int(11) NOT NULL COMMENT '证券内部编码',
+          `SecuCode` varchar(10) DEFAULT NULL COMMENT '证券代码',
+          `SecuAbbr` varchar(200) DEFAULT NULL COMMENT '证券简称',
+          `SerialNumber` int(10) DEFAULT NULL COMMENT '网站清单序列号',
+          `ListDate` datetime NOT NULL COMMENT '列入时间',
+          `TargetCategory` int(11) NOT NULL COMMENT '标的类别',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `un2` (`SecuMarket`, `TargetCategory`,`ListDate`, `InnerCode`) USING BTREE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='融资融券标的证券历史清单';
+        '''.format(self.detail_table_name)
+        spider = self._init_pool(self.spider_cfg)
+        spider.insert(sql)
+        spider.dispose()
+
+
     def read_xls(self, year, dt):
         wb = xlrd.open_workbook('./data_dir/{}/{}.xls'.format(year, dt))
         detail = wb.sheet_by_name("明细信息")
