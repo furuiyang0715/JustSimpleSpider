@@ -54,7 +54,7 @@ class ShSync(MarginBase):
           UNIQUE KEY `IX_MT_TargetSecurities` (`InnerCode`,`TargetCategory`,`InDate`,`OutDate`,`TargetFlag`)
         ) ENGINE=InnoDB DEFAULT CHARSET=gbk; 
         '''
-
+        # TODO 注意不能像聚源一样将可能为 空 的 OutDate 设置为唯一索引
         sql = '''
         CREATE TABLE IF NOT EXISTS `{}` (
           `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
