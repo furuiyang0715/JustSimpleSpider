@@ -8,11 +8,24 @@ class ShSync(MarginBase):
 
     def load_juyuan(self):
         """将聚源已有的数据导入"""
+        select_fields = ['SecuMarket', 'InnerCode', 'InDate', 'OutDate', 'TargetCategory', 'TargetFlag', 'ChangeReasonDesc',
+                         # 'UpdateTime', 'JSID',
+                         ]
+        select_str = ",".join(select_fields).rstrip(",")
+        # print(select_str)
 
         juyuan = self._init_pool(self.juyuan_cfg)
-        sql = '''select * from {} limit 10;'''.format(self.juyuan_table_name)
+        sql = '''select {} from {};'''.format(select_str, self.juyuan_table_name)
         ret = juyuan.select_all(sql)
-        print(ret)
+        # print(len(ret))
+        # print(ret[10])
+        return ret
+
+    def _create_table(self):
+        sql = '''
+        
+        
+        '''
 
 
 if __name__ == "__main__":
