@@ -1,4 +1,5 @@
 import logging
+import sys
 import time
 from collections import Counter
 
@@ -51,6 +52,14 @@ class ShSync(MarginBase):
         # print(ret1)
         # print(len(ret1), len(set(ret1)))
         print(Counter(ret1))    # Counter({1346: 2, 1131: 1, 1133: 1, ...
+
+        s_lst = set(self.get_spider_latest_list(83, 10))
+        print(set(ret1) - s_lst)
+        print(s_lst - set(ret1))
+
+        sys.exit(0)
+
+
 
         # 上交所融券卖出标的列表
         sql2 = '''select InnerCode from MT_TargetSecurities where TargetFlag = 1 and SecuMarket = 83 and TargetCategory = 20;'''
@@ -207,12 +216,12 @@ class ShSync(MarginBase):
         # self._create_table()
         # self.load_juyuan()
 
-        # self.show_juyuan_datas()
+        self.show_juyuan_datas()
 
         # self.parse_announcement()
 
-        spider_list = self.get_spider_latest_list(83, 10)
-        print(spider_list)
+        # spider_list = self.get_spider_latest_list(83, 10)
+        # print(spider_list)
 
         pass
 
