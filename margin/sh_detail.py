@@ -1,7 +1,9 @@
+import datetime
 import json
 import logging
 import pprint
 import sys
+import urllib
 from urllib.request import urlretrieve
 import requests
 import xlrd
@@ -14,8 +16,13 @@ logger = logging.getLogger(__name__)
 
 class DetailSpider(MarginBase):
     def __init__(self):
+        # detail_web_url = 'http://www.sse.com.cn/market/othersdata/margin/detail/index.shtml?marginDate=20200420'
         self.csv_url = 'http://www.sse.com.cn/market/dealingdata/overview/margin/a/rzrqjygk{}.xls'
         self.inner_code_map = self.get_inner_code_map()
+        # self.start_dt = datetime.datetime(2010, 3, 31)
+        self.year = 2014
+        self.start_dt = datetime.datetime(self.year, 1, 1)
+        self.end_dt = datetime.datetime(self.year, 12, 31)
 
     def get_inner_code_map(self):
         """
@@ -49,10 +56,27 @@ class DetailSpider(MarginBase):
         sys.stdout.write("\r%6.2f%%" % percent)
         sys.stdout.flush()
 
-    def load_xls(self):
-        dt = 20200506
+    def load_xls(self, dt: datetime.datetime):
+        """
+        下载某一天的明细文件
+        :param dt: eg.20200506
+        :return:
+        """
+        dt = dt.strftime("%Y%m%d")
         url = self.csv_url.format(dt)
-        urlretrieve(url, "./data_dir/{}.xls".format(dt), self.callbackfunc)
+        try:
+            urlretrieve(url, "./data_dir/{}/{}.xls".format(self.year, dt), self.callbackfunc)
+        except urllib.error.HTTPError:
+            logger.warning("不存在这一天的数据{}".format(dt))
+        except Exception as e:
+            logger.warning("下载失败 : {}".format(e))
+            raise Exception
+
+    def load(self):
+        dt = self.start_dt
+        while dt <= self.end_dt:
+            self.load_xls(dt)
+            dt = dt + datetime.timedelta(days=1)
 
     def get_inner_code(self, secu_code):
         ret = self.inner_code_map.get(secu_code)
@@ -62,24 +86,29 @@ class DetailSpider(MarginBase):
         return ret
 
     def start(self):
-        # 打开已有的工作薄
-        wb = xlrd.open_workbook('./data_dir/20200506.xls')
-        # 明细信息表单
-        detail = wb.sheet_by_name("明细信息")
-        # 总数据量
-        rows = detail.nrows - 1
-        # 表头信息
-        heads = detail.row_values(0)
-        # print(heads)
-        # ['标的证券代码', '标的证券简称', '本日融资余额(元)', '本日融资买入额(元)', '本日融资偿还额(元)', '本日融券余量', '本日融券卖出量', '本日融券偿还量']
-        # | id | SecuMarket | InnerCode | SecuCode | SecuAbbr | SerialNumber | ListDate            | TargetCategory | CREATETIMEJZ        | UPDATETIMEJZ
-        # 数据
-        datas = []
-        for i in range(1, rows+1):
-            data = detail.row_values(i)
-            datas.append(self.get_inner_code(data[0]))
 
-        print(datas)
+        self.load()
+
+        # # 打开已有的工作薄
+        # wb = xlrd.open_workbook('./data_dir/20200506.xls')
+        # # 明细信息表单
+        # detail = wb.sheet_by_name("明细信息")
+        # # 总数据量
+        # rows = detail.nrows - 1
+        # # 表头信息
+        # heads = detail.row_values(0)
+        # # print(heads)
+        # # ['标的证券代码', '标的证券简称', '本日融资余额(元)', '本日融资买入额(元)', '本日融资偿还额(元)', '本日融券余量', '本日融券卖出量', '本日融券偿还量']
+        # # | id | SecuMarket | InnerCode | SecuCode | SecuAbbr | SerialNumber | ListDate            | TargetCategory | CREATETIMEJZ        | UPDATETIMEJZ
+        # # 数据
+        # datas = []
+        # for i in range(1, rows+1):
+        #     data = detail.row_values(i)
+        #     datas.append(self.get_inner_code(data[0]))
+        #
+        # print(datas)
+
+        pass
 
 
 if __name__ == "__main__":
