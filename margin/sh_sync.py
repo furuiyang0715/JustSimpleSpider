@@ -1,3 +1,4 @@
+import datetime
 import logging
 import sys
 import time
@@ -180,6 +181,15 @@ class ShSync(MarginBase):
         ret = [r.get("InnerCode") for r in ret]
         return ret
 
+    def get_spider_dt_list(self, dt, market, category):
+        """获取爬虫库中具体某一天的清单"""
+        spider = self._init_pool(self.spider_cfg)
+        sql = '''select InnerCode from {} where ListDate = '{}' and SecuMarket = {} and TargetCategory = {}; 
+                '''.format(self.spider_table_name, dt, market, category)
+        ret = spider.select_all(sql)
+        ret = [r.get("InnerCode") for r in ret]
+        return ret
+
     def parse_announcement(self):
         """从公告中提取更改信息 """
         # 公告链接地址: http://www.sse.com.cn/disclosure/magin/announcement/
@@ -216,12 +226,15 @@ class ShSync(MarginBase):
         # self._create_table()
         # self.load_juyuan()
 
-        self.show_juyuan_datas()
+        # self.show_juyuan_datas()
 
         # self.parse_announcement()
 
         # spider_list = self.get_spider_latest_list(83, 10)
         # print(spider_list)
+
+        spi_lst = self.get_spider_dt_list(datetime.datetime(2020, 5, 6), 83, 10)
+        print(spi_lst)
 
         pass
 

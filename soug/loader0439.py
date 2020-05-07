@@ -387,7 +387,7 @@ def trans(source_dir, target_dir):
     error_list = []
     lst = listfiles(source_dir)
     for file in lst:
-        n_file = file.replace(source_dir, target_dir).replace(".scel", ".csv")
+        n_file = file.replace(source_dir, target_dir).replace(".scel", ".data_dir")
         n_file_dir = os.path.split(n_file)[0]
         os.makedirs(n_file_dir, exist_ok=True)
         print(file, ">>>>>>", n_file)

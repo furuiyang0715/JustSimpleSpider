@@ -5,7 +5,7 @@ import os
 
 
 FolderPath = r'/Users/furuiyang/gitzip/JustSimpleSpider/baidu/amerge_csv/11900001_12000000'
-SaveFileName = r'key_words_11900001_12000000.csv'
+SaveFileName = r'key_words_11900001_12000000.data_dir'
 SaveFilePath = r'/Users/furuiyang/gitzip/JustSimpleSpider/baidu/amerge_csv'  # 拼接后要保存的文件路径
 # 获取要合并的目标文件夹中的文件列表
 file_list = os.listdir(FolderPath)
