@@ -1,6 +1,5 @@
 import logging
 import time
-import traceback
 
 from margin.base import MarginBase
 
@@ -35,6 +34,48 @@ class ShSync(MarginBase):
             target.dispose()
         except Exception as e:
             logger.warning(f"dispose error: {e}")
+
+    def show_juyuan_datas(self):
+        """
+        分析聚源已有的数据
+        """
+        juyuan = self._init_pool(self.juyuan_cfg)
+        # 上交所融资买入标的列表
+        sql1 = '''select InnerCode from MT_TargetSecurities where TargetFlag = 1 and SecuMarket = 83 and TargetCategory = 10;'''
+        ret1 = juyuan.select_all(sql1)
+        ret1 = [r.get("InnerCode") for r in ret1]
+        print(ret1)
+        print(len(ret1))
+
+        # 上交所融券卖出标的列表
+        sql2 = '''select InnerCode from MT_TargetSecurities where TargetFlag = 1 and SecuMarket = 83 and TargetCategory = 20;'''
+        ret2 = juyuan.select_all(sql2)
+        ret2 = [r.get("InnerCode") for r in ret2]
+        print(ret2)
+        print(len(ret2))
+
+        print(set(ret1) == set(ret2))
+
+        # 深交所融资买入标的
+        sql3 = '''select InnerCode from MT_TargetSecurities where TargetFlag = 1 and SecuMarket = 90 and TargetCategory = 10;'''
+        ret3 = juyuan.select_all(sql3)
+        ret3 = [r.get("InnerCode") for r in ret3]
+        print(ret3)
+        print(len(ret3))
+
+        # 深交所融券卖出标的
+        sql4 = '''select InnerCode from MT_TargetSecurities where TargetFlag = 1 and SecuMarket = 90 and TargetCategory = 20;'''
+        ret4 = juyuan.select_all(sql4)
+        ret4 = [r.get("InnerCode") for r in ret4]
+        print(ret4)
+        print(len(ret4))
+
+        print(set(ret3) == set(ret4))
+
+        # 查询聚源的最近更新时间
+        sql5 = '''select max(UpdateTime) as max_dt from MT_TargetSecurities ; '''
+        ret5 = juyuan.select_one(sql5).get("max_dt")
+        print(ret5)    # 2020-04-20 09:04:01
 
     def _create_table(self):
         juyuan_sql = '''
@@ -78,10 +119,13 @@ class ShSync(MarginBase):
         target.dispose()
         logger.info("尝试建表")
 
-    def start(self):
-        self._create_table()
+        # 10-融资买入标的，20-融券卖出标的
 
-        self.load_juyuan()
+    def start(self):
+        # self._create_table()
+        # self.load_juyuan()
+
+        self.show_juyuan_datas()
 
 
 if __name__ == "__main__":
