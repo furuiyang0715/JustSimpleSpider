@@ -15,7 +15,8 @@ class ShSync(MarginBase):
     def load_juyuan(self):
         """将聚源已有的数据导入"""
         select_fields = ['SecuMarket', 'InnerCode', 'InDate', 'OutDate', 'TargetCategory', 'TargetFlag', 'ChangeReasonDesc',
-                         # 'UpdateTime', 'JSID',
+                         'UpdateTime',
+                         # 'JSID',
                          ]
         select_str = ",".join(select_fields).rstrip(",")
         # print(select_str)
@@ -25,7 +26,15 @@ class ShSync(MarginBase):
         ret = juyuan.select_all(sql)
         # print(len(ret))
         # print(ret[10])
-        return ret
+        juyuan.dispose()
+
+        target = self._init_pool(self.product_cfg)
+        update_fields = ['SecuMarket', 'InnerCode', 'InDate', 'OutDate', 'TargetCategory', 'TargetFlag', 'ChangeReasonDesc', 'UpdateTime']
+        #     def _save(self, sql_pool, to_insert, table, update_fields):
+        for item in ret:
+            self._save(target, item, self.target_table_name, update_fields)
+
+        target.dispose()
 
     def _create_table(self):
         juyuan_sql = '''
@@ -56,7 +65,7 @@ class ShSync(MarginBase):
           `TargetCategory` int(11) NOT NULL COMMENT '标的类别',
           `TargetFlag` int(11) DEFAULT NULL COMMENT '标的状态',
           `ChangeReasonDesc` varchar(2000) DEFAULT NULL COMMENT '变更原因描述',
-          `UpdateTime` datetime NOT NULL COMMENT '更新时间',
+          `UpdateTime` datetime NOT NULL COMMENT '数据源更新时间',
           `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
           `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           PRIMARY KEY (`id`),
@@ -71,6 +80,8 @@ class ShSync(MarginBase):
 
     def start(self):
         self._create_table()
+
+        self.load_juyuan()
 
 
 if __name__ == "__main__":
