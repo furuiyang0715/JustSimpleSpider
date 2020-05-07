@@ -1,4 +1,6 @@
 import logging
+import time
+import traceback
 
 from margin.base import MarginBase
 
@@ -19,22 +21,20 @@ class ShSync(MarginBase):
                          # 'JSID',
                          ]
         select_str = ",".join(select_fields).rstrip(",")
-        # print(select_str)
-
         juyuan = self._init_pool(self.juyuan_cfg)
         sql = '''select {} from {};'''.format(select_str, self.juyuan_table_name)
         ret = juyuan.select_all(sql)
-        # print(len(ret))
-        # print(ret[10])
         juyuan.dispose()
 
-        target = self._init_pool(self.product_cfg)
         update_fields = ['SecuMarket', 'InnerCode', 'InDate', 'OutDate', 'TargetCategory', 'TargetFlag', 'ChangeReasonDesc', 'UpdateTime']
-        #     def _save(self, sql_pool, to_insert, table, update_fields):
+        target = self._init_pool(self.product_cfg)
         for item in ret:
             self._save(target, item, self.target_table_name, update_fields)
 
-        target.dispose()
+        try:
+            target.dispose()
+        except Exception as e:
+            logger.warning(f"dispose error: {e}")
 
     def _create_table(self):
         juyuan_sql = '''
@@ -69,7 +69,7 @@ class ShSync(MarginBase):
           `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
           `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           PRIMARY KEY (`id`),
-          UNIQUE KEY `IX_MT_TargetSecurities` (`InnerCode`,`TargetCategory`,`InDate`,`OutDate`,`TargetFlag`)
+          UNIQUE KEY `IX_MT_TargetSecurities` (`SecuMarket`, `InnerCode`,`TargetCategory`,`InDate`,`TargetFlag`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='融资融券标的证券变更记录';
         '''.format(self.target_table_name)
 
@@ -85,4 +85,7 @@ class ShSync(MarginBase):
 
 
 if __name__ == "__main__":
+    now = lambda: time.time()
+    start_time = now()
     ShSync().start()
+    logger.info(f"用时: {now() - start_time} 秒")    # (end)大概是 80s (dispose)大概是 425s
