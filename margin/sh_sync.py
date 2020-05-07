@@ -1,5 +1,6 @@
 import logging
 import time
+from collections import Counter
 
 from margin.base import MarginBase
 
@@ -12,6 +13,8 @@ class ShSync(MarginBase):
     def __init__(self):
         self.juyuan_table_name = 'MT_TargetSecurities'
         self.target_table_name = 'MT_TargetSecurities'
+        # 爬虫库
+        self.spider_table_name = 'targetsecurities'
         self.inner_code_map = self.get_inner_code_map()
 
     def load_juyuan(self):
@@ -45,31 +48,34 @@ class ShSync(MarginBase):
         sql1 = '''select InnerCode from MT_TargetSecurities where TargetFlag = 1 and SecuMarket = 83 and TargetCategory = 10;'''
         ret1 = juyuan.select_all(sql1)
         ret1 = [r.get("InnerCode") for r in ret1]
-        print(ret1)
-        print(len(ret1))
+        # print(ret1)
+        # print(len(ret1), len(set(ret1)))
+        print(Counter(ret1))    # Counter({1346: 2, 1131: 1, 1133: 1, ...
 
         # 上交所融券卖出标的列表
         sql2 = '''select InnerCode from MT_TargetSecurities where TargetFlag = 1 and SecuMarket = 83 and TargetCategory = 20;'''
         ret2 = juyuan.select_all(sql2)
         ret2 = [r.get("InnerCode") for r in ret2]
-        print(ret2)
-        print(len(ret2))
-
+        # print(ret2)
+        # print(len(ret2), len(set(ret2)))
+        print(Counter(ret2))  # Counter({1346: 2, 1131: 1, 1133: 1, 1154: 1, ..
         print(set(ret1) == set(ret2))
 
         # 深交所融资买入标的
         sql3 = '''select InnerCode from MT_TargetSecurities where TargetFlag = 1 and SecuMarket = 90 and TargetCategory = 10;'''
         ret3 = juyuan.select_all(sql3)
         ret3 = [r.get("InnerCode") for r in ret3]
-        print(ret3)
-        print(len(ret3))
+        # print(ret3)
+        # print(len(ret3), len(set(ret3)))
+        print(Counter(ret3))   # Counter({12243: 2, 16175: 2, 3: 1, 6: 1, 83: 1, 102: 1, 105: ..
 
         # 深交所融券卖出标的
         sql4 = '''select InnerCode from MT_TargetSecurities where TargetFlag = 1 and SecuMarket = 90 and TargetCategory = 20;'''
         ret4 = juyuan.select_all(sql4)
         ret4 = [r.get("InnerCode") for r in ret4]
-        print(ret4)
-        print(len(ret4))
+        # print(ret4)
+        # print(len(ret4), len(set(ret4)))
+        print(Counter(ret4))   # Counter({12243: 2, 16175: 2, 403: 1, 433: 1,  ..
 
         print(set(ret3) == set(ret4))
 
@@ -154,6 +160,17 @@ class ShSync(MarginBase):
 
         # 10-融资买入标的，20-融券卖出标的
 
+    def get_spider_latest_list(self, market, category):
+        """获取爬虫库中最新的清单"""
+        # ['SecuMarket', 'InnerCode', 'SecuCode', 'SecuAbbr', 'SerialNumber', 'ListDate', 'TargetCategory']
+        spider = self._init_pool(self.spider_cfg)
+        sql = '''select InnerCode from {} where ListDate = (select max(ListDate) from {} \
+        where SecuMarket = {} and TargetCategory = {}) and SecuMarket = {} and TargetCategory = {}; 
+        '''.format(self.spider_table_name, self.spider_table_name, market, category, market, category)
+        ret = spider.select_all(sql)
+        ret = [r.get("InnerCode") for r in ret]
+        return ret
+
     def parse_announcement(self):
         """从公告中提取更改信息 """
         # 公告链接地址: http://www.sse.com.cn/disclosure/magin/announcement/
@@ -161,11 +178,28 @@ class ShSync(MarginBase):
         # 在聚源的最大更新时间之后的有：
         # (1) 4.23 的公告: http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20200423_5052948.shtml
         # 内容: 在2020年4月24日将天津松江（600225） 调出融资融券标的证券名单
+        inner_code = self.get_inner_code('600225')
+        print(inner_code)  # 1346
 
+        # (2) 4.28 的公告: http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20200428_5067981.shtml
+        # 内容: 在2020年4月29日将 博信股份（600083） 调出融资融券标的证券名单
+        inner_code = self.get_inner_code("600083")
+        print(inner_code)   # 1205
 
+        # (3）4.29 的公告: http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20200429_5075757.shtml
+        # 内容: 于2020年4月30日将 交大昂立（600530）和宏图高科（600122）调出融资融券标的证券名单
+        inner_code_1 = self.get_inner_code('600530')
+        inner_code_2 = self.get_inner_code('600122')
+        print(inner_code_1, inner_code_2)  # 1694 1250
 
-
-
+        # (4) 4.30 的公告:http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20200430_5085195.shtml
+        # 内容: 于2020年5月6日将 美都能源（600175）、六国化工（600470）、飞乐音响（600651）、安信信托（600816）和宜华生活（600978）调出融资融券标的证券名单。
+        in_co_1 = self.get_inner_code('600175')
+        in_co_2 = self.get_inner_code('600470')
+        in_co_3 = self.get_inner_code('600651')
+        in_co_4 = self.get_inner_code('600816')
+        in_co_5 = self.get_inner_code('600978')
+        print(in_co_1, in_co_2, in_co_3, in_co_4, in_co_5)  # 1293 1612 1868 2051 2908
 
         pass
 
@@ -173,7 +207,14 @@ class ShSync(MarginBase):
         # self._create_table()
         # self.load_juyuan()
 
-        self.show_juyuan_datas()
+        # self.show_juyuan_datas()
+
+        # self.parse_announcement()
+
+        spider_list = self.get_spider_latest_list(83, 10)
+        print(spider_list)
+
+        pass
 
 
 if __name__ == "__main__":
