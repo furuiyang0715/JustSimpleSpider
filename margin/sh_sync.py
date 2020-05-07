@@ -12,6 +12,7 @@ class ShSync(MarginBase):
     def __init__(self):
         self.juyuan_table_name = 'MT_TargetSecurities'
         self.target_table_name = 'MT_TargetSecurities'
+        self.inner_code_map = self.get_inner_code_map()
 
     def load_juyuan(self):
         """将聚源已有的数据导入"""
@@ -77,6 +78,37 @@ class ShSync(MarginBase):
         ret5 = juyuan.select_one(sql5).get("max_dt")
         print(ret5)    # 2020-04-20 09:04:01
 
+    def get_inner_code_map(self):
+        """
+        获取聚源内部编码映射表
+        https://dd.gildata.com/#/tableShow/27/column///
+        https://dd.gildata.com/#/tableShow/718/column///
+        """
+        juyuan = self._init_pool(self.juyuan_cfg)
+
+        # if self.type in ("sh", "sz"):
+        #     sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
+        # else:
+        #     sql = '''SELECT SecuCode,InnerCode from hk_secumain WHERE SecuCategory in (51, 3, 53, 78) and SecuMarket in (72) and ListedSector in (1, 2, 6, 7);'''
+
+        # 8 是开放式基金
+        sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2, 8) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
+        ret = juyuan.select_all(sql)
+        juyuan.dispose()
+        info = {}
+        for r in ret:
+            key = r.get("SecuCode")
+            value = r.get('InnerCode')
+            info[key] = value
+        return info
+
+    def get_inner_code(self, secu_code):
+        ret = self.inner_code_map.get(secu_code)
+        if not ret:
+            logger.warning("{} 不存在内部编码".format(secu_code))
+            raise
+        return ret
+
     def _create_table(self):
         juyuan_sql = '''
         CREATE TABLE `mt_targetsecurities` (
@@ -96,6 +128,7 @@ class ShSync(MarginBase):
         ) ENGINE=InnoDB DEFAULT CHARSET=gbk; 
         '''
         # TODO 注意不能像聚源一样将可能为 空 的 OutDate 设置为唯一索引
+        # https://blog.csdn.net/xiaobao5214/article/details/100920837
         sql = '''
         CREATE TABLE IF NOT EXISTS `{}` (
           `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
@@ -120,6 +153,21 @@ class ShSync(MarginBase):
         logger.info("尝试建表")
 
         # 10-融资买入标的，20-融券卖出标的
+
+    def parse_announcement(self):
+        """从公告中提取更改信息 """
+        # 公告链接地址: http://www.sse.com.cn/disclosure/magin/announcement/
+
+        # 在聚源的最大更新时间之后的有：
+        # (1) 4.23 的公告: http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20200423_5052948.shtml
+        # 内容: 在2020年4月24日将天津松江（600225） 调出融资融券标的证券名单
+
+
+
+
+
+
+        pass
 
     def start(self):
         # self._create_table()
