@@ -10,6 +10,7 @@ from urllib.request import urlretrieve
 import requests
 import xlrd
 
+sys.path.append('./../../')
 from margin.base import MarginBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -155,8 +156,9 @@ class DetailSpider(MarginBase):
         for year in [
             # 2010,
             # 2011, 2012,
-            2013,
-            # 2014, 2015, 2016, 2017, 2018, 2019, 2020
+            # 2013,
+
+            2014, 2015, 2016, 2017, 2018, 2019, 2020
         ]:
             print(year)
             for file in sorted(os.listdir("./data_dir/{}".format(year))):
