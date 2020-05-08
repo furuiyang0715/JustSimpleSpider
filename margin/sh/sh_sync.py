@@ -60,8 +60,6 @@ class ShSync(MarginBase):
 
         sys.exit(0)
 
-
-
         # 上交所融券卖出标的列表
         sql2 = '''select InnerCode from MT_TargetSecurities where TargetFlag = 1 and SecuMarket = 83 and TargetCategory = 20;'''
         ret2 = juyuan.select_all(sql2)
@@ -101,12 +99,6 @@ class ShSync(MarginBase):
         https://dd.gildata.com/#/tableShow/718/column///
         """
         juyuan = self._init_pool(self.juyuan_cfg)
-
-        # if self.type in ("sh", "sz"):
-        #     sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
-        # else:
-        #     sql = '''SELECT SecuCode,InnerCode from hk_secumain WHERE SecuCategory in (51, 3, 53, 78) and SecuMarket in (72) and ListedSector in (1, 2, 6, 7);'''
-
         # 8 是开放式基金
         sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2, 8) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
         ret = juyuan.select_all(sql)
