@@ -23,6 +23,7 @@ class SzListSpider(MarginBase):
         # 文件下载链接  eg. 2020-05-07 random.random
         # 'http://www.szse.cn/api/report/ShowReport?SHOWTYPE=xlsx&CATALOGID=1834_xxpl&txtDate=2020-05-08&random=0.5377421243834375&TABKEY=tab1'
         self.base_file_url = 'http://www.szse.cn/api/report/ShowReport?SHOWTYPE=xlsx&CATALOGID=1834_xxpl&txtDate={}&random={}&TABKEY=tab1'
+        self.inner_code_map = self.get_inner_code_map()
 
     def read_xls(self):
         wb = xlrd.open_workbook('/Users/furuiyang/gitzip/JustSimpleSpider/margin/融资融券标的证券信息0508.xlsx')
@@ -44,7 +45,7 @@ class SzListSpider(MarginBase):
             item['SecuMarket'] = 90  # 深交所
             secu_code = data[0]
             item['SecuCode'] = secu_code
-            # item['InnerCode'] = self.get_inner_code(secu_code)
+            item['InnerCode'] = self.get_inner_code(secu_code)
             item['SecuAbbr'] = data[1]
             item['SerialNumber'] = i
             # item['ListDate'] = list_date

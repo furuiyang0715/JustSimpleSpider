@@ -103,3 +103,29 @@ class MarginBase(object):
 
             sql_pool.end()
             return count
+
+    def get_inner_code(self, secu_code):
+        ret = self.inner_code_map.get(secu_code)
+        if not ret:
+            logger.warning("{} 不存在内部编码".format(secu_code))
+            # ret = "undefinded"
+            raise
+        return ret
+
+    def get_inner_code_map(self):
+        """
+        获取聚源内部编码映射表
+        https://dd.gildata.com/#/tableShow/27/column///
+        https://dd.gildata.com/#/tableShow/718/column///
+        """
+        juyuan = self._init_pool(self.juyuan_cfg)
+        # 8 是开放式基金
+        sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2, 8) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
+        ret = juyuan.select_all(sql)
+        juyuan.dispose()
+        info = {}
+        for r in ret:
+            key = r.get("SecuCode")
+            value = r.get('InnerCode')
+            info[key] = value
+        return info
