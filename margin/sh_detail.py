@@ -88,6 +88,7 @@ class DetailSpider(MarginBase):
         ret = self.inner_code_map.get(secu_code)
         if not ret:
             logger.warning("{} 不存在内部编码".format(secu_code))
+            # ret = "undefinded"
             raise
         return ret
 
@@ -150,7 +151,10 @@ class DetailSpider(MarginBase):
 
     def start(self):
         self._create_table()
-        for year in sorted(os.listdir("./data_dir")):
+        # for year in sorted(os.listdir("./data_dir")):
+        for year in [
+            # 2010,
+            2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]:
             print(year)
             for file in sorted(os.listdir("./data_dir/{}".format(year))):
                 dt = file.split(".")[0]
@@ -161,6 +165,8 @@ class DetailSpider(MarginBase):
                 print()
 
     def _start(self):
+        # 单独检查
+        self.read_xls(2010, 20101122)
 
         pass
 
@@ -169,4 +175,5 @@ if __name__ == "__main__":
     now = lambda: time.time()
     start_dt = now()
     DetailSpider().start()
+    # DetailSpider()._start()
     logger.info("耗时 {} 秒".format(now() - start_dt))
