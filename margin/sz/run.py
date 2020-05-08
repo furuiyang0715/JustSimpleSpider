@@ -41,6 +41,20 @@ class SzListSpider(MarginBase):
         # print(heads)
         # ['证券代码', '证券简称', '融资标的', '融券标的', '当日可融资', '当日可融券', '融券卖出价格限制']
 
+        fields = [
+            'SecuMarket',
+            'SecuCode',
+            'InnerCode',
+            'SecuAbbr',
+            'SerialNumber',
+            'ListDate',
+            'FinanceBool',     # 融资标的
+            'FinanceBuyToday',  # 当日可融资
+            'SecurityBool',   # 融券标的
+            'SecuritySellToday',  # 当日可融券
+            'SecuritySellLimit',  # 融券卖出价格限制
+        ]
+
         # list_date = datetime.datetime.strptime(str(dt), "%Y%m%d")
         for i in range(1, rows+1):
             data = detail.row_values(i)
@@ -89,7 +103,7 @@ class SzListSpider(MarginBase):
         """
         dt = dt.strftime("%Y-%m-%d")
         url = self.base_file_url.format(dt, random.random())
-        print(">>>>>>>", url)
+        # print(">>>>>>>", url)
         try:
             urlretrieve(url, "./data_dir/{}/{}.xlsx".format(self.year, dt), self.callbackfunc)
         except urllib.error.HTTPError:
@@ -101,10 +115,52 @@ class SzListSpider(MarginBase):
             raise Exception
 
     def load(self):
+        """下载历史文件信息"""
         dt = self.start_dt
         while dt <= self.end_dt:
             self.load_xlsx(dt)
             dt = dt + datetime.timedelta(days=1)
+
+    def _create_table(self):
+        """建表"""
+
+        # fields = [
+        #     'SecuMarket',
+        #     'SecuCode',
+        #     'InnerCode',
+        #     'SecuAbbr',
+        #     'SerialNumber',
+        #     'ListDate',
+        #     'FinanceBool',     # 融资标的
+        #     'FinanceBuyToday',  # 当日可融资
+        #     'SecurityBool',   # 融券标的
+        #     'SecuritySellToday',  # 当日可融券
+        #     'SecuritySellLimit',  # 融券卖出价格限制
+        # ]
+
+        sql = '''
+         CREATE TABLE IF NOT EXISTS `{}` (
+          `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+          `SecuMarket` int(11) DEFAULT NULL COMMENT '证券市场',
+          `InnerCode` int(11) NOT NULL COMMENT '证券内部编码',
+          `SecuCode` varchar(10) DEFAULT NULL COMMENT '证券代码',
+          `SecuAbbr` varchar(200) DEFAULT NULL COMMENT '证券简称',
+          `SerialNumber` int(10) DEFAULT NULL COMMENT '网站清单序列号',
+          `ListDate` datetime NOT NULL COMMENT '列入时间',
+          `FinanceBool` int NOT NULL COMMENT '融资标的 1是0否',
+          `FinanceBuyToday` int NOT NULL COMMENT '当日可融资 1是0否',
+          `SecurityBool` int NOT NULL COMMENT '融券标的 1是0否',
+          `SecuritySellToday` int NOT NULL COMMENT '当日可融券 1是0否',
+          `SecuritySellLimit` int NOT NULL COMMENT '融券卖出价格限制 1是0否',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `un2` (`SecuMarket`, `TargetCategory`,`ListDate`, `InnerCode`) USING BTREE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='深交所融资融券标的证券历史清单';
+        '''
+        spider = self._init_pool(self.spider_cfg)
+        spider.insert(sql)
+        spider.dispose()
 
     def start(self):
         self.load()
