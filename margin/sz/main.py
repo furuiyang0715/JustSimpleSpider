@@ -1,5 +1,6 @@
 import datetime
 import logging
+import sys
 import time
 from margin.base import MarginBase
 
@@ -77,78 +78,54 @@ class SzGener(MarginBase):
 
     def parse_announcemen_byhuman(self):
         """从公告中提取更改信息 """
+        target = self._init_pool(self.product_cfg)
 
         # # (1) http://www.szse.cn/disclosure/notice/general/t20200415_575996.html
-        # # 本所于2020年4月16日起将 000727 调出融资融券标的证券名单
+        # # 本所于2020年4月16日起将 南京华东电子信息科技股份有限公司股票（证券代码：000727）  调出融资融券标的证券名单
         # inner_code = self.get_inner_code('000727')
         # print(inner_code)    # 401
-        # '''
-        # mysql> select * from MT_TargetSecurities where InnerCode = '401';
-        # +--------------+------------+-----------+---------------------+---------------------+----------------+------------+------------------+---------------------+--------------+
-        # | ID           | SecuMarket | InnerCode | InDate              | OutDate             | TargetCategory | TargetFlag | ChangeReasonDesc | UpdateTime          | JSID         |
-        # +--------------+------------+-----------+---------------------+---------------------+----------------+------------+------------------+---------------------+--------------+
-        # | 619614010487 |         90 |       401 | 2019-08-19 00:00:00 | 2020-04-16 00:00:00 |             10 |          0 | NULL             | 2020-04-16 10:24:11 | 640347851196 |
-        # | 619614010510 |         90 |       401 | 2019-08-19 00:00:00 | 2020-04-16 00:00:00 |             20 |          0 | NULL             | 2020-04-16 10:24:11 | 640347851197 |
-        # +--------------+------------+-----------+---------------------+---------------------+----------------+------------+------------------+---------------------+--------------+
-        # 2 rows in set (0.04 sec)
-        # '''
 
  #        # (2） http://www.szse.cn/disclosure/notice/general/t20200428_576534.html
- #        # 本所于2020年4月29日起将 000536 调出融资融券标的证券名单
- #        target = self._init_pool(self.product_cfg)
+ #        # 本所于2020年4月29日起将 华映科技（集团）股份有限公司股票（证券代码：000536）  调出融资融券标的证券名单
  #        inner_code = self.get_inner_code("000536")   # 220
- #        '''
- #        mysql> select * from MT_TargetSecurities where InnerCode = '220';
- #        +--------------+------------+-----------+---------------------+---------+----------------+------------+------------------+---------------------+--------------+
- #        | ID           | SecuMarket | InnerCode | InDate              | OutDate | TargetCategory | TargetFlag | ChangeReasonDesc | UpdateTime          | JSID         |
- #        +--------------+------------+-----------+---------------------+---------+----------------+------------+------------------+---------------------+--------------+
- #        | 624019264531 |         90 |       220 | 2014-09-22 00:00:00 | NULL    |             10 |          1 | NULL             | 2019-10-10 10:41:01 | 624019264532 |
- #        | 624019264533 |         90 |       220 | 2014-09-22 00:00:00 | NULL    |             20 |          1 | NULL             | 2019-10-10 10:41:01 | 624019264534 |
- #        +--------------+------------+-----------+---------------------+---------+----------------+------------+------------------+---------------------+--------------+
- #        2 rows in set (0.01 sec)
- #        '''
  #        dt = datetime.datetime(2020, 4, 29)
  #        sql = '''update {} set OutDate = '{}', TargetFlag = 2 where SecuMarket = 90 and InnerCode = {}\
  # and TargetCategory in (10, 20) and TargetFlag = 1; '''.format(self.target_table_name, dt, inner_code)
  #        ret = target.update(sql)
- #        '''
- #        mysql> select * from MT_TargetSecurities where InnerCode = '220';
- #        +------+------------+-----------+---------------------+---------------------+----------------+------------+------------------+---------------------+---------------------+---------------------+
- #        | id   | SecuMarket | InnerCode | InDate              | OutDate             | TargetCategory | TargetFlag | ChangeReasonDesc | UpdateTime          | CREATETIMEJZ        | UPDATETIMEJZ        |
- #        +------+------------+-----------+---------------------+---------------------+----------------+------------+------------------+---------------------+---------------------+---------------------+
- #        | 6971 |         90 |       220 | 2014-09-22 00:00:00 | 2020-04-29 00:00:00 |             10 |          2 | NULL             | 2019-10-10 10:41:01 | 2020-05-07 14:42:48 | 2020-05-08 17:28:27 |
- #        | 6973 |         90 |       220 | 2014-09-22 00:00:00 | 2020-04-29 00:00:00 |             20 |          2 | NULL             | 2019-10-10 10:41:01 | 2020-05-07 14:42:48 | 2020-05-08 17:28:27 |
- #        +------+------------+-----------+---------------------+---------------------+----------------+------------+------------------+---------------------+---------------------+---------------------+
- #        2 rows in set (0.01 sec)
- #        '''
- #        try:
- #            target.dispose()
- #        except:
- #            pass
 
-        # # (3) http://www.szse.cn/disclosure/notice/general/t20200429_576572.html
-        # # 本所于2020年4月30日起将002176股票调出融资融券标的证券名单
-        # target = self._init_pool(self.product_cfg)
+        # (3) http://www.szse.cn/disclosure/notice/general/t20200429_576571.html
+        # 本所于2020年4月30日起将 苏州胜利精密制造科技股份有限公司股票（证券代码：002426） 调出融资融券标的证券名单。
+        # inner_code = self.get_inner_code('002426')
+        # # print(inner_code)   # 10476
         # dt = datetime.datetime(2020, 4, 30)
-        # inner_code = self.get_inner_code('002176')
-        # # print(inner_code)   # 6139
-        #
         # sql = '''update {} set OutDate = '{}', TargetFlag = 2 where SecuMarket = 90 and InnerCode = {}\
         # and TargetCategory in (10, 20) and TargetFlag = 1; '''.format(self.target_table_name, dt, inner_code)
         # ret = target.update(sql)
         # print(ret)
-        # target.dispose()
 
-        #
+        # (4) http://www.szse.cn/disclosure/notice/general/t20200429_576572.html
+        # 本所于2020年4月30日起将  江西特种电机股份有限公司股票（证券代码：002176） 调出融资融券标的证券名单
+        # dt = datetime.datetime(2020, 4, 30)
+        # inner_code = self.get_inner_code('002176')
+        # # print(inner_code)   # 6139
+        # sql = '''update {} set OutDate = '{}', TargetFlag = 2 where SecuMarket = 90 and InnerCode = {}\
+        # and TargetCategory in (10, 20) and TargetFlag = 1; '''.format(self.target_table_name, dt, inner_code)
+        # ret = target.update(sql)
+        # print(ret)
 
+        # # (5) http://www.szse.cn/disclosure/notice/general/t20200430_576649.html
+        # # 本所于2020年5月6日起将  深圳市奋达科技股份有限公司股票（证券代码：002681）  调出融资融券标的证券名单。
+        # dt = datetime.datetime(2020, 5, 6)
+        # inner_code = self.get_inner_code('002681')
+        # # print(inner_code)   # 16668
+        # sql = '''update {} set OutDate = '{}', TargetFlag = 2 where SecuMarket = 90 and InnerCode = {}\
+        # and TargetCategory in (10, 20) and TargetFlag = 1; '''.format(self.target_table_name, dt, inner_code)
+        # ret = target.update(sql)
+        # print(ret)
 
+        # (6)
 
-
-
-
-
-
-        pass
+        target.dispose()
 
     def start(self):
         # self._create_table()
