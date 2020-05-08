@@ -41,6 +41,11 @@
 - http://www.szse.cn/disclosure/margin/object/index.html 
 
 
+### 思路 
+聚源数据库的最后更新时间是 20200420 , 可以认为数据准确的时间定为 20200419。 
+对于深交所, 核对 20200419 的列表与点选 20200419 的是否符合。 
+
+
 
 ### sql 
 ```shell script
