@@ -1,5 +1,6 @@
 import datetime
 import logging
+import random
 import sys
 import urllib
 from urllib.request import urlretrieve
@@ -19,11 +20,14 @@ class SzListSpider(MarginBase):
         # api 接口
         # self.base_api_url = 'http://www.szse.cn/api/report/ShowReport/data?SHOWTYPE=JSON&CATALOGID=1834_xxpl&txtDate=2010-04-01&tab1PAGENO=1&random=0.483243785962155'
         # 有数据存在的起始时间
-        self.start_dt = datetime.datetime(2010, 3, 29)
+        # self.start_dt = datetime.datetime(2010, 3, 29)
         # 文件下载链接  eg. 2020-05-07 random.random
         # 'http://www.szse.cn/api/report/ShowReport?SHOWTYPE=xlsx&CATALOGID=1834_xxpl&txtDate=2020-05-08&random=0.5377421243834375&TABKEY=tab1'
         self.base_file_url = 'http://www.szse.cn/api/report/ShowReport?SHOWTYPE=xlsx&CATALOGID=1834_xxpl&txtDate={}&random={}&TABKEY=tab1'
         self.inner_code_map = self.get_inner_code_map()
+        self.year = 2020
+        self.start_dt = datetime.datetime(self.year, 1, 1)
+        self.end_dt = datetime.datetime(self.year, 12, 31)
 
     def read_xls(self):
         wb = xlrd.open_workbook('/Users/furuiyang/gitzip/JustSimpleSpider/margin/融资融券标的证券信息0508.xlsx')
@@ -63,42 +67,51 @@ class SzListSpider(MarginBase):
             # except:
             #     logger.warning("dispose error")
 
-    # def callbackfunc(self, blocknum, blocksize, totalsize):
-    #     """
-    #     回调函数
-    #     :param blocknum: 已经下载的数据块
-    #     :param blocksize:  数据块的大小
-    #     :param totalsize: 远程文件的大小
-    #     :return:
-    #     """
-    #     percent = 100.0 * blocknum * blocksize / totalsize
-    #     if percent > 100:
-    #         percent = 100
-    #     sys.stdout.write("\r%6.2f%%" % percent)
-    #     sys.stdout.flush()
-    #
-    # def load_xlsx(self, dt: datetime.datetime):
-    #     """
-    #     下载某一天的明细文件
-    #     :param dt: eg.20200506
-    #     :return:
-    #     """
-    #     dt = dt.strftime("%Y%m%d")
-    #     url = self.csv_url.format(dt)
-    #     # print(">>>>>>>", url)
-    #     try:
-    #         urlretrieve(url, "./data_dir/{}/{}.xls".format(self.year, dt), self.callbackfunc)
-    #     except urllib.error.HTTPError:
-    #         logger.warning("不存在这一天的数据{}".format(dt))
-    #     except TimeoutError:
-    #         logger.warning("超时 {} ".format(dt))
-    #     except Exception as e:
-    #         logger.warning("下载失败 : {}".format(e))
-    #         raise Exception
+    def callbackfunc(self, blocknum, blocksize, totalsize):
+        """
+        回调函数
+        :param blocknum: 已经下载的数据块
+        :param blocksize:  数据块的大小
+        :param totalsize: 远程文件的大小
+        :return:
+        """
+        percent = 100.0 * blocknum * blocksize / totalsize
+        if percent > 100:
+            percent = 100
+        sys.stdout.write("\r%6.2f%%" % percent)
+        sys.stdout.flush()
+
+    def load_xlsx(self, dt: datetime.datetime):
+        """
+        下载某一天的明细文件
+        :param dt: eg.20200506
+        :return:
+        """
+        dt = dt.strftime("%Y-%m-%d")
+        url = self.base_file_url.format(dt, random.random())
+        print(">>>>>>>", url)
+        try:
+            urlretrieve(url, "./data_dir/{}/{}.xlsx".format(self.year, dt), self.callbackfunc)
+        except urllib.error.HTTPError:
+            logger.warning("不存在这一天的数据{}".format(dt))
+        except TimeoutError:
+            logger.warning("超时 {} ".format(dt))
+        except Exception as e:
+            logger.warning("下载失败 : {}".format(e))
+            raise Exception
+
+    def load(self):
+        dt = self.start_dt
+        while dt <= self.end_dt:
+            self.load_xlsx(dt)
+            dt = dt + datetime.timedelta(days=1)
+
+    def start(self):
+        self.load()
+
+
+        pass
 
 
 if __name__ == "__main__":
-    SzListSpider().read_xls()
-
-
-    pass
+    SzListSpider().start()
