@@ -154,12 +154,16 @@ class DetailSpider(MarginBase):
         # for year in sorted(os.listdir("./data_dir")):
         for year in [
             # 2010,
-            2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]:
+            # 2011, 2012,
+            2013,
+            # 2014, 2015, 2016, 2017, 2018, 2019, 2020
+        ]:
             print(year)
             for file in sorted(os.listdir("./data_dir/{}".format(year))):
                 dt = file.split(".")[0]
                 print(dt)
-                self.read_xls(year, dt)
+                if int(dt) >= 20131129:
+                    self.read_xls(year, dt)
                 print()
                 print()
                 print()

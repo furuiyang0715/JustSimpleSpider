@@ -1,7 +1,9 @@
 import datetime
 import logging
+import os
 import random
 import sys
+import time
 import urllib
 from urllib.request import urlretrieve
 
@@ -28,17 +30,51 @@ class SzListSpider(MarginBase):
         self.year = 2020
         self.start_dt = datetime.datetime(self.year, 1, 1)
         self.end_dt = datetime.datetime(self.year, 12, 31)
+        self.history_table_name = 'sz_margin_history'
+        # 存在历史数据的文件夹
+        self.data_dir = '/Users/furuiyang/gitzip/JustSimpleSpider/margin/sz/data_dir'
 
-    def read_xls(self):
-        wb = xlrd.open_workbook('/Users/furuiyang/gitzip/JustSimpleSpider/margin/融资融券标的证券信息0508.xlsx')
+    def read(self):
+        """将历史数据存入数据库 """
+        # years = sorted(os.listdir(self.data_dir))
+        # print(years)   # ['2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020']
+
+        error_list = []
+        for year in sorted(os.listdir(self.data_dir)):
+        # for year in ['2010', '2011',]:
+            print(year)
+            year_dir = os.path.join(self.data_dir, year)
+            for file in sorted(os.listdir(year_dir)):
+                # print(file)
+                dt = file.split(".")[0]
+                dt = datetime.datetime.strptime(dt, "%Y-%m-%d")
+                file_path = os.path.join(year_dir, file)
+                print(dt, file_path)
+                try:
+                    self.read_xls(file_path, dt)
+                except:
+                    error_list.append(dt)
+                print()
+                print()
+                print()
+
+        print(error_list)
+
+    def read_xls(self, file: str, dt: datetime.datetime):
+        """
+        读取单个时间点的文件
+        :param file: 文件路径
+        :param dt: 文件对应的日期
+        :return:
+        """
+        wb = xlrd.open_workbook(file)
         detail = wb.sheet_by_name("融资融券标的证券信息")
-        # 总数据量
+
         rows = detail.nrows - 1
         # print("总数据量 {}".format(rows))
 
-        # 表头信息
         heads = detail.row_values(0)
-        # print(heads)
+        # print("表头信息", heads)
         # ['证券代码', '证券简称', '融资标的', '融券标的', '当日可融资', '当日可融券', '融券卖出价格限制']
 
         fields = [
@@ -56,6 +92,7 @@ class SzListSpider(MarginBase):
         ]
 
         # list_date = datetime.datetime.strptime(str(dt), "%Y%m%d")
+        items = []
         for i in range(1, rows+1):
             data = detail.row_values(i)
             # print(data)
@@ -66,20 +103,21 @@ class SzListSpider(MarginBase):
             item['InnerCode'] = self.get_inner_code(secu_code)
             item['SecuAbbr'] = data[1]
             item['SerialNumber'] = i
-            # item['ListDate'] = list_date
+            item['ListDate'] = dt
             item['FinanceBool'] = 1 if data[2] == "Y" else 0    # 融资标的
             item['FinanceBuyToday'] = 1 if data[4] == "Y" else 0  # 当日可融资
             item['SecurityBool'] = 1 if data[3] == 'Y' else 0  # 融券标的
             item['SecuritySellToday'] = 1 if data[5] == "Y" else 0  # 当日可融券
             item['SecuritySellLimit'] = 1 if data[6] == "Y" else 0  # 融券卖出价格限制
-            print(item)
+            items.append(item)
 
-            # client = self._init_pool(self.spider_cfg)
-            # self._save(client, item, self.detail_table_name, fields)
-            # try:
-            #     client.dispose()
-            # except:
-            #     logger.warning("dispose error")
+        client = self._init_pool(self.spider_cfg)
+        for item in items:
+            self._save(client, item, self.history_table_name, fields)
+        try:
+            client.dispose()
+        except:
+            logger.warning("dispose error")
 
     def callbackfunc(self, blocknum, blocksize, totalsize):
         """
@@ -155,19 +193,23 @@ class SzListSpider(MarginBase):
           `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
           `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           PRIMARY KEY (`id`),
-          UNIQUE KEY `un2` (`SecuMarket`, `TargetCategory`,`ListDate`, `InnerCode`) USING BTREE
+          UNIQUE KEY `un2` (`ListDate`, `InnerCode`) USING BTREE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='深交所融资融券标的证券历史清单';
-        '''
+        '''.format(self.history_table_name)
         spider = self._init_pool(self.spider_cfg)
         spider.insert(sql)
         spider.dispose()
 
     def start(self):
-        self.load()
+        self._create_table()
 
+        # self.load()
 
-        pass
+        self.read()
 
 
 if __name__ == "__main__":
+    now = lambda: time.time()
+    start_dt = now()
     SzListSpider().start()
+    logger.info("耗时: {}".format(now() - start_dt))
