@@ -1,8 +1,10 @@
 import datetime
 import json
 import logging
+import os
 import pprint
 import sys
+import time
 import urllib
 from urllib.request import urlretrieve
 import requests
@@ -99,7 +101,7 @@ class DetailSpider(MarginBase):
           `SecuAbbr` varchar(200) DEFAULT NULL COMMENT '证券简称',
           `SerialNumber` int(10) DEFAULT NULL COMMENT '网站清单序列号',
           `ListDate` datetime NOT NULL COMMENT '列入时间',
-          `TargetCategory` int(11) NOT NULL COMMENT '标的类别',
+          `TargetCategory` int(11) DEFAULT NULL COMMENT '标的类别',
           `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
           `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           PRIMARY KEY (`id`),
@@ -109,7 +111,6 @@ class DetailSpider(MarginBase):
         spider = self._init_pool(self.spider_cfg)
         spider.insert(sql)
         spider.dispose()
-
 
     def read_xls(self, year, dt):
         wb = xlrd.open_workbook('./data_dir/{}/{}.xls'.format(year, dt))
@@ -125,6 +126,7 @@ class DetailSpider(MarginBase):
         # 数据
         items = []
         list_date = datetime.datetime.strptime(str(dt), "%Y%m%d")
+        fields = ["SecuMarket", "InnerCode", 'SecuCode', 'SecuAbbr', 'SerialNumber', 'ListDate', 'TargetCategory', ]
         for i in range(1, rows+1):
             data = detail.row_values(i)
             item = dict()
@@ -137,15 +139,34 @@ class DetailSpider(MarginBase):
             item['ListDate'] = list_date
             item['TargetCategory'] = None
             # print(data)
-            print(item)
-            # self._save()
+            # print(item)
+            client = self._init_pool(self.spider_cfg)
+            self._save(client, item, self.detail_table_name, fields)
             items.append(item)
+            try:
+                client.dispose()
+            except:
+                logger.warning("dispose error")
 
     def start(self):
-        self.read_xls(2020, 20200430)
+        self._create_table()
+        for year in sorted(os.listdir("./data_dir")):
+            print(year)
+            for file in sorted(os.listdir("./data_dir/{}".format(year))):
+                dt = file.split(".")[0]
+                print(dt)
+                self.read_xls(year, dt)
+                print()
+                print()
+                print()
+
+    def _start(self):
 
         pass
 
 
 if __name__ == "__main__":
+    now = lambda: time.time()
+    start_dt = now()
     DetailSpider().start()
+    logger.info("耗时 {} 秒".format(now() - start_dt))
