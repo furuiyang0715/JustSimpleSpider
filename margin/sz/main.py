@@ -3,7 +3,7 @@ import logging
 import sys
 import time
 from margin.base import MarginBase
-from margin.configs import LOCAL
+from margin.configs import LOCAL, FIRST
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -210,6 +210,9 @@ class SzGener(MarginBase):
 
         to_add_set, to_delete_set = self.history_diff(dt1, dt2)
         logger.info("{} 和 {} 的 diff 结果: add: {} , delete: {}".format(dt1, dt2, to_add_set, to_delete_set))
+        local_str = "本地" if LOCAL else "远程"
+        msg = "{}: 融资融券标的变更记录生成: {} 和 {} 的 diff 结果: add: {} , delete: {}".format(local_str, dt1, dt2, to_add_set, to_delete_set)
+        self.ding(msg)
         if to_add_set:
             for inner_code in to_add_set:
                 # 在 dt1 增加 2 条 in 的记录
@@ -258,11 +261,10 @@ class SzGener(MarginBase):
             self._create_table()
 
         # 将聚源数据库的数据导出
-        self.load_juyuan()
-        logger.info("已经导出聚源数据库")
-
-        # 手动解析 TODO
-        # self.parse_announcemen_byhuman()
+        if FIRST:
+            self.load_juyuan()
+            logger.info("已经导出聚源数据库") 
+            self.parse_announcemen_byhuman()
 
         _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
         _yester_day = _today - datetime.timedelta(days=1)
