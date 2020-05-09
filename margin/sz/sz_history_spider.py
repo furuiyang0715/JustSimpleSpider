@@ -260,3 +260,23 @@ if __name__ == '__main__':
     except Exception as e:
         logger.info(f"本次任务执行出错{e}")
         sys.exit(0)
+
+
+'''部署 
+docker build -f Dockerfile_szhistory -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sz_history:v1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sz_history:v1 
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sz_history:v1 
+
+# remote 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
+--env LOCAL=0 \
+--name sz_history \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sz_history:v1  
+
+# local
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
+--env LOCAL=0 \
+--name sz_history \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sz_history:v1  
+
+'''
