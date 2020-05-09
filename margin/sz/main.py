@@ -206,6 +206,7 @@ class SzGener(MarginBase):
         target = self._init_pool(self.product_cfg)
 
         to_add_set, to_delete_set = self.history_diff(dt1, dt2)
+        logger.info("{} 和 {} 的 diff 结果: add: {} , delete: {}".format(dt1, dt2, to_add_set, to_delete_set))
         if to_add_set:
             for inner_code in to_add_set:
                 # 在 dt1 增加 2 条 in 的记录
@@ -232,12 +233,21 @@ class SzGener(MarginBase):
                 self._save(target, item1, self.target_table_name, fields)
                 self._save(target, item2, self.target_table_name, fields)
 
+        base_sql = '''update {} set OutDate = '{}', TargetFlag = 2 where SecuMarket = 90 and InnerCode = {}\
+        and TargetCategory in (10, 20) and TargetFlag = 1; '''
+
         if to_delete_set:
             for inner_code in to_delete_set:
                 # 在 dt1 update 进 2 条 out 的记录
-                
+                sql = base_sql.format(self.target_table_name, dt1, inner_code)
+                ret = target.update(sql)
+                logger.info("更新的记录条数是 {}".format(ret))
 
-                pass
+        try:
+            target.dispose()
+        except:
+            logger.warning("dispose error")
+            raise
 
     def start(self):
         # self._create_table()
