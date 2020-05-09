@@ -101,6 +101,8 @@ class SzGener(MarginBase):
         sql = '''update {} set OutDate = '{}', TargetFlag = 2 where SecuMarket = 90 and InnerCode = {}\
  and TargetCategory in (10, 20) and TargetFlag = 1; '''.format(self.target_table_name, dt, inner_code)
         ret = target.update(sql)
+        print(ret)
+        target.end()
 
         # (3) http://www.szse.cn/disclosure/notice/general/t20200429_576571.html
         # 本所于2020年4月30日起将 苏州胜利精密制造科技股份有限公司股票（证券代码：002426） 调出融资融券标的证券名单。
@@ -111,6 +113,7 @@ class SzGener(MarginBase):
         and TargetCategory in (10, 20) and TargetFlag = 1; '''.format(self.target_table_name, dt, inner_code)
         ret = target.update(sql)
         print(ret)
+        target.end()
 
         # (4) http://www.szse.cn/disclosure/notice/general/t20200429_576572.html
         # 本所于2020年4月30日起将  江西特种电机股份有限公司股票（证券代码：002176） 调出融资融券标的证券名单
@@ -121,6 +124,7 @@ class SzGener(MarginBase):
         and TargetCategory in (10, 20) and TargetFlag = 1; '''.format(self.target_table_name, dt, inner_code)
         ret = target.update(sql)
         print(ret)
+        target.end()
 
         # # (5) http://www.szse.cn/disclosure/notice/general/t20200430_576649.html
         # # 本所于2020年5月6日起将  深圳市奋达科技股份有限公司股票（证券代码：002681）  调出融资融券标的证券名单。
@@ -131,6 +135,7 @@ class SzGener(MarginBase):
         and TargetCategory in (10, 20) and TargetFlag = 1; '''.format(self.target_table_name, dt, inner_code)
         ret = target.update(sql)
         print(ret)
+        target.end()
 
         # # (6) http://www.szse.cn/disclosure/notice/general/t20200430_576648.html
         # # 本所于2020年5月6日起将 大连晨鑫网络科技股份有限公司股票（证券代码：002447） 调出融资融券标的证券名单
@@ -140,6 +145,7 @@ class SzGener(MarginBase):
         sql = base_sql.format(self.target_table_name, dt, inner_code)
         ret = target.update(sql)
         print(ret)
+        target.end()
 
         # (7) http://www.szse.cn/disclosure/notice/general/t20200430_576646.html
         # 本所于2020年5月6日起将 藏格控股股份有限公司股票（证券代码：000408） 调出融资融券标的证券名单。
@@ -149,6 +155,7 @@ class SzGener(MarginBase):
         sql = base_sql.format(self.target_table_name, dt, inner_code)
         ret = target.update(sql)
         print(ret)
+        target.end()
 
         # (8) http://www.szse.cn/disclosure/notice/general/t20200430_576647.html
         # 本所于2020年5月6日起将该 深圳市同洲电子股份有限公司股票（证券代码：002052） 调出融资融券标的证券名单。
@@ -158,6 +165,7 @@ class SzGener(MarginBase):
         sql = base_sql.format(self.target_table_name, dt, inner_code)
         ret = target.update(sql)
         print(ret)
+        target.end()
 
         try:
             target.dispose()
