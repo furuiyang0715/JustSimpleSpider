@@ -109,6 +109,7 @@ class SzListSpider(MarginBase):
             item['SecurityBool'] = 1 if data[3] == 'Y' else 0  # 融券标的
             item['SecuritySellToday'] = 1 if data[5] == "Y" else 0  # 当日可融券
             item['SecuritySellLimit'] = 1 if data[6] == "Y" else 0  # 融券卖出价格限制
+            # print(item)
             items.append(item)
 
         client = self._init_pool(self.spider_cfg)
@@ -118,6 +119,9 @@ class SzListSpider(MarginBase):
             client.dispose()
         except:
             logger.warning("dispose error")
+            raise
+
+        return True
 
     def callbackfunc(self, blocknum, blocksize, totalsize):
         """
@@ -141,9 +145,10 @@ class SzListSpider(MarginBase):
         """
         dt = dt.strftime("%Y-%m-%d")
         url = self.base_file_url.format(dt, random.random())
-        # print(">>>>>>>", url)
+        file_path = "./data_dir/{}.xlsx".format(dt)
         try:
-            urlretrieve(url, "./data_dir/{}/{}.xlsx".format(self.year, dt), self.callbackfunc)
+            # urlretrieve(url, "./data_dir/{}/{}.xlsx".format(self.year, dt), self.callbackfunc)
+            urlretrieve(url, file_path, self.callbackfunc)
         except urllib.error.HTTPError:
             logger.warning("不存在这一天的数据{}".format(dt))
         except TimeoutError:
@@ -151,6 +156,8 @@ class SzListSpider(MarginBase):
         except Exception as e:
             logger.warning("下载失败 : {}".format(e))
             raise Exception
+        else:
+            return file_path
 
     def load(self):
         """下载历史文件信息"""
@@ -207,9 +214,32 @@ class SzListSpider(MarginBase):
 
         self.read()
 
+    def crawl(self):
+        # （1）建表
+        self._create_table()
+
+        # (2) 下载昨天和前天的数据文件
+        _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
+
+        _yester_day = _today - datetime.timedelta(days=1)
+        print(_yester_day)
+
+        _before_yester_day = _today - datetime.timedelta(days=2)
+        print(_before_yester_day)
+
+        _yester_file = self.load_xlsx(_yester_day)
+        print(">>>> ")
+        _before_yester_day_file = self.load_xlsx(_before_yester_day)
+        print("<<<<")
+
+        # (3) 将数据存入数据库
+        save_ret1 = self.read_xls(_yester_file, _yester_day)
+        save_ret2 = self.read_xls(_before_yester_day_file, _before_yester_day)
+        logger.info("入库结果: {} >>> {}, {} >>> {}".format(_yester_day, save_ret1, _before_yester_day, save_ret2))
+
 
 if __name__ == "__main__":
     now = lambda: time.time()
     start_dt = now()
-    SzListSpider().start()
+    SzListSpider().crawl()
     logger.info("耗时: {}".format(now() - start_dt))
