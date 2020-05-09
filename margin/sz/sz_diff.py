@@ -173,27 +173,33 @@ class SzGener(MarginBase):
             logger.info("dispose error")
             raise
         
-    def dt_datas(self, dt1):
+    def dt_datas(self, dt1, type):
         """获取爬虫库中某一天的历史数据"""
         spider = self._init_pool(self.spider_cfg)
         sql_dt = '''select max(ListDate) as mx from {} where ListDate <= '{}'; '''.format(self.sz_history_table_name, dt1)
         dt1_ = spider.select_one(sql_dt).get("mx")
-        sql = '''select InnerCode from {} where ListDate = '{}' and  FinanceBool = 1; '''.format(self.sz_history_table_name, dt1_)  # TODO and FinanceBuyToday = 1
+        if type == 1:    # 融资
+            sql = '''select InnerCode from {} where ListDate = '{}' and  FinanceBool = 1; '''.format(self.sz_history_table_name, dt1_)  # TODO and FinanceBuyToday = 1
+        elif type == 2:   # 融券
+            sql = '''select InnerCode from {} where ListDate = '{}' and  SecurityBool = 1; '''.format(self.sz_history_table_name, dt1_)
+        else:
+            raise
         ret1 = spider.select_all(sql)
         ret1 = sorted(set([r.get("InnerCode") for r in ret1]))
         return ret1
         
-    def history_diff(self, dt1, dt2):
+    def history_diff(self, dt1, dt2, type=1):
         """
         将历史数据中某两天的数据进行 diff
         dt1 是变更发生的时间 
-        dt2 是变更发生的前一天 
+        dt2 是变更发生的前一天
+        type: 1 是融资 2 是融券
         """
         
-        data1 = self.dt_datas(dt1)
+        data1 = self.dt_datas(dt1, type)
         data1 = set(sorted(data1))
 
-        data2 = self.dt_datas(dt2)
+        data2 = self.dt_datas(dt2, type)
         data2 = set(sorted(data2))
         
         to_add_set = data1 - data2 
@@ -204,67 +210,70 @@ class SzGener(MarginBase):
         
         return to_add_set, to_delete_set
     
-    def gene_records(self, dt1, dt2):
+    def gene_records(self, dt1, dt2, type):
         """
-        生成数据库的一条变更记录
+        生成数据库的一条 "融资" 变更记录
         dt1 是较大的时间点
         dt2 是较小的时间点 是 dt1 的前一天
         """
         #  id | SecuMarket | InnerCode | InDate              | OutDate | TargetCategory | TargetFlag | ChangeReasonDesc | UpdateTime          | CREATETIMEJZ        | UPDATETIMEJZ
         fields = ["SecuMarket", "InnerCode", "InDate", "OutDate", "TargetCategory", "TargetFlag", "ChangeReasonDesc"]
 
-        item = {"SecuMarket": 90,
-                # "InnerCode": '',
-                # "InDate": '',
-                # 'OutDate': '',
-                # 'TargetCategory': '',   # 10 和 20
-                # 'TargetFlag': '',
-                'ChangeReasonDesc': '',
-                'UpdateTime': datetime.datetime.now(),
-                }
+        # item = {"SecuMarket": 90,
+        #         # "InnerCode": '',
+        #         # "InDate": '',
+        #         # 'OutDate': '',
+        #         # 'TargetCategory': '',   # 10 和 20
+        #         # 'TargetFlag': '',
+        #         'ChangeReasonDesc': '',
+        #         'UpdateTime': datetime.datetime.now(),
+        #         }
 
         target = self._init_pool(self.product_cfg)
 
-        to_add_set, to_delete_set = self.history_diff(dt1, dt2)
+        to_add_set, to_delete_set = self.history_diff(dt1, dt2, type)
         logger.info("{} 和 {} 的 diff 结果: add: {} , delete: {}".format(dt1, dt2, to_add_set, to_delete_set))
         local_str = "本地" if LOCAL else "远程"
-        msg = "{}: 融资融券标的变更记录生成: {} 和 {} 的 diff 结果: add: {} , delete: {}".format(local_str, dt1, dt2, to_add_set, to_delete_set)
-        self.ding(msg)
+        type_str = "融资" if type == 1 else "融券"
+        msg = "{}:{} 变更记录生成: {} 和 {} 的 diff 结果: add: {} , delete: {}".format(local_str, type_str, dt1, dt2, to_add_set, to_delete_set)
+
         if to_add_set:
             for inner_code in to_add_set:
-                # 在 dt1 增加 2 条 in 的记录
-                item1 = {
-                    "SecuMarket": 90,
-                    "InnerCode": inner_code,
-                    "InDate": dt1,
-                    'TargetCategory': 10,
-                    'TargetFlag': 1,
-                    'ChangeReasonDesc': '',
-                    'UpdateTime': datetime.datetime.now(),
-                }
+                if type == 1:
+                    item = {
+                        "SecuMarket": 90,
+                        "InnerCode": inner_code,
+                        "InDate": dt1,
+                        'TargetCategory': 10,
+                        'TargetFlag': 1,
+                        'ChangeReasonDesc': '',
+                        'UpdateTime': datetime.datetime.now(),
+                    }
+                else:
+                    item = {
+                        "SecuMarket": 90,
+                        "InnerCode": inner_code,
+                        "InDate": dt1,
+                        'TargetCategory': 20,
+                        'TargetFlag': 1,
+                        'ChangeReasonDesc': '',
+                        'UpdateTime': datetime.datetime.now(),
+                    }
+                count = self._save(target, item, self.target_table_name, fields)
+                logger.info("type: {}, add 记录条数 {}".format(type, count))
 
-                item2 = {
-                    "SecuMarket": 90,
-                    "InnerCode": inner_code,
-                    "InDate": dt1,
-                    'TargetCategory': 20,
-                    'TargetFlag': 1,
-                    'ChangeReasonDesc': '',
-                    'UpdateTime': datetime.datetime.now(),
-                }
-
-                self._save(target, item1, self.target_table_name, fields)
-                self._save(target, item2, self.target_table_name, fields)
-
-        base_sql = '''update {} set OutDate = '{}', TargetFlag = 2 where SecuMarket = 90 and InnerCode = {}\
-        and TargetCategory in (10, 20) and TargetFlag = 1; '''
+        if type == 1:
+            base_sql = '''update {} set OutDate = '{}', TargetFlag = 2 where SecuMarket = 90 and InnerCode = {}\
+            and TargetCategory = 10  and TargetFlag = 1; '''
+        else:
+            base_sql = '''update {} set OutDate = '{}', TargetFlag = 2 where SecuMarket = 90 and InnerCode = {}\
+            and TargetCategory = 20  and TargetFlag = 1; '''
 
         if to_delete_set:
             for inner_code in to_delete_set:
-                # 在 dt1 update 进 2 条 out 的记录
                 sql = base_sql.format(self.target_table_name, dt1, inner_code)
                 ret = target.update(sql)
-                logger.info("更新的记录条数是 {}".format(ret))
+                logger.info("type: {}, update 记录条数是 {}".format(type, ret))
 
         try:
             target.dispose()
@@ -272,7 +281,11 @@ class SzGener(MarginBase):
             logger.warning("dispose error")
             raise
 
+        # self.ding(msg)
+        return msg
+
     def start(self):
+        msg = ''
         # 建表[远程没有建表的权限]
         if LOCAL:
             self._create_table()
@@ -290,7 +303,70 @@ class SzGener(MarginBase):
         # print(_yester_day)
         # print(_before_yester_day)
 
-        self.gene_records(_yester_day, _before_yester_day)
+        logger.info("开始处理融资数据")
+        msg += self.gene_records(_yester_day, _before_yester_day, 1)
+
+        msg += '\n'
+
+        logger.info("开始处理融券数据")
+        msg += self.gene_records(_yester_day, _before_yester_day, 2)
+
+        msg += '\n\n'
+        msg += self.monitor()
+
+        # print(msg)
+        self.ding(msg)
+
+    def monitor(self):
+        """用来校对数据的一致性"""
+        _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
+
+        def check1():
+            # 融资
+            latest_list_spider = self.dt_datas(_today, 1)
+            latest_list_spider = set(sorted(latest_list_spider))
+
+            target = self._init_pool(self.product_cfg)
+            sql = 'select InnerCode from {} where SecuMarket = 90 and TargetFlag = 1 and  TargetCategory = 10; '.format(self.target_table_name)
+            ret = target.select_all(sql)
+
+            dc_list = set(sorted([r.get("InnerCode") for r in ret]))
+
+            r1 = dc_list - latest_list_spider
+            r2 = latest_list_spider - dc_list
+            '''
+            {204806}
+            set()
+            '''
+            # delete  from stk_mttargetsecurities where InnerCode = '204806';
+            msg = "融资一致性 check : dc_list - latest_list_spider >> {},latest_list_spider - dc_list>>{}".format(r1, r2)
+            logger.info(msg)
+            return msg
+
+        def check2():
+            # 融券
+            latest_list_spider = self.dt_datas(_today, 2)
+            latest_list_spider = set(sorted(latest_list_spider))
+
+            target = self._init_pool(self.product_cfg)
+            sql = 'select InnerCode from {} where SecuMarket = 90 and TargetFlag = 1 and  TargetCategory = 20; '.format(
+                self.target_table_name)
+            ret = target.select_all(sql)
+
+            dc_list = set(sorted([r.get("InnerCode") for r in ret]))
+
+            r1 = dc_list - latest_list_spider
+            r2 = latest_list_spider - dc_list
+            msg = "融券一致性 check : dc_list - latest_list_spider >> {},latest_list_spider - dc_list>>{}".format(r1, r2)
+            logger.info(msg)
+            return msg
+
+        msg = ''
+        msg += check1()
+        msg += "\n"
+        msg += check2()
+        # print(msg)
+        return msg
 
 
 def diff_task():
@@ -316,6 +392,12 @@ if __name__ == "__main__":
         logger.info(f"本次任务执行出错{e}")
         sys.exit(0)
 
+
+# if __name__ == "__main__":
+#     diff_task()
+#
+#     # SzGener().monitor()
+#     pass
 
 '''部署 
 docker build -f Dockerfile_szdiff -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sz_diff:v1 .
