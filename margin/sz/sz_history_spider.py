@@ -8,8 +8,9 @@ import urllib
 from urllib.request import urlretrieve
 
 import xlrd
-from apscheduler.schedulers.blocking import BlockingScheduler
 
+sys.path.append('./../')
+from apscheduler.schedulers.blocking import BlockingScheduler
 from margin.base import MarginBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -146,7 +147,9 @@ class SzListSpider(MarginBase):
         """
         dt = dt.strftime("%Y-%m-%d")
         url = self.base_file_url.format(dt, random.random())
-        file_path = "./data_dir/{}.xlsx".format(dt)
+        # 获取当前执行文件的绝对路径的切割 
+        dirname, filename = os.path.split(os.path.abspath(__file__))
+        file_path = os.path.join(dirname, "./data_dir/{}.xlsx".format(dt))
         try:
             # urlretrieve(url, "./data_dir/{}/{}.xlsx".format(self.year, dt), self.callbackfunc)
             urlretrieve(url, file_path, self.callbackfunc)
@@ -275,7 +278,7 @@ registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sz_history:v1
 
 # local
 sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
---env LOCAL=0 \
+--env LOCAL=1 \
 --name sz_history \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sz_history:v1  
 

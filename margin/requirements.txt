@@ -1,0 +1,7 @@
+demjson==2.2.4
+xlrd==1.2.0
+lxml==4.5.0
+PyMySQL==0.9.3
+APScheduler==3.6.3
+requests==2.23.0
+DBUtils==1.3
