@@ -170,6 +170,6 @@ class MarginBase(object):
         message_json = json.dumps(message)
         resp = requests.post(url=url, data=message_json, headers=header)
         if resp.status_code == 200:
-            pass
+            logger.info("钉钉发送消息成功: {}".format(msg))
         else:
             logger.warning("钉钉消息发送失败")
