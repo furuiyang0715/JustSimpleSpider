@@ -53,7 +53,6 @@ class Checker(MarginBase):
         print(set(ret2) - set(ret1))    # set()
 
     def dt_datas(self, dt1):
-        # 4.15 与 4.18 相比
         spider = self._init_pool(self.spider_cfg)
         sql_dt = '''select max(ListDate) as mx from {} where ListDate <= '{}'; '''.format(self.sz_history_table_name, dt1)
         dt1_ = spider.select_one(sql_dt).get("mx")
