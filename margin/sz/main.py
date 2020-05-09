@@ -1,7 +1,12 @@
 import datetime
 import logging
+import os
 import sys
 import time
+
+from apscheduler.schedulers.blocking import BlockingScheduler
+
+sys.path.append('./../')
 from margin.base import MarginBase
 from margin.configs import LOCAL, FIRST
 
@@ -154,7 +159,11 @@ class SzGener(MarginBase):
         ret = target.update(sql)
         print(ret)
 
-        target.dispose()
+        try:
+            target.dispose()
+        except:
+            logger.info("dispose error")
+            raise
         
     def dt_datas(self, dt1):
         """获取爬虫库中某一天的历史数据"""
@@ -263,7 +272,7 @@ class SzGener(MarginBase):
         # 将聚源数据库的数据导出
         if FIRST:
             self.load_juyuan()
-            logger.info("已经导出聚源数据库") 
+            logger.info("已经导出聚源数据库")
             self.parse_announcemen_byhuman()
 
         _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
@@ -276,8 +285,26 @@ class SzGener(MarginBase):
         self.gene_records(_yester_day, _before_yester_day)
 
 
-if __name__ == "__main__":
+def diff_task():
+    """对比两天清单差异的任务"""
     now = lambda: time.time()
     start_time = now()
     SzGener().start()
     logger.info(f"用时: {now() - start_time} 秒")    # (end)大概是 80s (dispose)大概是 425s
+
+
+if __name__ == "__main__":
+    scheduler = BlockingScheduler()
+    # 确保重启时可以执行一次
+    diff_task()
+
+    scheduler.add_job(diff_task, 'cron', hour='16, 23', max_instances=10, id="diff_task")
+    logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
+    try:
+        scheduler.start()
+    except (KeyboardInterrupt, SystemExit):
+        pass
+    except Exception as e:
+        logger.info(f"本次任务执行出错{e}")
+        sys.exit(0)
+
