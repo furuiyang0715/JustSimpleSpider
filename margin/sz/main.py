@@ -13,8 +13,8 @@ class SzGener(MarginBase):
         self.juyuan_table_name = 'MT_TargetSecurities'
         self.target_table_name = 'MT_TargetSecurities'
         # 爬虫库
-        self.spider_table_name = 'targetsecurities'
         self.inner_code_map = self.get_inner_code_map()
+        self.sz_history_table_name = 'sz_margin_history' 
 
         # 深交所的公告页
         self.announcemen_web = 'http://www.szse.cn/disclosure/margin/business/index.html'
@@ -154,6 +154,45 @@ class SzGener(MarginBase):
         # print(ret)
 
         target.dispose()
+        
+    def dt_datas(self, dt1):
+        """获取爬虫库中某一天的历史数据"""
+        spider = self._init_pool(self.spider_cfg)
+        sql_dt = '''select max(ListDate) as mx from {} where ListDate <= '{}'; '''.format(self.sz_history_table_name, dt1)
+        dt1_ = spider.select_one(sql_dt).get("mx")
+        sql = '''select InnerCode from {} where ListDate = '{}' and  FinanceBool = 1; '''.format(self.sz_history_table_name, dt1_)  # TODO and FinanceBuyToday = 1
+        ret1 = spider.select_all(sql)
+        ret1 = sorted(set([r.get("InnerCode") for r in ret1]))
+        return ret1
+        
+    def history_diff(self, dt1, dt2):
+        """
+        将历史数据中某两天的数据进行 diff
+        dt1 是变更发生的时间 
+        dt2 是变更发生的前一天 
+        """
+        
+        data1 = self.dt_datas(dt1)
+        data1 = set(sorted(data1))
+
+        data2 = self.dt_datas(dt2)
+        data2 = set(sorted(data2))
+        
+        to_add_set = data1 - data2 
+        to_delete_set = data2 - data1 
+        
+        logger.info("要增加的标的: {}".format(to_add_set))
+        logger.info("要剔除的标的: {}".format(to_delete_set))
+        
+        return to_add_set, to_delete_set
+    
+    def gene_records(self, dt1, dt2):
+        """
+        生成数据库的一条变更记录 
+        """
+        to_add_set, to_delete_set = self.history_diff(dt1, dt2)
+        
+        pass 
 
     def start(self):
         # self._create_table()
