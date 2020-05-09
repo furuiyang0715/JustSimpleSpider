@@ -78,6 +78,9 @@ class SzGener(MarginBase):
 
     def parse_announcemen_byhuman(self):
         """从公告中提取更改信息 """
+        base_sql = '''update {} set OutDate = '{}', TargetFlag = 2 where SecuMarket = 90 and InnerCode = {}\
+        and TargetCategory in (10, 20) and TargetFlag = 1; '''
+
         target = self._init_pool(self.product_cfg)
 
         # # (1) http://www.szse.cn/disclosure/notice/general/t20200415_575996.html
@@ -123,7 +126,32 @@ class SzGener(MarginBase):
         # ret = target.update(sql)
         # print(ret)
 
-        # (6)
+        # # (6) http://www.szse.cn/disclosure/notice/general/t20200430_576648.html
+        # # 本所于2020年5月6日起将 大连晨鑫网络科技股份有限公司股票（证券代码：002447） 调出融资融券标的证券名单
+        # dt = datetime.datetime(2020, 5, 6)
+        # inner_code = self.get_inner_code("002447")
+        # print(inner_code)   # 10493
+        # sql = base_sql.format(self.target_table_name, dt, inner_code)
+        # ret = target.update(sql)
+        # print(ret)
+
+        # (7) http://www.szse.cn/disclosure/notice/general/t20200430_576646.html
+        # 本所于2020年5月6日起将 藏格控股股份有限公司股票（证券代码：000408） 调出融资融券标的证券名单。
+        # dt = datetime.datetime(2020, 5, 6)
+        # inner_code = self.get_inner_code("000408")
+        # print(inner_code)   # 155
+        # sql = base_sql.format(self.target_table_name, dt, inner_code)
+        # ret = target.update(sql)
+        # print(ret)
+
+        # (8) http://www.szse.cn/disclosure/notice/general/t20200430_576647.html
+        # 本所于2020年5月6日起将该 深圳市同洲电子股份有限公司股票（证券代码：002052） 调出融资融券标的证券名单。
+        # dt = datetime.datetime(2020, 5, 6)
+        # inner_code = self.get_inner_code("002052")
+        # print(inner_code)  # 4347
+        # sql = base_sql.format(self.target_table_name, dt, inner_code)
+        # ret = target.update(sql)
+        # print(ret)
 
         target.dispose()
 
