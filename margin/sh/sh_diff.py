@@ -62,8 +62,13 @@ class ShSync(MarginBase):
     def get_spider_dt_list(self, dt, market, category):
         """获取爬虫库中具体某一天的清单"""
         spider = self._init_pool(self.spider_cfg)
+
+        sql_dt = '''select max(ListDate) as mx from {} where ListDate <= '{}' and SecuMarket =83 and TargetCategory = {}; 
+        '''.format(self.spider_table_name, dt, category)
+        dt_ = spider.select_one(sql_dt).get("mx")
+        logger.info("距离{}最近的之前的一天是{}".format(dt, dt_))
         sql = '''select InnerCode from {} where ListDate = '{}' and SecuMarket = {} and TargetCategory = {}; 
-                '''.format(self.spider_table_name, dt, market, category)
+                '''.format(self.spider_table_name, dt_, market, category)
         ret = spider.select_all(sql)
         ret = [r.get("InnerCode") for r in ret]
         return ret
