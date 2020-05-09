@@ -28,24 +28,6 @@ class DetailSpider(MarginBase):
         self.end_dt = datetime.datetime(self.year, 12, 31)
         self.detail_table_name = 'detailmargin'
 
-    def get_inner_code_map(self):
-        """
-        获取聚源内部编码映射表
-        https://dd.gildata.com/#/tableShow/27/column///
-        https://dd.gildata.com/#/tableShow/718/column///
-        """
-        juyuan = self._init_pool(self.juyuan_cfg)
-        # 8 是开放式基金
-        sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2, 8) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
-        ret = juyuan.select_all(sql)
-        juyuan.dispose()
-        info = {}
-        for r in ret:
-            key = r.get("SecuCode")
-            value = r.get('InnerCode')
-            info[key] = value
-        return info
-
     def callbackfunc(self, blocknum, blocksize, totalsize):
         """
         回调函数
@@ -68,7 +50,6 @@ class DetailSpider(MarginBase):
         """
         dt = dt.strftime("%Y%m%d")
         url = self.csv_url.format(dt)
-        # print(">>>>>>>", url)
         try:
             urlretrieve(url, "./data_dir/{}/{}.xls".format(self.year, dt), self.callbackfunc)
         except urllib.error.HTTPError:
@@ -84,14 +65,6 @@ class DetailSpider(MarginBase):
         while dt <= self.end_dt:
             self.load_xls(dt)
             dt = dt + datetime.timedelta(days=1)
-
-    def get_inner_code(self, secu_code):
-        ret = self.inner_code_map.get(secu_code)
-        if not ret:
-            logger.warning("{} 不存在内部编码".format(secu_code))
-            # ret = "undefinded"
-            raise
-        return ret
 
     def _create_table(self):
         sql = '''
@@ -150,29 +123,32 @@ class DetailSpider(MarginBase):
             except:
                 logger.warning("dispose error")
 
+    # def start(self):
+    #     self._create_table()
+    #     # for year in sorted(os.listdir("./data_dir")):
+    #     for year in [
+    #         # 2010,
+    #         # 2011, 2012,
+    #         # 2013,
+    #
+    #         2014, 2015, 2016, 2017, 2018, 2019, 2020
+    #     ]:
+    #         print(year)
+    #         for file in sorted(os.listdir("./data_dir/{}".format(year))):
+    #             dt = file.split(".")[0]
+    #             print(dt)
+    #             if int(dt) >= 20131129:
+    #                 self.read_xls(year, dt)
+    #             print()
+    #             print()
+    #             print()
+
     def start(self):
+        # 建表
         self._create_table()
-        # for year in sorted(os.listdir("./data_dir")):
-        for year in [
-            # 2010,
-            # 2011, 2012,
-            # 2013,
 
-            2014, 2015, 2016, 2017, 2018, 2019, 2020
-        ]:
-            print(year)
-            for file in sorted(os.listdir("./data_dir/{}".format(year))):
-                dt = file.split(".")[0]
-                print(dt)
-                if int(dt) >= 20131129:
-                    self.read_xls(year, dt)
-                print()
-                print()
-                print()
+        # 确定需要下载的时间列表
 
-    def _start(self):
-        # 单独检查
-        self.read_xls(2010, 20101122)
 
         pass
 
