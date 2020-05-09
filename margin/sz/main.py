@@ -190,9 +190,54 @@ class SzGener(MarginBase):
         """
         生成数据库的一条变更记录 
         """
+        #  id | SecuMarket | InnerCode | InDate              | OutDate | TargetCategory | TargetFlag | ChangeReasonDesc | UpdateTime          | CREATETIMEJZ        | UPDATETIMEJZ
+        fields = ["SecuMarket", "InnerCode", "InDate", "OutDate", "TargetCategory", "TargetFlag", "ChangeReasonDesc"]
+
+        item = {"SecuMarket": 90,
+                # "InnerCode": '',
+                # "InDate": '',
+                # 'OutDate': '',
+                # 'TargetCategory': '',   # 10 和 20
+                # 'TargetFlag': '',
+                'ChangeReasonDesc': '',
+                'UpdateTime': datetime.datetime.now(),
+                }
+
+        target = self._init_pool(self.product_cfg)
+
         to_add_set, to_delete_set = self.history_diff(dt1, dt2)
-        
-        pass 
+        if to_add_set:
+            for inner_code in to_add_set:
+                # 在 dt1 增加 2 条 in 的记录
+                item1 = {
+                    "SecuMarket": 90,
+                    "InnerCode": inner_code,
+                    "InDate": dt1,
+                    'TargetCategory': 10,
+                    'TargetFlag': 1,
+                    'ChangeReasonDesc': '',
+                    'UpdateTime': datetime.datetime.now(),
+                }
+
+                item2 = {
+                    "SecuMarket": 90,
+                    "InnerCode": inner_code,
+                    "InDate": dt1,
+                    'TargetCategory': 20,
+                    'TargetFlag': 1,
+                    'ChangeReasonDesc': '',
+                    'UpdateTime': datetime.datetime.now(),
+                }
+
+                self._save(target, item1, self.target_table_name, fields)
+                self._save(target, item2, self.target_table_name, fields)
+
+        if to_delete_set:
+            for inner_code in to_delete_set:
+                # 在 dt1 update 进 2 条 out 的记录
+                
+
+                pass
 
     def start(self):
         # self._create_table()
