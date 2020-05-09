@@ -2,8 +2,7 @@ import datetime
 
 from margin.base import MarginBase
 
-
-'''
+'''聚源库以及新建库的字段差异 
 mysql> select * from MT_TargetSecurities limit 1;
 +--------------+------------+-----------+---------------------+---------+----------------+------------+------------------+---------------------+--------------+
 | ID           | SecuMarket | InnerCode | InDate              | OutDate | TargetCategory | TargetFlag | ChangeReasonDesc | UpdateTime          | JSID         |
@@ -63,18 +62,27 @@ class Checker(MarginBase):
         ret1 = sorted(set([r.get("InnerCode") for r in ret1]))
         return ret1
 
-    def check2(self):
-        dt1 = datetime.datetime(2020, 4, 15)
+    def diff_dts(self, dt1: datetime.datetime, dt2: datetime.datetime):
+        # dt1 = datetime.datetime(2020, 4, 15)
         data1 = self.dt_datas(dt1)
         data1 = set(sorted(data1))
 
-        dt2 = datetime.datetime(2020, 4, 18)
+        # dt2 = datetime.datetime(2020, 4, 18)
         data2 = self.dt_datas(dt2)
         data2 = set(sorted(data2))
 
         print(data1 == data2)
         print(data1 - data2)
         print(data2 - data1)
+
+    def check2(self):
+        # 较新的时间点 之前的数据点
+        # self.diff_dts(datetime.datetime(2020, 4, 16), datetime.datetime(2020, 4, 15))
+        # self.diff_dts(datetime.datetime(2020, 4, 29), datetime.datetime(2020, 4, 28))
+        # self.diff_dts(datetime.datetime(2020, 4, 30), datetime.datetime(2020, 4, 29))
+        # self.diff_dts(datetime.datetime(2020, 5, 6), datetime.datetime(2020, 5, 5))
+
+        pass
 
 
 if __name__ == "__main__":
