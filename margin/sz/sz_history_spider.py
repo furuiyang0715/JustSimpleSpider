@@ -8,6 +8,7 @@ import urllib
 from urllib.request import urlretrieve
 
 import xlrd
+from apscheduler.schedulers.blocking import BlockingScheduler
 
 from margin.base import MarginBase
 
@@ -238,8 +239,24 @@ class SzListSpider(MarginBase):
         logger.info("入库结果: {} >>> {}, {} >>> {}".format(_yester_day, save_ret1, _before_yester_day, save_ret2))
 
 
-if __name__ == "__main__":
+def sz_history_task():
     now = lambda: time.time()
     start_dt = now()
     SzListSpider().crawl()
-    logger.info("耗时: {}".format(now() - start_dt))
+    logger.info("耗时: {} 秒".format(now() - start_dt))
+
+
+if __name__ == '__main__':
+    scheduler = BlockingScheduler()
+    # 确保重启时可以执行一次
+    sz_history_task()
+
+    scheduler.add_job(sz_history_task, 'cron', hour='3, 9, 15', max_instances=10, id="spider_task")
+    logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
+    try:
+        scheduler.start()
+    except (KeyboardInterrupt, SystemExit):
+        pass
+    except Exception as e:
+        logger.info(f"本次任务执行出错{e}")
+        sys.exit(0)
