@@ -308,3 +308,23 @@ if __name__ == "__main__":
         logger.info(f"本次任务执行出错{e}")
         sys.exit(0)
 
+
+'''部署 
+docker build -f Dockerfile_szdiff -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sz_diff:v1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sz_diff:v1 
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sz_diff:v1 
+
+# remote 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
+--env LOCAL=0 \
+--env FIRST=1 \
+--name margin_sz_diff \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sz_diff:v1  
+
+# local
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
+--env LOCAL=1 \
+--env FIRST=0 \
+--name margin_sz_diff \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sz_diff:v1  
+'''
