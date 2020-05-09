@@ -10,6 +10,7 @@ from urllib.request import urlretrieve
 import xlrd
 
 sys.path.append('./../')
+from margin.configs import LOCAL
 from apscheduler.schedulers.blocking import BlockingScheduler
 from margin.base import MarginBase
 
@@ -147,7 +148,7 @@ class SzListSpider(MarginBase):
         """
         dt = dt.strftime("%Y-%m-%d")
         url = self.base_file_url.format(dt, random.random())
-        # 获取当前执行文件的绝对路径的切割 
+        # 获取当前执行文件的绝对路径的切割
         dirname, filename = os.path.split(os.path.abspath(__file__))
         file_path = os.path.join(dirname, "./data_dir/{}.xlsx".format(dt))
         try:
@@ -240,6 +241,8 @@ class SzListSpider(MarginBase):
         save_ret1 = self.read_xls(_yester_file, _yester_day)
         save_ret2 = self.read_xls(_before_yester_day_file, _before_yester_day)
         logger.info("入库结果: {} >>> {}, {} >>> {}".format(_yester_day, save_ret1, _before_yester_day, save_ret2))
+        local_str = "本地" if LOCAL else "远程"
+        self.ding("{}: 深交所融资融券清单爬虫入库结果: {} >>{}, {} >>{} ".format(local_str, _yester_day, save_ret1, _before_yester_day, save_ret2))
 
 
 def sz_history_task():

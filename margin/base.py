@@ -1,10 +1,18 @@
+import base64
+import hashlib
+import hmac
+import json
 import logging
+import time
 import traceback
+
+import requests
+import urllib.parse
 
 from margin.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD,
                             SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER,
                             PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD,
-                            JUY_DB, DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB)
+                            JUY_DB, DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB, SECRET, TOKEN)
 from margin.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -129,3 +137,39 @@ class MarginBase(object):
             value = r.get('InnerCode')
             info[key] = value
         return info
+
+    def ding(self, msg):
+        def get_url():
+            timestamp = str(round(time.time() * 1000))
+            secret_enc = SECRET.encode('utf-8')
+            string_to_sign = '{}\n{}'.format(timestamp, SECRET)
+            string_to_sign_enc = string_to_sign.encode('utf-8')
+            hmac_code = hmac.new(secret_enc, string_to_sign_enc, digestmod=hashlib.sha256).digest()
+            sign = urllib.parse.quote_plus(base64.b64encode(hmac_code))
+            url = 'https://oapi.dingtalk.com/robot/send?access_token={}&timestamp={}&sign={}'.format(
+                TOKEN, timestamp, sign)
+            return url
+
+        url = get_url()
+        header = {
+            "Content-Type": "application/json",
+            "Charset": "UTF-8"
+        }
+        message = {
+            "msgtype": "text",
+            "text": {
+                "content": "{}@15626046299".format(msg)
+            },
+            "at": {
+                "atMobiles": [
+                    "15626046299",
+                ],
+                "isAtAll": False
+            }
+        }
+        message_json = json.dumps(message)
+        resp = requests.post(url=url, data=message_json, headers=header)
+        if resp.status_code == 200:
+            pass
+        else:
+            logger.warning("钉钉消息发送失败")
