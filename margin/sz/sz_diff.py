@@ -325,7 +325,7 @@ sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sz_diff:v
 # remote 
 sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
 --env LOCAL=0 \
---env FIRST=1 \
+--env FIRST=0 \
 --name margin_sz_diff \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sz_diff:v1  
 
