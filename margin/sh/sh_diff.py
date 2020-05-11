@@ -18,33 +18,38 @@ class ShSync(MarginBase):
         self.juyuan_table_name = 'MT_TargetSecurities'
         self.target_table_name = 'stk_mttargetsecurities'
         # 爬虫库
-        self.spider_table_name = 'Margin_sh_list_spider'
+        self.spider_table_name = 'margin_sh_list_spider'
         self.inner_code_map = self.get_inner_code_map()
 
-    def show_juyuan_datas(self):
+    def show_juyuan_datas(self, juyuan=1):
         """
-        分析聚源已有的数据
+        分析聚源[正式库]已有的数据
         """
-        juyuan = self._init_pool(self.juyuan_cfg)
+        if juyuan:
+            table = self.juyuan_table_name
+            client = self._init_pool(self.juyuan_cfg)
+        else:
+            table = self.target_table_name
+            client = self._init_pool(self.product_cfg)
         # 上交所融资买入标的列表
-        # sql1 = '''select InnerCode from MT_TargetSecurities where TargetFlag = 1 and SecuMarket = 83 and TargetCategory = 10;'''
-        # ret1 = juyuan.select_all(sql1)
-        # ret1 = [r.get("InnerCode") for r in ret1]
-        # print(Counter(ret1))    # Counter({1346: 2, 1131: 1, 1133: 1, ...
-        # s_lst = set(self.get_spider_latest_list(83, 10))
-        # print(set(ret1) - s_lst)    # {1250, 2051, 1346, 1612, 1293, 1868, 1205, 2908, 1694}
-        # print(s_lst - set(ret1))    # {240096, 234476, 232095}
+        sql1 = '''select InnerCode from {} where TargetFlag = 1 and SecuMarket = 83 and TargetCategory = 10;'''.format(table)
+        ret1 = client.select_all(sql1)
+        ret1 = [r.get("InnerCode") for r in ret1]
+        print(Counter(ret1))    # Counter({1346: 2, 1131: 1, 1133: 1, ...
+        s_lst = set(self.get_spider_latest_list(83, 10))
+        print(set(ret1) - s_lst)    # {1250, 2051, 1346, 1612, 1293, 1868, 1205, 2908, 1694}
+        print(s_lst - set(ret1))    # {240096, 234476, 232095}
 
         # 上交所融券卖出标的列表
-        # sql2 = '''select InnerCode from MT_TargetSecurities where TargetFlag = 1 and SecuMarket = 83 and TargetCategory = 20;'''
-        # ret2 = juyuan.select_all(sql2)
-        # ret2 = [r.get("InnerCode") for r in ret2]
-        # print(Counter(ret2))  # Counter({1346: 2, 1131: 1, 1133: 1, 1154: 1, ..
-        # s_lst = set(self.get_spider_latest_list(83, 20))
-        # print(set(ret2) - s_lst)  # {1250, 2051, 1346, 1612, 1293, 1868, 1205, 2908, 1694}
-        # print(s_lst - set(ret2))  # {240096, 234476, 232095}
-        #
-        # print(set(ret1) == set(ret2))
+        sql2 = '''select InnerCode from {} where TargetFlag = 1 and SecuMarket = 83 and TargetCategory = 20;'''.format(table)
+        ret2 = client.select_all(sql2)
+        ret2 = [r.get("InnerCode") for r in ret2]
+        print(Counter(ret2))  # Counter({1346: 2, 1131: 1, 1133: 1, 1154: 1, ..
+        s_lst = set(self.get_spider_latest_list(83, 20))
+        print(set(ret2) - s_lst)  # {1250, 2051, 1346, 1612, 1293, 1868, 1205, 2908, 1694}
+        print(s_lst - set(ret2))  # {240096, 234476, 232095}
+
+        print(set(ret1) == set(ret2))
 
         # # 查询聚源的最近更新时间
         # sql5 = '''select max(UpdateTime) as max_dt from MT_TargetSecurities ; '''
@@ -71,7 +76,7 @@ class ShSync(MarginBase):
         select * from margin_sh_detail_spider where InnerCode = '240096' order by ListDate ;    # 2020-04-27 00:00:00 
         '''
 
-        juyuan.dispose()
+        client.dispose()
 
     def get_spider_latest_list(self, market, category):
         """获取爬虫库中最新的清单"""
@@ -106,18 +111,27 @@ class ShSync(MarginBase):
         # (1) 4.23 的公告: http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20200423_5052948.shtml
         # 内容: 在2020年4月24日将天津松江（600225） 调出融资融券标的证券名单
         inner_code = self.get_inner_code('600225')
-        print(inner_code)  # 1346
+        # print(inner_code)  # 1346
+        self._update(inner_code, datetime.datetime(2020, 4, 24), 1, 0)
+        self._update(inner_code, datetime.datetime(2020, 4, 24), 0, 0)
 
         # (2) 4.28 的公告: http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20200428_5067981.shtml
         # 内容: 在2020年4月29日将 博信股份（600083） 调出融资融券标的证券名单
         inner_code = self.get_inner_code("600083")
-        print(inner_code)   # 1205
+        # print(inner_code)   # 1205
+        self._update(inner_code, datetime.datetime(2020, 4, 29), 1, 0)
+        self._update(inner_code, datetime.datetime(2020, 4, 29), 0, 0)
 
         # (3）4.29 的公告: http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20200429_5075757.shtml
         # 内容: 于2020年4月30日将 交大昂立（600530）和宏图高科（600122）调出融资融券标的证券名单
         inner_code_1 = self.get_inner_code('600530')
         inner_code_2 = self.get_inner_code('600122')
-        print(inner_code_1, inner_code_2)  # 1694 1250
+        # print(inner_code_1, inner_code_2)  # 1694 1250
+        self._update(inner_code_1, datetime.datetime(2020, 4, 30), 1, 0)
+        self._update(inner_code_1, datetime.datetime(2020, 4, 30), 0, 0)
+
+        self._update(inner_code_2, datetime.datetime(2020, 4, 30), 1, 0)
+        self._update(inner_code_2, datetime.datetime(2020, 4, 30), 0, 0)
 
         # (4) 4.30 的公告:http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20200430_5085195.shtml
         # 内容: 于2020年5月6日将 美都能源（600175）、六国化工（600470）、飞乐音响（600651）、安信信托（600816）和宜华生活（600978）调出融资融券标的证券名单。
@@ -126,9 +140,20 @@ class ShSync(MarginBase):
         in_co_3 = self.get_inner_code('600651')
         in_co_4 = self.get_inner_code('600816')
         in_co_5 = self.get_inner_code('600978')
-        print(in_co_1, in_co_2, in_co_3, in_co_4, in_co_5)  # 1293 1612 1868 2051 2908
+        # print(in_co_1, in_co_2, in_co_3, in_co_4, in_co_5)  # 1293 1612 1868 2051 2908
+        for in_co in (in_co_1, in_co_2, in_co_3, in_co_4, in_co_5):
+            self._update(in_co, datetime.datetime(2020, 5, 6), 1, 0)
+            self._update(in_co, datetime.datetime(2020, 5, 6), 0, 0)
 
     def _update(self, inner_code, dt, type, to_add):
+        """
+
+        :param inner_code: 聚源内部编码
+        :param dt: 变更发生时间
+        :param type: 1 融资 0 融券
+        :param to_add: 1 移入 0 移出
+        :return:
+        """
         # 正式库表的字段
         fields = ["SecuMarket", "InnerCode", "InDate", "OutDate", "TargetCategory", "TargetFlag", "ChangeReasonDesc"]
         target = self._init_pool(self.product_cfg)
@@ -176,17 +201,16 @@ class ShSync(MarginBase):
     def start(self):
         # 临时解析公告 只在首次运行
         if FIRST:
-            # self.show_juyuan_datas()
-            # print()
+            self.show_juyuan_datas()
             self.parse_announcement()
+            self.show_juyuan_datas(juyuan=0)
 
-        _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
-        _yester_day = _today - datetime.timedelta(days=1)
-        _before_yester_day = _today - datetime.timedelta(days=2)
-        print(_yester_day, "***", _before_yester_day)
-
-        lst = self.get_spider_latest_list(83, 10)
-        print(lst)
+        # _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
+        # _yester_day = _today - datetime.timedelta(days=1)
+        # _before_yester_day = _today - datetime.timedelta(days=2)
+        # print(_yester_day, "***", _before_yester_day)
+        # lst = self.get_spider_latest_list(83, 10)
+        # print(lst)
 
 
 if __name__ == "__main__":
