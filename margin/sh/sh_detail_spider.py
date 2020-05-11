@@ -71,6 +71,24 @@ class DetailSpider(MarginBase):
             self.load_xls(dt)
             dt = dt + datetime.timedelta(days=1)
 
+    def get_detail_dt_list(self, dt, market, category):
+        """获取爬虫库中具体某一天的 detail 清单"""
+        spider = self._init_pool(self.spider_cfg)
+
+        # sql_dt = '''select max(ListDate) as mx from {} where ListDate <= '{}' and SecuMarket =83 and TargetCategory = {};
+        # TODO 在 sh 的 detail 中未对融资融券进行区分
+        sql_dt = '''select max(ListDate) as mx from {} where ListDate <= '{}' and SecuMarket =83; 
+        '''.format(self.detail_table_name, dt, category)
+        # print(sql_dt)
+        # sys.exit(0)
+        dt_ = spider.select_one(sql_dt).get("mx")
+        logger.info("距离{}最近的之前的一天是{}".format(dt, dt_))
+        # sql = '''select InnerCode from {} where ListDate = '{}' and SecuMarket = {} and TargetCategory = {}; '''.format(self.detail_table_name, dt_, market, category)
+        sql = '''select InnerCode from {} where ListDate = '{}' and SecuMarket = {}; '''.format(self.detail_table_name, dt_, market)
+        ret = spider.select_all(sql)
+        ret = [r.get("InnerCode") for r in ret]
+        return ret
+
     def _create_table(self):
         sql = '''
         CREATE TABLE IF NOT EXISTS `{}` (
@@ -152,20 +170,26 @@ class DetailSpider(MarginBase):
         # 建表
         self._create_table()
 
-        dt_list = self.get_dt_list()
-        # print(dt_list[0])
-        # print(dt_list[-1])
-        # print(len(dt_list))
+        # 下载所需的 detail 数据
+        # dt_list = self.get_dt_list()
+        # # print(dt_list[0])
+        # # print(dt_list[-1])
+        # # print(len(dt_list))
+        #
+        # for dt in dt_list:
+        #     logger.info("开始下载 {} 的数据".format(dt))
+        #     ret = self.load_xls(dt)
+        #     if ret:
+        #         logger.info('开始将 {} 的数据入库 '.format(dt))
+        #         self.read_xls(dt)
+        #
+        #     print()
+        #     print()
 
-        for dt in dt_list:
-            logger.info("开始下载 {} 的数据".format(dt))
-            ret = self.load_xls(dt)
-            if ret:
-                logger.info('开始将 {} 的数据入库 '.format(dt))
-                self.read_xls(dt)
+        lst1 = self.get_detail_dt_list(datetime.datetime(2020, 5, 8), 83, 10)
+        print(lst1)
 
-            print()
-            print()
+        lis2 = self.get_list_dt_list()
 
 
 if __name__ == "__main__":

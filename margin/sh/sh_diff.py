@@ -16,7 +16,7 @@ class ShSync(MarginBase):
     """上交融资融券标的"""
     def __init__(self):
         self.juyuan_table_name = 'MT_TargetSecurities'
-        self.target_table_name = 'MT_TargetSecurities'
+        self.target_table_name = 'stk_mttargetsecurities'
         # 爬虫库
         self.spider_table_name = 'targetsecurities'
         self.inner_code_map = self.get_inner_code_map()
@@ -131,6 +131,9 @@ class ShSync(MarginBase):
         _yester_day = _today - datetime.timedelta(days=1)
         _before_yester_day = _today - datetime.timedelta(days=2)
         print(_yester_day, "***", _before_yester_day)
+
+        lst = self.get_spider_latest_list(83, 10)
+        print(lst)
 
 
 if __name__ == "__main__":
