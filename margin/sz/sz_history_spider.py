@@ -74,7 +74,13 @@ class SzListSpider(MarginBase):
         detail = wb.sheet_by_name("融资融券标的证券信息")
 
         rows = detail.nrows - 1
-        # print("总数据量 {}".format(rows))
+        logger.info("总数据量 {}".format(rows))
+
+        # 根据行数检测出没有数据的文件
+        if rows < 10:
+            logger.warning("当日无数据更新 {}".format(dt))
+            # return True
+            return '当日无数据更新'
 
         heads = detail.row_values(0)
         # print("表头信息", heads)
@@ -124,7 +130,8 @@ class SzListSpider(MarginBase):
             logger.warning("dispose error")
             raise
 
-        return True
+        # return True
+        return '数据更新成功'
 
     def callbackfunc(self, blocknum, blocksize, totalsize):
         """
