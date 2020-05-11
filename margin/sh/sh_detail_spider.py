@@ -123,31 +123,14 @@ class DetailSpider(MarginBase):
             except:
                 logger.warning("dispose error")
 
-    # def start(self):
-    #     self._create_table()
-    #     # for year in sorted(os.listdir("./data_dir")):
-    #     for year in [
-    #         # 2010,
-    #         # 2011, 2012,
-    #         # 2013,
-    #
-    #         2014, 2015, 2016, 2017, 2018, 2019, 2020
-    #     ]:
-    #         print(year)
-    #         for file in sorted(os.listdir("./data_dir/{}".format(year))):
-    #             dt = file.split(".")[0]
-    #             print(dt)
-    #             if int(dt) >= 20131129:
-    #                 self.read_xls(year, dt)
-    #             print()
-    #             print()
-    #             print()
-
     def start(self):
         # 建表
         self._create_table()
 
         # 确定需要下载的时间列表
+        start_dt = datetime.datetime(2020, 4, 1)
+        end_dt = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
+
 
 
         pass
