@@ -139,7 +139,7 @@ class DetailSpider(MarginBase):
             item['SecuAbbr'] = data[1]
             item['SerialNumber'] = i
             item['ListDate'] = list_date
-            item['TargetCategory'] = None
+            item['TargetCategory'] = 10
             # print(data)
             # print(item)
             client = self._init_pool(self.spider_cfg)
@@ -176,17 +176,17 @@ class DetailSpider(MarginBase):
         # print(dt_list[-1])
         # print(len(dt_list))
 
-        for dt in dt_list:
-            logger.info("开始下载 {} 的数据".format(dt))
-            ret = self.load_xls(dt)
-            if ret:
-                logger.info('开始将 {} 的数据入库 '.format(dt))
-                self.read_xls(dt)
+        # for dt in dt_list:
+        #     logger.info("开始下载 {} 的数据".format(dt))
+        #     ret = self.load_xls(dt)
+        #     if ret:
+        #         logger.info('开始将 {} 的数据入库 '.format(dt))
+        #         self.read_xls(dt)
+        #
+        #     print()
+        #     print()
 
-            print()
-            print()
-
-        lst1 = self.get_detail_dt_list(datetime.datetime(2020, 5, 8), 83, 10)
+        lst1 = self.get_detail_dt_list(datetime.datetime(2020, 5, 11), 83, 10)
         print(lst1)
 
 
