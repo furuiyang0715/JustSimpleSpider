@@ -7,11 +7,8 @@ import time
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 sys.path.append('./../')
-from margin.base import MarginBase
+from margin.base import MarginBase, logger
 from margin.configs import LOCAL, FIRST
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 
 class SzGener(MarginBase):

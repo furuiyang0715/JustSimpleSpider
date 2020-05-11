@@ -12,10 +12,7 @@ import xlrd
 sys.path.append('./../')
 from margin.configs import LOCAL
 from apscheduler.schedulers.blocking import BlockingScheduler
-from margin.base import MarginBase
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+from margin.base import MarginBase, logger
 
 
 class SzListSpider(MarginBase):
