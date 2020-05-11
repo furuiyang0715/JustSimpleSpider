@@ -66,9 +66,9 @@ class ShSync(MarginBase):
         '''
 
         '''只能从历史的交易明细中尝试找一下列入日期 
-        select * from margin_sh_detail_spider where InnerCode = '232095' order by ListDate ;
-        select * from margin_sh_detail_spider where InnerCode = '234476' order by ListDate ;
-        select * from margin_sh_detail_spider where InnerCode = '240096' order by ListDate ;
+        select * from margin_sh_detail_spider where InnerCode = '232095' order by ListDate ;    # 2020-05-08 00:00:00 
+        select * from margin_sh_detail_spider where InnerCode = '234476' order by ListDate ;    # 2020-04-29 00:00:00 
+        select * from margin_sh_detail_spider where InnerCode = '240096' order by ListDate ;    # 2020-04-27 00:00:00 
         '''
 
         juyuan.dispose()
@@ -128,11 +128,56 @@ class ShSync(MarginBase):
         in_co_5 = self.get_inner_code('600978')
         print(in_co_1, in_co_2, in_co_3, in_co_4, in_co_5)  # 1293 1612 1868 2051 2908
 
+    def _update(self, inner_code, dt, type, to_add):
+        # 正式库表的字段
+        fields = ["SecuMarket", "InnerCode", "InDate", "OutDate", "TargetCategory", "TargetFlag", "ChangeReasonDesc"]
+        target = self._init_pool(self.product_cfg)
+        if to_add:  # 被列入的情况
+            if type == 1:    # 融资
+                item = {
+                    "SecuMarket": 83,   # 上交所
+                    "InnerCode": inner_code,
+                    "InDate": dt,  # 被列入的时间
+                    'TargetCategory': 10,   # 融资
+                    'TargetFlag': 1,
+                    'ChangeReasonDesc': '',
+                    'UpdateTime': datetime.datetime.now(),
+                }
+            else:
+                item = {
+                    "SecuMarket": 83,
+                    "InnerCode": inner_code,
+                    "InDate": dt,
+                    'TargetCategory': 20,   # 融券
+                    'TargetFlag': 1,
+                    'ChangeReasonDesc': '',
+                    'UpdateTime': datetime.datetime.now(),
+                }
+            count = self._save(target, item, self.target_table_name, fields)
+            logger.info("type: {}, add 记录条数 {}".format(type, count))
+        else:   # 被移出列表的情况
+            if type == 1:    # 融资
+                base_sql = '''update {} set OutDate = '{}', TargetFlag = 2 where SecuMarket = 83 and InnerCode = {}\
+                and TargetCategory = 10  and TargetFlag = 1; '''
+            else:    # 融券
+                base_sql = '''update {} set OutDate = '{}', TargetFlag = 2 where SecuMarket = 83 and InnerCode = {}\
+                and TargetCategory = 20  and TargetFlag = 1; '''
+
+            sql = base_sql.format(self.target_table_name, dt, inner_code)
+            ret = target.update(sql)
+            logger.info("type: {}, update 记录条数是 {}".format(type, ret))
+
+        try:
+            target.dispose()
+        except:
+            logger.warning("dispose error")
+            raise
+
     def start(self):
         # 临时解析公告 只在首次运行
         if FIRST:
-            self.show_juyuan_datas()
-            print()
+            # self.show_juyuan_datas()
+            # print()
             self.parse_announcement()
 
         _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
