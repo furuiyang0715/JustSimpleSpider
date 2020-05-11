@@ -21,32 +21,49 @@ class ShSync(MarginBase):
         self.spider_table_name = 'targetsecurities'
         self.inner_code_map = self.get_inner_code_map()
 
-    # def show_juyuan_datas(self):
-    #     """
-    #     分析聚源已有的数据
-    #     """
-    #     juyuan = self._init_pool(self.juyuan_cfg)
-    #     # 上交所融资买入标的列表
-    #     sql1 = '''select InnerCode from MT_TargetSecurities where TargetFlag = 1 and SecuMarket = 83 and TargetCategory = 10;'''
-    #     ret1 = juyuan.select_all(sql1)
-    #     ret1 = [r.get("InnerCode") for r in ret1]
-    #     print(Counter(ret1))    # Counter({1346: 2, 1131: 1, 1133: 1, ...
-    #
-    #     s_lst = set(self.get_spider_latest_list(83, 10))
-    #     print(set(ret1) - s_lst)
-    #     print(s_lst - set(ret1))
-    #
-    #     # 上交所融券卖出标的列表
-    #     sql2 = '''select InnerCode from MT_TargetSecurities where TargetFlag = 1 and SecuMarket = 83 and TargetCategory = 20;'''
-    #     ret2 = juyuan.select_all(sql2)
-    #     ret2 = [r.get("InnerCode") for r in ret2]
-    #     print(Counter(ret2))  # Counter({1346: 2, 1131: 1, 1133: 1, 1154: 1, ..
-    #     print(set(ret1) == set(ret2))
-    #
-    #     # 查询聚源的最近更新时间
-    #     sql5 = '''select max(UpdateTime) as max_dt from MT_TargetSecurities ; '''
-    #     ret5 = juyuan.select_one(sql5).get("max_dt")
-    #     print(ret5)    # 2020-04-20 09:04:01
+    def show_juyuan_datas(self):
+        """
+        分析聚源已有的数据
+        """
+        juyuan = self._init_pool(self.juyuan_cfg)
+        # 上交所融资买入标的列表
+        # sql1 = '''select InnerCode from MT_TargetSecurities where TargetFlag = 1 and SecuMarket = 83 and TargetCategory = 10;'''
+        # ret1 = juyuan.select_all(sql1)
+        # ret1 = [r.get("InnerCode") for r in ret1]
+        # print(Counter(ret1))    # Counter({1346: 2, 1131: 1, 1133: 1, ...
+        # s_lst = set(self.get_spider_latest_list(83, 10))
+        # print(set(ret1) - s_lst)    # {1250, 2051, 1346, 1612, 1293, 1868, 1205, 2908, 1694}
+        # print(s_lst - set(ret1))    # {240096, 234476, 232095}
+
+        # 上交所融券卖出标的列表
+        # sql2 = '''select InnerCode from MT_TargetSecurities where TargetFlag = 1 and SecuMarket = 83 and TargetCategory = 20;'''
+        # ret2 = juyuan.select_all(sql2)
+        # ret2 = [r.get("InnerCode") for r in ret2]
+        # print(Counter(ret2))  # Counter({1346: 2, 1131: 1, 1133: 1, 1154: 1, ..
+        # s_lst = set(self.get_spider_latest_list(83, 20))
+        # print(set(ret2) - s_lst)  # {1250, 2051, 1346, 1612, 1293, 1868, 1205, 2908, 1694}
+        # print(s_lst - set(ret2))  # {240096, 234476, 232095}
+        #
+        # print(set(ret1) == set(ret2))
+
+        # # 查询聚源的最近更新时间
+        # sql5 = '''select max(UpdateTime) as max_dt from MT_TargetSecurities ; '''
+        # ret5 = juyuan.select_one(sql5).get("max_dt")
+        # print(ret5)    # 2020-04-20 09:04:01
+
+        '''TODO 需要在历史数据中进行查询的几个 
+        mysql> select InnerCode, SecuCode, ChiName from secumain where InnerCode in (240096, 234476, 232095);
+        +-----------+----------+-----------------------------------------------+
+        | InnerCode | SecuCode | ChiName                                       |
+        +-----------+----------+-----------------------------------------------+
+        |    232095 | 688466   | 金科环境股份有限公司                          |
+        |    234476 | 688365   | 杭州光云科技股份有限公司                      |
+        |    240096 | 688318   | 深圳市财富趋势科技股份有限公司                |
+        +-----------+----------+-----------------------------------------------+
+        3 rows in set (0.01 sec)
+        '''
+
+        juyuan.dispose()
 
     def get_spider_latest_list(self, market, category):
         """获取爬虫库中最新的清单"""
@@ -104,8 +121,16 @@ class ShSync(MarginBase):
         print(in_co_1, in_co_2, in_co_3, in_co_4, in_co_5)  # 1293 1612 1868 2051 2908
 
     def start(self):
+        # 临时解析公告 只在首次运行
         if FIRST:
+            self.show_juyuan_datas()
+            print()
             self.parse_announcement()
+
+        _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
+        _yester_day = _today - datetime.timedelta(days=1)
+        _before_yester_day = _today - datetime.timedelta(days=2)
+        print(_yester_day, "***", _before_yester_day)
 
 
 if __name__ == "__main__":
