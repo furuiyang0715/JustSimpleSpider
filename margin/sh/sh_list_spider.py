@@ -12,6 +12,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from lxml import html
 
 sys.path.append("./../")
+from margin.configs import LOCAL
 from margin.base import MarginBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -62,6 +63,7 @@ class SHMarginSpider(MarginBase):
         </a></li><li><a href="#tableData_962" data-toggle="tab">融券卖出标的证券一览表
         </a></li><li><a href="#tableData_960" data-toggle="tab">融资融券可充抵保证金证券一览表
         """
+        msg = ''
         # self._drop_table()
         self._create_table()
         resp = requests.get(self.url)
@@ -97,6 +99,8 @@ class SHMarginSpider(MarginBase):
                 item['InnerCode'] = inner_code
                 self._save(spider, item, self.spider_table_name, fields)
 
+            msg += "{} 上交所的融券卖出标的爬虫入库成功\n".format(show_dt)
+
             # 961
             datas = doc.xpath("//table[@class='table search_bdzqkc search3T']/script[@type='text/javascript']")[0].text
             show_dt = datetime.datetime.strptime(re.findall("var showdate = '(.*)'", datas)[0], "%Y%m%d")
@@ -123,11 +127,18 @@ class SHMarginSpider(MarginBase):
                 item['InnerCode'] = inner_code
                 self._save(spider, item, self.spider_table_name, fields)
 
+            msg += "{} 上交所的融资买入标的爬虫入库成功\n".format(show_dt)
+
+            local_str = '本地测试:\n' if LOCAL else "远程:\n"
+            local_str += msg
+
             # 关闭数据库连接
             try:
                 spider.dispose()
             except:
                 pass
+            else:
+                self.ding(msg)
 
         else:
             raise Exception("网页请求失败")
