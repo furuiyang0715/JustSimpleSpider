@@ -8,7 +8,7 @@ from collections import Counter
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 sys.path.append('./../')
-from margin.configs import FIRST
+from margin.configs import FIRST, LOCAL
 from margin.base import MarginBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -16,7 +16,14 @@ logger = logging.getLogger(__name__)
 
 
 class ShSync(MarginBase):
-    """上交融资融券标的"""
+    """上交融资融券标的正式表记录生成
+    思路: list spider 的时间是连续的, 在某一天将昨天和前天的数据进行 diff, 得到 to_add 和 to_delete。
+
+    核对中发现: 将某只证券移出会出公告, 但是将其加入的时候不会。 因无法回溯历史列表，使用 detail 列表的 diff 替代。 存疑。
+
+    运行时间: 在每天的 16点以及 23 点运行
+
+    """
     def __init__(self):
         self.juyuan_table_name = 'MT_TargetSecurities'
         self.target_table_name = 'stk_mttargetsecurities'
@@ -27,6 +34,8 @@ class ShSync(MarginBase):
     def show_juyuan_datas(self, juyuan=1):
         """
         分析聚源[正式库]已有的数据
+        因为正式库和聚源库字段一致
+        只在首次运行时进行此分析
         """
         if juyuan:
             table = self.juyuan_table_name
@@ -98,7 +107,6 @@ class ShSync(MarginBase):
 
     def get_spider_latest_list(self, market, category):
         """获取爬虫库中最新的清单"""
-        # ['SecuMarket', 'InnerCode', 'SecuCode', 'SecuAbbr', 'SerialNumber', 'ListDate', 'TargetCategory']
         spider = self._init_pool(self.spider_cfg)
         sql = '''select InnerCode from {} where ListDate = (select max(ListDate) from {} \
         where SecuMarket = {} and TargetCategory = {}) and SecuMarket = {} and TargetCategory = {}; 
@@ -125,7 +133,7 @@ class ShSync(MarginBase):
             return []
 
     def parse_announcement(self):
-        """从公告中提取更改信息 """
+        """从公告中手动提取更改信息 """
         # 公告链接地址: http://www.sse.com.cn/disclosure/magin/announcement/
 
         # 在聚源的最大更新时间之后的有：
@@ -168,10 +176,10 @@ class ShSync(MarginBase):
 
     def _update(self, inner_code, dt, type, to_add):
         """
-
+        数据库操作封装
         :param inner_code: 聚源内部编码
         :param dt: 变更发生时间
-        :param type: 1 融资 0 融券
+        :param type: 1 融资 2 融券
         :param to_add: 1 移入 0 移出
         :return:
         """
@@ -212,7 +220,6 @@ class ShSync(MarginBase):
             sql = base_sql.format(self.target_table_name, dt, inner_code)
             ret = target.update(sql)
             logger.info("type: {}, update 记录条数是 {}".format(type, ret))
-
         try:
             target.dispose()
         except:
@@ -220,7 +227,12 @@ class ShSync(MarginBase):
             raise
 
     def start(self):
-        # 临时解析公告 只在首次运行
+        msg = ''
+
+        local_str = "本地测试: " if LOCAL else "远程: "
+        msg += local_str
+        msg += '上交所数据生成:\n'
+
         if FIRST:
             self.show_juyuan_datas()
             self.parse_announcement()
@@ -231,6 +243,11 @@ class ShSync(MarginBase):
         _yester_day = _today - datetime.timedelta(days=1)
         _before_yester_day = _today - datetime.timedelta(days=2)
         print(_yester_day, "***", _before_yester_day)
+        msg += '时间点: {} 与 {}\n'.format(_yester_day, _before_yester_day)
+        _type_str_map = {
+            10: "融资",
+            20: "融券",
+        }
         for _type in (10, 20):
             _yester_day_list = self.get_spider_dt_list(_yester_day, _type)
             _before_yester_day_list = self.get_spider_dt_list(_before_yester_day, _type)
@@ -238,12 +255,31 @@ class ShSync(MarginBase):
             if _yester_day and _before_yester_day:
                 to_add = set(_yester_day_list) - set(_before_yester_day_list)
                 to_delete = set(_before_yester_day_list) - set(_yester_day_list)
+                logger.info("to_add: {}, to_delete: {}".format(to_add, to_delete))
+                msg += "{}: to_add: {}, to_delete: {}\n".format(_type_str_map.get(_type), to_add, to_delete)
                 if to_add:
                     for one in to_add:
                         self._update(one, _yester_day, _type, 1)
                 if to_delete:
                     for one in to_delete:
                         self._update(one, _yester_day, _type, 0)
+
+        # print(msg)
+
+        msg += '一致性检查: \n'
+
+        dc_list_10 = set(sorted(self.product_dt_datas(83, 10)))
+        spider_list_10 = set(sorted(self.get_spider_latest_list(83, 10)))
+        msg += "融资一致性 check : dc_list - latest_list_spider >> {},latest_list_spider - dc_list>>{} \n".format(
+            dc_list_10 - spider_list_10, spider_list_10 - dc_list_10)
+
+        dc_list_20 = set(sorted(self.product_dt_datas(83, 20)))
+        spider_list_20 = set(sorted(self.get_spider_latest_list(83, 20)))
+        msg += "融券一致性 check : dc_list - latest_list_spider >> {},latest_list_spider - dc_list>>{} \n".format(
+            dc_list_20 - spider_list_20, spider_list_20 - dc_list_20)
+
+        print(msg)
+        self.ding(msg)
 
 
 def diff_task():
@@ -256,7 +292,6 @@ def diff_task():
 
 if __name__ == "__main__":
     scheduler = BlockingScheduler()
-    # 确保重启时可以执行一次
     diff_task()
 
     scheduler.add_job(diff_task, 'cron', hour='16, 23', max_instances=10, id="sh_diff_task")
