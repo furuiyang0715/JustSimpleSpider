@@ -19,7 +19,6 @@ class SzGener(MarginBase):
         self.juyuan_table_name = 'MT_TargetSecurities'
         self.target_table_name = 'stk_mttargetsecurities'
         # 爬虫库
-        self.inner_code_map = self.get_inner_code_map()
         self.sz_history_table_name = 'sz_margin_history' 
 
         # 深交所的公告页

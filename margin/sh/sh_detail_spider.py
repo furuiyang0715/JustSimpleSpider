@@ -21,7 +21,6 @@ class DetailSpider(MarginBase):
     def __init__(self):
         # detail_web_url = 'http://www.sse.com.cn/market/othersdata/margin/detail/index.shtml?marginDate=20200420'
         self.csv_url = 'http://www.sse.com.cn/market/dealingdata/overview/margin/a/rzrqjygk{}.xls'
-        self.inner_code_map = self.get_inner_code_map()
         # self.start_dt = datetime.datetime(2010, 3, 31)
         self.year = 2020
         self.start_dt = datetime.datetime(self.year, 1, 1)

@@ -29,7 +29,6 @@ class ShSync(MarginBase):
         self.target_table_name = 'stk_mttargetsecurities'
         # 爬虫库
         self.spider_table_name = 'margin_sh_list_spider'
-        self.inner_code_map = self.get_inner_code_map()
 
     def show_juyuan_datas(self, juyuan=1):
         """

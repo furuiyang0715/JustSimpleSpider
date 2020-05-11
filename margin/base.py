@@ -120,7 +120,8 @@ class MarginBase(object):
             raise
         return ret
 
-    def get_inner_code_map(self):
+    @property
+    def inner_code_map(self):
         """
         获取聚源内部编码映射表
         https://dd.gildata.com/#/tableShow/27/column///

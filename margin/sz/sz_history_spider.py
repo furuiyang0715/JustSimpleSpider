@@ -29,7 +29,6 @@ class SzListSpider(MarginBase):
         # 文件下载链接  eg. 2020-05-07 random.random
         # 'http://www.szse.cn/api/report/ShowReport?SHOWTYPE=xlsx&CATALOGID=1834_xxpl&txtDate=2020-05-08&random=0.5377421243834375&TABKEY=tab1'
         self.base_file_url = 'http://www.szse.cn/api/report/ShowReport?SHOWTYPE=xlsx&CATALOGID=1834_xxpl&txtDate={}&random={}&TABKEY=tab1'
-        self.inner_code_map = self.get_inner_code_map()
         self.year = 2020
         self.start_dt = datetime.datetime(self.year, 1, 1)
         self.end_dt = datetime.datetime(self.year, 12, 31)
