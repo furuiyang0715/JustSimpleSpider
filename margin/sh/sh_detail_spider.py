@@ -50,15 +50,20 @@ class DetailSpider(MarginBase):
         """
         dt = dt.strftime("%Y%m%d")
         url = self.csv_url.format(dt)
+        dirname, filename = os.path.split(os.path.abspath(__file__))
+        file = os.path.join(dirname, "data_dir/{}.xls".format(dt))
         try:
-            urlretrieve(url, "./data_dir/{}/{}.xls".format(self.year, dt), self.callbackfunc)
+            urlretrieve(url, file, self.callbackfunc)
         except urllib.error.HTTPError:
             logger.warning("不存在这一天的数据{}".format(dt))
+            return False
         except TimeoutError:
             logger.warning("超时 {} ".format(dt))
         except Exception as e:
             logger.warning("下载失败 : {}".format(e))
             raise Exception
+        else:
+            return True
 
     def load(self):
         dt = self.start_dt
@@ -86,9 +91,13 @@ class DetailSpider(MarginBase):
         spider = self._init_pool(self.spider_cfg)
         spider.insert(sql)
         spider.dispose()
+        logger.info('建表成功 ')
 
-    def read_xls(self, year, dt):
-        wb = xlrd.open_workbook('./data_dir/{}/{}.xls'.format(year, dt))
+    def read_xls(self, dt):
+        dt = dt.strftime("%Y%m%d")
+        dirname, _ = os.path.split(os.path.abspath(__file__))
+        file = os.path.join(dirname, "data_dir/{}.xls".format(dt))
+        wb = xlrd.open_workbook(file)
         detail = wb.sheet_by_name("明细信息")
         # 总数据量
         rows = detail.nrows - 1
@@ -123,17 +132,40 @@ class DetailSpider(MarginBase):
             except:
                 logger.warning("dispose error")
 
+    def get_dt_list(self):
+        # # 确定一个需要下载的时间点 或者 时间点列表
+        # start_dt = datetime.datetime(2020, 1, 2)
+        # dt_list = [start_dt, ]
+
+        # 根据起止时间生成列表
+        dt_list = []
+        start_dt = datetime.datetime(2020, 1, 2)
+        end_dt = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
+        dt = start_dt
+        while dt < end_dt:
+            dt_list.append(dt)
+            dt += datetime.timedelta(days=1)
+
+        return dt_list
+
     def start(self):
         # 建表
         self._create_table()
 
-        # 确定需要下载的时间列表
-        start_dt = datetime.datetime(2020, 4, 1)
-        end_dt = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
+        dt_list = self.get_dt_list()
+        # print(dt_list[0])
+        # print(dt_list[-1])
+        # print(len(dt_list))
 
+        for dt in dt_list:
+            logger.info("开始下载 {} 的数据".format(dt))
+            ret = self.load_xls(dt)
+            if ret:
+                logger.info('开始将 {} 的数据入库 '.format(dt))
+                self.read_xls(dt)
 
-
-        pass
+            print()
+            print()
 
 
 if __name__ == "__main__":
