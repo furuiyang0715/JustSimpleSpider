@@ -39,6 +39,9 @@ class Checker(MarginBase):
         self.juyuan_last_day = datetime.datetime(2020, 4, 19)
         self.sz_history_table_name = 'sz_margin_history'
 
+        self.sh_list_table_name = 'margin_sh_list_spider'
+        self.sh_detail_table_name = 'margin_sh_detail_spider'
+
     def check1(self):
         # 查询聚源最新的数据
         juyuan = self._init_pool(self.juyuan_cfg)
@@ -92,10 +95,19 @@ class Checker(MarginBase):
 
         pass
 
+    def check3(self):
+
+        pass
+
 
 if __name__ == "__main__":
     # Checker().check1()
 
-    Checker().check2()
+    # Checker().check2()
+
+
+    # sh
+    Checker().check3()
+
 
     pass
