@@ -1,20 +1,26 @@
 # coding=utf8
 import datetime
 import logging
+import os
 import re
 import sys
+import time
 
 import demjson
 import requests
+from apscheduler.schedulers.blocking import BlockingScheduler
 from lxml import html
 
 sys.path.append("./../")
 from margin.base import MarginBase
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 
 class SHMarginSpider(MarginBase):
+    """爬取当日的上交所融资融券列表"""
+
     def _drop_table(self):
         """临时删除数据库"""
         sql = '''drop table {}; '''.format(self.spider_table_name)
@@ -123,6 +129,51 @@ class SHMarginSpider(MarginBase):
             except:
                 pass
 
+        else:
+            raise Exception("网页请求失败")
 
-if __name__ == "__main__":
+
+def sh_list_task():
+    now = lambda: time.time()
+    start_dt = now()
     SHMarginSpider().start()
+    logger.info("耗时: {} 秒".format(now() - start_dt))
+
+
+if __name__ == '__main__':
+    scheduler = BlockingScheduler()
+    # 确保重启时可以执行一次
+    sh_list_task()
+
+    scheduler.add_job(sh_list_task, 'cron', hour='3, 9, 15', max_instances=10, id="sh_spider_task")
+    logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
+    try:
+        scheduler.start()
+    except (KeyboardInterrupt, SystemExit):
+        pass
+    except Exception as e:
+        logger.info(f"本次任务执行出错{e}")
+        sys.exit(0)
+
+
+# if __name__ == "__main__":
+#     SHMarginSpider().start()
+
+'''
+docker build -f Dockerfile_shlist -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_list:v1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_list:v1
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_list:v1
+
+# remote 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
+--env LOCAL=0 \
+--name margin_sh_list \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_list:v1
+
+# local
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
+--env LOCAL=1 \
+--name margin_sh_list \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_list:v1 
+
+'''
