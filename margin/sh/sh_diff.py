@@ -104,19 +104,22 @@ class ShSync(MarginBase):
         ret = [r.get("InnerCode") for r in ret]
         return ret
 
-    def get_spider_dt_list(self, dt, market, category):
+    def get_spider_dt_list(self, dt, category):
         """获取爬虫库中具体某一天的清单"""
         spider = self._init_pool(self.spider_cfg)
 
         sql_dt = '''select max(ListDate) as mx from {} where ListDate <= '{}' and SecuMarket =83 and TargetCategory = {}; 
         '''.format(self.spider_table_name, dt, category)
         dt_ = spider.select_one(sql_dt).get("mx")
-        logger.info("距离{}最近的之前的一天是{}".format(dt, dt_))
-        sql = '''select InnerCode from {} where ListDate = '{}' and SecuMarket = {} and TargetCategory = {}; 
-                '''.format(self.spider_table_name, dt_, market, category)
-        ret = spider.select_all(sql)
-        ret = [r.get("InnerCode") for r in ret]
-        return ret
+        logger.info("距离 {} 最近的之前的一天是{}".format(dt, dt_))
+        if dt_:
+            sql = '''select InnerCode from {} where ListDate = '{}' and SecuMarket = 83 and TargetCategory = {};
+            '''.format(self.spider_table_name, dt_, category)
+            ret = spider.select_all(sql)
+            ret = [r.get("InnerCode") for r in ret]
+            return ret
+        else:
+            return []
 
     def parse_announcement(self):
         """从公告中提取更改信息 """
@@ -221,12 +224,23 @@ class ShSync(MarginBase):
             self.parse_detail()
             # self.show_juyuan_datas(juyuan=0)
 
-        # _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
-        # _yester_day = _today - datetime.timedelta(days=1)
-        # _before_yester_day = _today - datetime.timedelta(days=2)
-        # print(_yester_day, "***", _before_yester_day)
-        # lst = self.get_spider_latest_list(83, 10)
-        # print(lst)
+        _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
+        _yester_day = _today - datetime.timedelta(days=1)
+        _before_yester_day = _today - datetime.timedelta(days=2)
+        print(_yester_day, "***", _before_yester_day)
+        for _type in (10, 20):
+            _yester_day_list = self.get_spider_dt_list(_yester_day, _type)
+            _before_yester_day_list = self.get_spider_dt_list(_before_yester_day, _type)
+            print(_yester_day_list, _before_yester_day_list)
+            if _yester_day and _before_yester_day:
+                to_add = set(_yester_day_list) - set(_before_yester_day_list)
+                to_delete = set(_before_yester_day_list) - set(_yester_day_list)
+                if to_add:
+                    for one in to_add:
+                        self._update(one, _yester_day, _type, 1)
+                if to_delete:
+                    for one in to_delete:
+                        self._update(one, _yester_day, _type, 0)
 
 
 if __name__ == "__main__":
