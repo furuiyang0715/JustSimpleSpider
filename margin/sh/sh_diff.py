@@ -78,6 +78,12 @@ class ShSync(MarginBase):
 
         client.dispose()
 
+    def parse_detail(self):
+        self._update("232095", datetime.datetime(2020, 5, 8), 1, 1)
+        self._update("232095", datetime.datetime(2020, 5, 8), 0, 1)
+
+        pass
+
     def get_spider_latest_list(self, market, category):
         """获取爬虫库中最新的清单"""
         # ['SecuMarket', 'InnerCode', 'SecuCode', 'SecuAbbr', 'SerialNumber', 'ListDate', 'TargetCategory']
@@ -113,14 +119,14 @@ class ShSync(MarginBase):
         inner_code = self.get_inner_code('600225')
         # print(inner_code)  # 1346
         self._update(inner_code, datetime.datetime(2020, 4, 24), 1, 0)
-        self._update(inner_code, datetime.datetime(2020, 4, 24), 0, 0)
+        self._update(inner_code, datetime.datetime(2020, 4, 24), 2, 0)
 
         # (2) 4.28 的公告: http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20200428_5067981.shtml
         # 内容: 在2020年4月29日将 博信股份（600083） 调出融资融券标的证券名单
         inner_code = self.get_inner_code("600083")
         # print(inner_code)   # 1205
         self._update(inner_code, datetime.datetime(2020, 4, 29), 1, 0)
-        self._update(inner_code, datetime.datetime(2020, 4, 29), 0, 0)
+        self._update(inner_code, datetime.datetime(2020, 4, 29), 2, 0)
 
         # (3）4.29 的公告: http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20200429_5075757.shtml
         # 内容: 于2020年4月30日将 交大昂立（600530）和宏图高科（600122）调出融资融券标的证券名单
@@ -128,10 +134,10 @@ class ShSync(MarginBase):
         inner_code_2 = self.get_inner_code('600122')
         # print(inner_code_1, inner_code_2)  # 1694 1250
         self._update(inner_code_1, datetime.datetime(2020, 4, 30), 1, 0)
-        self._update(inner_code_1, datetime.datetime(2020, 4, 30), 0, 0)
+        self._update(inner_code_1, datetime.datetime(2020, 4, 30), 2, 0)
 
         self._update(inner_code_2, datetime.datetime(2020, 4, 30), 1, 0)
-        self._update(inner_code_2, datetime.datetime(2020, 4, 30), 0, 0)
+        self._update(inner_code_2, datetime.datetime(2020, 4, 30), 2, 0)
 
         # (4) 4.30 的公告:http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20200430_5085195.shtml
         # 内容: 于2020年5月6日将 美都能源（600175）、六国化工（600470）、飞乐音响（600651）、安信信托（600816）和宜华生活（600978）调出融资融券标的证券名单。
@@ -143,7 +149,7 @@ class ShSync(MarginBase):
         # print(in_co_1, in_co_2, in_co_3, in_co_4, in_co_5)  # 1293 1612 1868 2051 2908
         for in_co in (in_co_1, in_co_2, in_co_3, in_co_4, in_co_5):
             self._update(in_co, datetime.datetime(2020, 5, 6), 1, 0)
-            self._update(in_co, datetime.datetime(2020, 5, 6), 0, 0)
+            self._update(in_co, datetime.datetime(2020, 5, 6), 2, 0)
 
     def _update(self, inner_code, dt, type, to_add):
         """
