@@ -60,6 +60,7 @@ class SHMarginSpider(MarginBase):
         spider.dispose()
 
     def __init__(self):
+        super(SHMarginSpider, self).__init__()
         self.url = 'http://www.sse.com.cn/services/tradingservice/margin/info/againstmargin/'
         self.spider_table_name = 'margin_sh_list_spider'
 

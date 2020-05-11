@@ -55,6 +55,9 @@ class MarginBase(object):
         "db": DC_DB,
     }
 
+    def __init__(self):
+        self.target_table_name = 'stk_mttargetsecurities'
+
     def _init_pool(self, cfg: dict):
         """
         eg.

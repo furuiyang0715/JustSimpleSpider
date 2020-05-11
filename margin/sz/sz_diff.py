@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 class SzGener(MarginBase):
     def __init__(self):
+        super(SzGener, self).__init__()
         self.juyuan_table_name = 'MT_TargetSecurities'
-        self.target_table_name = 'stk_mttargetsecurities'
         # 爬虫库
         self.sz_history_table_name = 'sz_margin_history' 
 

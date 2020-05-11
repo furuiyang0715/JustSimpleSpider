@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 class SzListSpider(MarginBase):
     def __init__(self):
+        super(SzListSpider, SzListSpider).__init__()
         # 主页链接
         # self.web_url = 'http://www.szse.cn/disclosure/margin/object/index.html'
         # api 接口

@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 class DetailSpider(MarginBase):
     def __init__(self):
+        super(DetailSpider, self).__init__()
         # detail_web_url = 'http://www.sse.com.cn/market/othersdata/margin/detail/index.shtml?marginDate=20200420'
         self.csv_url = 'http://www.sse.com.cn/market/dealingdata/overview/margin/a/rzrqjygk{}.xls'
         # self.start_dt = datetime.datetime(2010, 3, 31)
