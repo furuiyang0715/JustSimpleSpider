@@ -20,7 +20,14 @@ logger = logging.getLogger(__name__)
 
 
 class SHMarginSpider(MarginBase):
-    """爬取当日的上交所融资融券列表"""
+    """爬取当日的上交所融资融券列表
+    网址: http://www.sse.com.cn/services/tradingservice/margin/info/againstmargin/
+    更新时间: 当日即可更新当日数据
+    更新内容: 目前[当日的]融资买入以及融券卖出列表
+    爬虫表: margin_sh_list_spider
+    更新时间: 每天的 3、9、15 点更新一次
+    说明: 清单数据不可回溯历史。爬虫表时间是从部署上线时间 2020-05-11 开始的。
+    """
 
     def _drop_table(self):
         """临时删除数据库"""
@@ -156,7 +163,7 @@ if __name__ == '__main__':
     # 确保重启时可以执行一次
     sh_list_task()
 
-    scheduler.add_job(sh_list_task, 'cron', hour='3, 9, 15', max_instances=10, id="sh_spider_task")
+    scheduler.add_job(sh_list_task, 'cron', hour='3, 9, 15', max_instances=10, id="sh_spider_list_task")
     logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
     try:
         scheduler.start()
