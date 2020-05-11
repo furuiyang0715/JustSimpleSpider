@@ -138,7 +138,7 @@ class SHMarginSpider(MarginBase):
             except:
                 pass
             else:
-                self.ding(msg)
+                self.ding(local_str)
 
         else:
             raise Exception("网页请求失败")
