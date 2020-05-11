@@ -1,6 +1,5 @@
 # coding=utf8
 import datetime
-import logging
 import os
 import re
 import sys
@@ -25,17 +24,13 @@ class SHMarginSpider(MarginBase):
     更新时间: 每天的 3、9、15 点更新一次
     说明: 清单数据不可回溯历史。爬虫表时间是从部署上线时间 2020-05-11 开始的。
     """
-
-    def _drop_table(self):
-        """临时删除数据库"""
-        sql = '''drop table {}; '''.format(self.spider_table_name)
-        spider = self._init_pool(self.spider_cfg)
-        spider.insert(sql)
-        spider.dispose()
+    def __init__(self):
+        super(SHMarginSpider, self).__init__()
+        self.url = 'http://www.sse.com.cn/services/tradingservice/margin/info/againstmargin/'
+        self.spider_table_name = 'margin_sh_list_spider'
 
     def _create_table(self):
-        """创建爬虫数据库"""
-        # fields = ['SecuMarket', 'InnerCode', 'SecuCode', 'SecuAbbr', 'SerialNumber', 'ListDate', 'TargetCategory']
+        """创建 sh list 爬虫数据库"""
         sql = '''
         CREATE TABLE IF NOT EXISTS `{}` (
           `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
@@ -56,19 +51,13 @@ class SHMarginSpider(MarginBase):
         spider.insert(sql)
         spider.dispose()
 
-    def __init__(self):
-        super(SHMarginSpider, self).__init__()
-        self.url = 'http://www.sse.com.cn/services/tradingservice/margin/info/againstmargin/'
-        self.spider_table_name = 'margin_sh_list_spider'
-
     def start(self):
         """
         <li><a href="#tableData_961" data-toggle="tab">融资买入标的证券一览表
         </a></li><li><a href="#tableData_962" data-toggle="tab">融券卖出标的证券一览表
         </a></li><li><a href="#tableData_960" data-toggle="tab">融资融券可充抵保证金证券一览表
         """
-        msg = ''
-        # self._drop_table()
+        msg = '本地测试:\n' if LOCAL else "远程:\n"
         self._create_table()
         resp = requests.get(self.url)
         if resp.status_code == 200:
@@ -133,17 +122,13 @@ class SHMarginSpider(MarginBase):
 
             msg += "{} 上交所的融资买入标的爬虫入库成功\n".format(show_dt)
 
-            local_str = '本地测试:\n' if LOCAL else "远程:\n"
-            local_str += msg
-
-            # 关闭数据库连接
             try:
                 spider.dispose()
             except:
-                pass
+                logger.warning("dispose error")
+                raise
             else:
-                self.ding(local_str)
-
+                self.ding(msg)
         else:
             raise Exception("网页请求失败")
 
@@ -157,7 +142,6 @@ def sh_list_task():
 
 if __name__ == '__main__':
     scheduler = BlockingScheduler()
-    # 确保重启时可以执行一次
     sh_list_task()
 
     scheduler.add_job(sh_list_task, 'cron', hour='3, 9, 15', max_instances=10, id="sh_spider_list_task")
@@ -169,10 +153,6 @@ if __name__ == '__main__':
     except Exception as e:
         logger.info(f"本次任务执行出错{e}")
         sys.exit(0)
-
-
-# if __name__ == "__main__":
-#     SHMarginSpider().start()
 
 '''
 docker build -f Dockerfile_shlist -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_list:v1 .
