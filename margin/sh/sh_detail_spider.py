@@ -157,10 +157,11 @@ class DetailSpider(MarginBase):
 
         # 根据起止时间生成列表
         dt_list = []
-        start_dt = datetime.datetime(2020, 4, 1)
-        end_dt = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
+        start_dt = datetime.datetime(2020, 3, 1)
+        end_dt = datetime.datetime(2020, 4, 2)
+        # end_dt = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
         dt = start_dt
-        while dt < end_dt:
+        while dt <= end_dt:
             dt_list.append(dt)
             dt += datetime.timedelta(days=1)
 
@@ -176,20 +177,18 @@ class DetailSpider(MarginBase):
         # print(dt_list[-1])
         # print(len(dt_list))
 
-        # for dt in dt_list:
-        #     logger.info("开始下载 {} 的数据".format(dt))
-        #     ret = self.load_xls(dt)
-        #     if ret:
-        #         logger.info('开始将 {} 的数据入库 '.format(dt))
-        #         self.read_xls(dt)
-        #
-        #     print()
-        #     print()
+        for dt in dt_list:
+            logger.info("开始下载 {} 的数据".format(dt))
+            ret = self.load_xls(dt)
+            if ret:
+                logger.info('开始将 {} 的数据入库 '.format(dt))
+                self.read_xls(dt)
+
+            print()
+            print()
 
         lst1 = self.get_detail_dt_list(datetime.datetime(2020, 5, 11), 83, 10)
         print(lst1)
-
-
 
 
 if __name__ == "__main__":

@@ -57,7 +57,7 @@ sh_detail = [1120, 1125, 1128, 1129, 1130, 1131, 1133, 1134, 1136, 1139, 1141, 1
 sh_list = set(sorted(sh_list))
 sh_detail = set(sorted(sh_detail))
 print(sh_list == sh_detail)
-print(sh_list - sh_detail)   # {226097}
+print(sh_list - sh_detail)   # {226097}  或许是因为明细信息出的较晚?? 待观察
 print(sh_detail - sh_list)
 
 sh_juyuan = []

@@ -61,6 +61,14 @@ class ShSync(MarginBase):
         |    240096 | 688318   | 深圳市财富趋势科技股份有限公司                |
         +-----------+----------+-----------------------------------------------+
         3 rows in set (0.01 sec)
+        TODO  这几个最近更新进去的 似乎只会发移出公告 而不会发列入公告 .. 
+    
+        '''
+
+        '''只能从历史的交易明细中尝试找一下列入日期 
+        select * from margin_sh_detail_spider where InnerCode = '232095' order by ListDate ;
+        select * from margin_sh_detail_spider where InnerCode = '234476' order by ListDate ;
+        select * from margin_sh_detail_spider where InnerCode = '240096' order by ListDate ;
         '''
 
         juyuan.dispose()
