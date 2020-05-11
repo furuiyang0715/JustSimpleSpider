@@ -1,8 +1,11 @@
 import datetime
 import logging
+import os
 import sys
 import time
 from collections import Counter
+
+from apscheduler.schedulers.blocking import BlockingScheduler
 
 sys.path.append('./../')
 from margin.configs import FIRST
@@ -219,10 +222,10 @@ class ShSync(MarginBase):
     def start(self):
         # 临时解析公告 只在首次运行
         if FIRST:
-            # self.show_juyuan_datas()
+            self.show_juyuan_datas()
             self.parse_announcement()
             self.parse_detail()
-            # self.show_juyuan_datas(juyuan=0)
+            self.show_juyuan_datas(juyuan=0)
 
         _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
         _yester_day = _today - datetime.timedelta(days=1)
@@ -243,8 +246,46 @@ class ShSync(MarginBase):
                         self._update(one, _yester_day, _type, 0)
 
 
-if __name__ == "__main__":
+def diff_task():
+    """对比两天清单差异的任务"""
     now = lambda: time.time()
     start_time = now()
     ShSync().start()
     logger.info(f"用时: {now() - start_time} 秒")    # (end)大概是 80s (dispose)大概是 425s
+
+
+if __name__ == "__main__":
+    scheduler = BlockingScheduler()
+    # 确保重启时可以执行一次
+    diff_task()
+
+    scheduler.add_job(diff_task, 'cron', hour='16, 23', max_instances=10, id="sh_diff_task")
+    logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
+    try:
+        scheduler.start()
+    except (KeyboardInterrupt, SystemExit):
+        pass
+    except Exception as e:
+        logger.info(f"本次任务执行出错{e}")
+        sys.exit(0)
+
+'''部署
+docker build -f Dockerfile_shdiff -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_diff:v1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_diff:v1 
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_diff:v1 
+
+# remote 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
+--env LOCAL=0 \
+--env FIRST=0 \
+--name margin_sh_diff \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_diff:v1  
+
+# local
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
+--env LOCAL=1 \
+--env FIRST=0 \
+--name margin_sh_diff \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_diff:v1  
+
+'''
