@@ -79,10 +79,19 @@ class ShSync(MarginBase):
         client.dispose()
 
     def parse_detail(self):
+        """根据历史明细生成数据"""
         self._update("232095", datetime.datetime(2020, 5, 8), 1, 1)
-        self._update("232095", datetime.datetime(2020, 5, 8), 0, 1)
+        self._update("232095", datetime.datetime(2020, 5, 8), 2, 1)
 
-        pass
+        self._update("234476", datetime.datetime(2020, 4, 29), 1, 1)
+        self._update("234476", datetime.datetime(2020, 4, 29), 2, 1)
+
+        self._update("240096", datetime.datetime(2020, 4, 27), 1, 1)
+        self._update("240096", datetime.datetime(2020, 4, 27), 2, 1)
+
+        # TODO  待明细信息出具后观察
+        self._update("226097", datetime.datetime(2020, 5, 11), 1, 1)
+        self._update("226097", datetime.datetime(2020, 5, 11), 2, 1)
 
     def get_spider_latest_list(self, market, category):
         """获取爬虫库中最新的清单"""
@@ -207,9 +216,10 @@ class ShSync(MarginBase):
     def start(self):
         # 临时解析公告 只在首次运行
         if FIRST:
-            self.show_juyuan_datas()
+            # self.show_juyuan_datas()
             self.parse_announcement()
-            self.show_juyuan_datas(juyuan=0)
+            self.parse_detail()
+            # self.show_juyuan_datas(juyuan=0)
 
         # _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
         # _yester_day = _today - datetime.timedelta(days=1)
