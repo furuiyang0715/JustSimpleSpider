@@ -54,7 +54,7 @@ class SHMarginSpider(MarginBase):
 
     def __init__(self):
         self.url = 'http://www.sse.com.cn/services/tradingservice/margin/info/againstmargin/'
-        self.spider_table_name = 'sh_margin_history'
+        self.spider_table_name = 'margin_sh_list_spider'
         self.inner_code_map = self.get_inner_code_map()
 
     def start(self):

@@ -26,7 +26,7 @@ class DetailSpider(MarginBase):
         self.year = 2020
         self.start_dt = datetime.datetime(self.year, 1, 1)
         self.end_dt = datetime.datetime(self.year, 12, 31)
-        self.detail_table_name = 'detailmargin'
+        self.detail_table_name = 'margin_sh_detail_spider'
 
     def callbackfunc(self, blocknum, blocksize, totalsize):
         """
@@ -157,7 +157,7 @@ class DetailSpider(MarginBase):
 
         # 根据起止时间生成列表
         dt_list = []
-        start_dt = datetime.datetime(2020, 1, 2)
+        start_dt = datetime.datetime(2020, 4, 1)
         end_dt = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
         dt = start_dt
         while dt < end_dt:
@@ -171,25 +171,25 @@ class DetailSpider(MarginBase):
         self._create_table()
 
         # 下载所需的 detail 数据
-        # dt_list = self.get_dt_list()
-        # # print(dt_list[0])
-        # # print(dt_list[-1])
-        # # print(len(dt_list))
-        #
-        # for dt in dt_list:
-        #     logger.info("开始下载 {} 的数据".format(dt))
-        #     ret = self.load_xls(dt)
-        #     if ret:
-        #         logger.info('开始将 {} 的数据入库 '.format(dt))
-        #         self.read_xls(dt)
-        #
-        #     print()
-        #     print()
+        dt_list = self.get_dt_list()
+        # print(dt_list[0])
+        # print(dt_list[-1])
+        # print(len(dt_list))
+
+        for dt in dt_list:
+            logger.info("开始下载 {} 的数据".format(dt))
+            ret = self.load_xls(dt)
+            if ret:
+                logger.info('开始将 {} 的数据入库 '.format(dt))
+                self.read_xls(dt)
+
+            print()
+            print()
 
         lst1 = self.get_detail_dt_list(datetime.datetime(2020, 5, 8), 83, 10)
         print(lst1)
 
-        lis2 = self.get_list_dt_list()
+
 
 
 if __name__ == "__main__":
