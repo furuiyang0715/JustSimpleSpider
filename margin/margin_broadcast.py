@@ -1,17 +1,64 @@
 """post 公告接口"""
 import datetime
+import re
 from urllib.parse import urljoin
 
 import requests
 from lxml import html
 
+from margin.base import MarginBase
 
-class MarginBroadcast(object):
+
+class MarginBroadcast(MarginBase):
     def __init__(self):
+        super(MarginBroadcast, self).__init__()
         self.sh_url = 'http://www.sse.com.cn/disclosure/magin/announcement/s_index.htm'
         self.sh_base_url = 'http://www.sse.com.cn/disclosure/magin/announcement/s_index_{}.htm'
         self.dt_format = "%Y-%m-%d"
         self.error_urls = []
+        self.announcement_table = 'margin_announcement'
+
+    def _create_table(self):
+        """建立爬虫表 """
+        spider = self._init_pool(self.spider_cfg)
+        sql = '''
+        '''
+        spider.insert(sql)
+        spider.dispose()
+
+    def _process_content(self, vs):
+        """
+        去除 4 字节的 utf-8 字符，否则插入 mysql 时会出错
+        :param vs:
+        :return:
+        """
+        try:
+            # python UCS-4 build的处理方式
+            highpoints = re.compile(u'[\U00010000-\U0010ffff]')
+        except re.error:
+            # python UCS-2 build的处理方式
+            highpoints = re.compile(u'[\uD800-\uDBFF][\uDC00-\uDFFF]')
+
+        params = list()
+        for v in vs:
+            # 对插入数据进行一些处理
+            nv = highpoints.sub(u'', v)
+            nv = self._filter_char(nv)
+            if nv.strip():     # 不需要在字符串之间保留空格
+                params.append(nv)
+        # print(params)
+        return "".join(params)
+
+    def _filter_char(self, _str):
+        """处理特殊的空白字符"""
+        for cha in ['\n', '\r', '\t',
+                    '\u200a', '\u200b', '\u200c', '\u200d', '\u200e',
+                    '\u202a', '\u202b', '\u202c', '\u202d', '\u202e',
+                    ]:
+            _str = _str.replace(cha, '')
+        # _str = _str.replace(u'\xa0', u' ')  # 把 \xa0 替换成普通的空格
+        _str = _str.replace(u'\xa0', u'')  # 把 \xa0 直接去除
+        return _str
 
     def start(self):
         for page in range(1, 23):
@@ -60,6 +107,7 @@ class MarginBroadcast(object):
                     item['keyword'] = keyword
 
                 print(item)
+                # self._save()
 
     def parse_sh_detail(self, url):
         """
@@ -133,6 +181,9 @@ class MarginBroadcast(object):
                 except:
                     content = ''
 
+            if content:
+                content = self._process_content(content)
+
             # 提取本篇的关键词
             '''
             <p style="display:none">
@@ -161,15 +212,15 @@ class MarginBroadcast(object):
             except:
                 words_str = ''
 
-            print(content)
-            print(words_str)
+            # print(">>> ", content)
+            # print(">>>> ", words_str)
             return {"content": content, "keyword": words_str}
 
 
 if __name__ == "__main__":
     m = MarginBroadcast()
-    # m.start()
-    # print(m.error_urls)
+    m.start()
+    print(m.error_urls)
 
-    demo_detail_url = 'http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20150911_3983844.shtml'
-    m.parse_sh_detail(demo_detail_url)
+    # demo_detail_url = 'http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20150911_3983844.shtml'
+    # m.parse_sh_detail(demo_detail_url)
