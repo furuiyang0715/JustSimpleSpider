@@ -61,6 +61,19 @@ class MarginBroadcast(MarginBase):
         }
         return datas
 
+    def parse_json_content(self, url):
+        """eg. http://www.szse.cn/disclosure/notice/general/t20200430_576647.json """
+        resp = requests.get(url)
+        if resp.status_code == 200:
+            ret = resp.text
+            py_data = json.loads(ret)
+            content = py_data.get("data", {}).get("content", '')
+            if content:
+                doc = html.fromstring(content)
+                content = self._process_content(doc.text_content())
+                return content
+            return ''
+
     def sz_start(self):
         for page in range(1, 8):
             datas = self._make_sz_params(page)
@@ -72,12 +85,13 @@ class MarginBroadcast(MarginBase):
                 announcements = py_ret.get("data")
                 for a in announcements:
                     print(a)
-                    item = {}
+                    item = dict()
                     item['title'] = a.get("doctitle")
                     item['link'] = a.get("docpuburl")
                     item['time'] = a.get('docpubtime')
                     # eg. http://www.szse.cn/disclosure/notice/general/t20200430_576647.json
                     content_json_url = urljoin("http://www.szse.cn", a.get("docpubjsonurl"))
+                    content = self.parse_json_content(content_json_url)
 
 
 
@@ -283,4 +297,6 @@ if __name__ == "__main__":
     # m.parse_sh_detail(demo_detail_url)
 
     # sz
-    m.sz_start()
+    # m.sz_start()
+
+    m.parse_json_content('http://www.szse.cn/disclosure/notice/general/t20200430_576647.json')
