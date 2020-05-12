@@ -171,14 +171,19 @@ class SzGener(MarginBase):
     def dt_datas(self, dt1, type):
         """获取爬虫库中某一天的历史数据"""
         spider = self._init_pool(self.spider_cfg)
-        sql_dt = '''select max(ListDate) as mx from {} where ListDate <= '{}'; '''.format(self.sz_history_table_name, dt1)
+        sql_dt = '''select max(ListDate) as mx from {} where ListDate <= '{}'; 
+        '''.format(self.sz_history_table_name, dt1)
         dt1_ = spider.select_one(sql_dt).get("mx")
+
         if type == 1:    # 融资
-            sql = '''select InnerCode from {} where ListDate = '{}' and  FinanceBool = 1; '''.format(self.sz_history_table_name, dt1_)  # TODO and FinanceBuyToday = 1
+            sql = '''select InnerCode from {} where ListDate = '{}' and  FinanceBool = 1; 
+            '''.format(self.sz_history_table_name, dt1_)  # TODO and FinanceBuyToday = 1
         elif type == 2:   # 融券
-            sql = '''select InnerCode from {} where ListDate = '{}' and  SecurityBool = 1; '''.format(self.sz_history_table_name, dt1_)
+            sql = '''select InnerCode from {} where ListDate = '{}' and  SecurityBool = 1; 
+            '''.format(self.sz_history_table_name, dt1_)
         else:
             raise
+
         ret1 = spider.select_all(sql)
         ret1 = sorted(set([r.get("InnerCode") for r in ret1]))
         return ret1
@@ -211,18 +216,7 @@ class SzGener(MarginBase):
         dt1 是较大的时间点
         dt2 是较小的时间点 是 dt1 的前一天
         """
-        #  id | SecuMarket | InnerCode | InDate              | OutDate | TargetCategory | TargetFlag | ChangeReasonDesc | UpdateTime          | CREATETIMEJZ        | UPDATETIMEJZ
         fields = ["SecuMarket", "InnerCode", "InDate", "OutDate", "TargetCategory", "TargetFlag", "ChangeReasonDesc"]
-
-        # item = {"SecuMarket": 90,
-        #         # "InnerCode": '',
-        #         # "InDate": '',
-        #         # 'OutDate': '',
-        #         # 'TargetCategory': '',   # 10 和 20
-        #         # 'TargetFlag': '',
-        #         'ChangeReasonDesc': '',
-        #         'UpdateTime': datetime.datetime.now(),
-        #         }
 
         target = self._init_pool(self.product_cfg)
 
@@ -276,7 +270,6 @@ class SzGener(MarginBase):
             logger.warning("dispose error")
             raise
 
-        # self.ding(msg)
         return msg
 
     def start(self):
@@ -387,12 +380,6 @@ if __name__ == "__main__":
         logger.info(f"本次任务执行出错{e}")
         sys.exit(0)
 
-
-# if __name__ == "__main__":
-#     diff_task()
-#
-#     # SzGener().monitor()
-#     pass
 
 '''部署 
 docker build -f Dockerfile_szdiff -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sz_diff:v1 .
