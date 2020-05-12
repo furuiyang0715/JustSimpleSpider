@@ -1,6 +1,9 @@
 """post 公告接口"""
 import datetime
+import json
+import random
 import re
+import sys
 from urllib.parse import urljoin
 
 import requests
@@ -12,19 +15,72 @@ from margin.base import MarginBase
 class MarginBroadcast(MarginBase):
     def __init__(self):
         super(MarginBroadcast, self).__init__()
+        # sh
         self.sh_url = 'http://www.sse.com.cn/disclosure/magin/announcement/s_index.htm'
         self.sh_base_url = 'http://www.sse.com.cn/disclosure/magin/announcement/s_index_{}.htm'
         self.dt_format = "%Y-%m-%d"
         self.error_urls = []
+
+        # sz
+        self.sz_url = 'http://www.szse.cn/api/search/content?random={}'.format(random.random())
+        self.headers = {
+            'Accept': 'application/json, text/javascript, */*; q=0.01',
+            'Accept-Encoding': 'gzip, deflate',
+            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Content-Length': '85',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Host': 'www.szse.cn',
+            'Origin': 'http://www.szse.cn',
+            'Pragma': 'no-cache',
+            'Referer': 'http://www.szse.cn/disclosure/margin/business/index.html',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36',
+            'X-Request-Type': 'ajax',
+            'X-Requested-With': 'XMLHttpRequest',
+        }
+
         self.announcement_table = 'margin_announcement'
 
-    def _create_table(self):
-        """建立爬虫表 """
-        spider = self._init_pool(self.spider_cfg)
-        sql = '''
+    def _make_sz_params(self, page_num):
         '''
-        spider.insert(sql)
-        spider.dispose()
+        keyword:
+        time: 0
+        range: title
+        channelCode[]: business_news
+        currentPage: 1
+        pageSize: 20
+        '''
+        datas = {
+            "keyword": '',
+            'time': '',
+            'range': 'title',
+            'channelCode[]': 'business_news',
+            'currentPage': page_num,
+            'pageSize': 20,
+        }
+        return datas
+
+    def sz_start(self):
+        for page in range(1, 8):
+            datas = self._make_sz_params(page)
+            resp = requests.post(self.sz_url, headers=self.headers, data=datas)
+            # print(resp)
+            if resp.status_code == 200:
+                ret = resp.text
+                py_ret = json.loads(ret)
+                announcements = py_ret.get("data")
+                for a in announcements:
+                    print(a)
+                    item = {}
+                    item['title'] = a.get("doctitle")
+                    item['link'] = a.get("docpuburl")
+                    item['time'] = a.get('docpubtime')
+                    # eg. http://www.szse.cn/disclosure/notice/general/t20200430_576647.json
+                    content_json_url = urljoin("http://www.szse.cn", a.get("docpubjsonurl"))
+
+
+            sys.exit(0)
 
     def _process_content(self, vs):
         """
@@ -107,7 +163,7 @@ class MarginBroadcast(MarginBase):
                     item['keyword'] = keyword
 
                 print(item)
-                # self._save()
+                # TODO 暂时的想法是将其存入 mongo 中
 
     def parse_sh_detail(self, url):
         """
@@ -219,8 +275,11 @@ class MarginBroadcast(MarginBase):
 
 if __name__ == "__main__":
     m = MarginBroadcast()
-    m.start()
-    print(m.error_urls)
+    # m.start()
+    # print(m.error_urls)
 
     # demo_detail_url = 'http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20150911_3983844.shtml'
     # m.parse_sh_detail(demo_detail_url)
+
+    # sz
+    m.sz_start()
