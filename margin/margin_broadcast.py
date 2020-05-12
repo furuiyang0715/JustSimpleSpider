@@ -8,12 +8,20 @@ from lxml import html
 
 class MarginBroadcast(object):
     def __init__(self):
-
         self.sh_url = 'http://www.sse.com.cn/disclosure/magin/announcement/s_index.htm'
+        self.sh_base_url = 'http://www.sse.com.cn/disclosure/magin/announcement/s_index_{}.htm'
         self.dt_format = "%Y-%m-%d"
 
-    def post_sh(self):
-        resp = requests.post(self.sh_url)
+    def start(self):
+        for page in range(1, 23):
+            if page == 1:
+                url = self.sh_url
+            else:
+                url = self.sh_base_url.format(page)
+            self.post_sh(url)
+
+    def post_sh(self, url):
+        resp = requests.post(url)
         if resp.status_code == 200:
             body = resp.text
             body = body.encode("ISO-8859-1").decode("utf-8")
@@ -96,5 +104,4 @@ class MarginBroadcast(object):
 
 if __name__ == "__main__":
     m = MarginBroadcast()
-    m.post_sh()
-    # m.parse_sh_detail("http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20200430_5085195.shtml")
+    m.start()
