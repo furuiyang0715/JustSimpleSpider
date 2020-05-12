@@ -14,9 +14,8 @@ from margin.configs import LOCAL, FIRST
 class SzGener(MarginBase):
     def __init__(self):
         super(SzGener, self).__init__()
-        self.juyuan_table_name = 'MT_TargetSecurities'
         # 爬虫库
-        self.sz_history_table_name = 'sz_margin_history' 
+        self.sz_history_table_name = 'sz_margin_history'
 
         # 深交所的公告页
         self.announcemen_web = 'http://www.szse.cn/disclosure/margin/business/index.html'

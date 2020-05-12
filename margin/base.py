@@ -57,6 +57,7 @@ class MarginBase(object):
 
     def __init__(self):
         self.target_table_name = 'stk_mttargetsecurities'
+        self.juyuan_table_name = 'MT_TargetSecurities'
 
     def _init_pool(self, cfg: dict):
         """

@@ -23,8 +23,6 @@ class ShSync(MarginBase):
     """
     def __init__(self):
         super(ShSync, self).__init__()
-        self.juyuan_table_name = 'MT_TargetSecurities'
-        # 爬虫库
         self.spider_table_name = 'margin_sh_list_spider'
 
     def show_juyuan_datas(self, juyuan=1):
