@@ -80,6 +80,7 @@ class MarginBroadcast(MarginBase):
                     content_json_url = urljoin("http://www.szse.cn", a.get("docpubjsonurl"))
 
 
+
             sys.exit(0)
 
     def _process_content(self, vs):
