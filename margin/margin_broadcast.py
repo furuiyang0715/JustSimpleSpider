@@ -11,6 +11,7 @@ class MarginBroadcast(object):
         self.sh_url = 'http://www.sse.com.cn/disclosure/magin/announcement/s_index.htm'
         self.sh_base_url = 'http://www.sse.com.cn/disclosure/magin/announcement/s_index_{}.htm'
         self.dt_format = "%Y-%m-%d"
+        self.error_urls = []
 
     def start(self):
         for page in range(1, 23):
@@ -24,7 +25,10 @@ class MarginBroadcast(object):
         resp = requests.post(url)
         if resp.status_code == 200:
             body = resp.text
-            body = body.encode("ISO-8859-1").decode("utf-8")
+            try:
+                body = body.encode("ISO-8859-1").decode("utf-8")
+            except:
+                self.error_urls.append(url)
             doc = html.fromstring(body)
             '''
             <dd>
@@ -35,18 +39,26 @@ class MarginBroadcast(object):
             broadcasts = doc.xpath(".//div[@class='sse_list_1 js_createPage']/dl/dd")
             for b in broadcasts:
                 item = dict()
+
                 show_dt_str = b.xpath("./span")[0].text_content()
                 show_dt = datetime.datetime.strptime(show_dt_str, self.dt_format)
+                item['time'] = show_dt
+
                 href = b.xpath("./a/@href")[0]
                 # http://www.sse.com.cn/   disclosure/magin/announcement/ssereport/c/c_20200430_5085195.shtml
                 href = urljoin("http://www.sse.com.cn/", href)
-                ret = self.parse_sh_detail(href)
-                content = ret.get("content")
-                keyword = ret.get("keyword")
-                item['time'] = show_dt
                 item['link'] = href
-                item['content'] = content
-                item['keyword'] = keyword
+
+                if href.endswith(".pdf") or href.endswith(".doc"):
+                    item['content'] = ''
+                    item['keyword'] = ''
+                else:
+                    ret = self.parse_sh_detail(href)
+                    content = ret.get("content")
+                    keyword = ret.get("keyword")
+                    item['content'] = content
+                    item['keyword'] = keyword
+
                 print(item)
 
     def parse_sh_detail(self, url):
@@ -58,7 +70,10 @@ class MarginBroadcast(object):
         resp = requests.get(url)
         if resp.status_code == 200:
             body = resp.text
-            body = body.encode("ISO-8859-1").decode("utf-8")
+            try:
+                body = body.encode("ISO-8859-1").decode("utf-8")
+            except:
+                self.error_urls.append(url)
 
             # print(body)
 
@@ -71,9 +86,52 @@ class MarginBroadcast(object):
                 <p>　　上海证券交易所</p>
                 <p>　　2020年4月30日</p>
             </div> 
+            或者: 
+            
+            <div class="article-infor">
+                <h2>关于融资融券标的证券调整的公告</h2>
+                
+                <div class="article_opt">
+                    <span class="js_output_apphide">
+                        <a href="##" class="js_myCollection sseicon2-icon_nocollection"></a>
+                        <a href="javascript:window.print();" class="mobile_hide sseicon-icon_print"></a>
+                        <a href="##" class="zoom sseicon-icon_fontSizeUp" data-type="zoom_in"></a>
+                        <a href="##" class="zoom sseicon-icon_fontSizeDown" data-type="zoom_out"></a>
+                    </span>
+                    <i> 2013-04-26</i>
+                </div>
+                
+                <p>　　2013年5月2日，中达股份（证券代码：600074）被实施退市风险警示。根据《上海证券交易所融资融券交易实施细则》第二十九条规定，本所于2013年5月2日起将该证券调出融资融券标的证券名单。<br />&nbsp;</p>
+                <p>　　特此公告。<br />&nbsp;</p>
+                <p>　　上海证券交易所</p>
+                <p>　　2013年4月26日</p>
+                
+                <div class="share js_output_apphide">分享：
+                    <span>
+                        <a href="javascript:void(0);" class="sinaico"> </a>
+                        <a href="javascript:void(0);" class="wechatico">
+                            <div class="feedback_slide" id="article_qrcode"><s></s><
+                                span class="qrcode_details">微信扫一扫，分享好友</span>
+                            </div>
+                        </a>
+                        <a href="javascript:void(0);" class="tencentico"> </a>
+                    </span>
+                </div>
+            
+            </div>
             '''
             doc = html.fromstring(body)
-            content = doc.xpath("//div[@class='allZoom']")[0].text_content()
+            try:
+                # TODO 对 content 进行去噪处理
+                content = doc.xpath("//div[@class='allZoom']")[0].text_content()
+            except:
+                content = ''
+
+            if not content:
+                try:
+                    content = doc.xpath("//div[@class='article-infor']")[0].text_content()
+                except:
+                    content = ''
 
             # 提取本篇的关键词
             '''
@@ -93,15 +151,25 @@ class MarginBroadcast(object):
                 </fjtignoreurl>
             </p>
             '''
-            key_words = doc.xpath("//span[@id='keywords']")[0].text_content().split()
-            words = []
-            for word in key_words:
-                word = word.strip(",")
-                words.append(word)
-            words_str = ','.join(words)
+            try:
+                key_words = doc.xpath("//span[@id='keywords']")[0].text_content().split()
+                words = []
+                for word in key_words:
+                    word = word.strip(",")
+                    words.append(word)
+                words_str = ','.join(words)
+            except:
+                words_str = ''
+
+            print(content)
+            print(words_str)
             return {"content": content, "keyword": words_str}
 
 
 if __name__ == "__main__":
     m = MarginBroadcast()
-    m.start()
+    # m.start()
+    # print(m.error_urls)
+
+    demo_detail_url = 'http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20150911_3983844.shtml'
+    m.parse_sh_detail(demo_detail_url)
