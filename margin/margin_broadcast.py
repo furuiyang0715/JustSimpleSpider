@@ -4,6 +4,7 @@ import json
 import random
 import re
 import sys
+import time
 from urllib.parse import urljoin
 
 import requests
@@ -74,6 +75,14 @@ class MarginBroadcast(MarginBase):
                 return content
             return ''
 
+    def trans_dt(self, dt: int):
+        """eg. 1588176000000 """
+        if not isinstance(dt, int):
+            dt = int(dt)
+        tl = time.localtime(dt/1000)
+        ret = time.strftime("%Y-%m-%d %H:%M:%S", tl)
+        return ret
+
     def sz_start(self):
         for page in range(1, 8):
             datas = self._make_sz_params(page)
@@ -84,16 +93,18 @@ class MarginBroadcast(MarginBase):
                 py_ret = json.loads(ret)
                 announcements = py_ret.get("data")
                 for a in announcements:
-                    print(a)
+                    # print(a)
                     item = dict()
                     item['title'] = a.get("doctitle")
                     item['link'] = a.get("docpuburl")
-                    item['time'] = a.get('docpubtime')
+                    item['time'] = self.trans_dt(a.get('docpubtime'))
                     # eg. http://www.szse.cn/disclosure/notice/general/t20200430_576647.json
                     content_json_url = urljoin("http://www.szse.cn", a.get("docpubjsonurl"))
                     content = self.parse_json_content(content_json_url)
+                    item['content'] = content
 
-
+                    print(item)
+                    #
 
             sys.exit(0)
 
@@ -161,6 +172,9 @@ class MarginBroadcast(MarginBase):
                 show_dt_str = b.xpath("./span")[0].text_content()
                 show_dt = datetime.datetime.strptime(show_dt_str, self.dt_format)
                 item['time'] = show_dt
+
+                title = b.xpath("./a")[0].text_content()
+                item['title'] = title
 
                 href = b.xpath("./a/@href")[0]
                 # http://www.sse.com.cn/   disclosure/magin/announcement/ssereport/c/c_20200430_5085195.shtml
@@ -290,8 +304,8 @@ class MarginBroadcast(MarginBase):
 
 if __name__ == "__main__":
     m = MarginBroadcast()
-    # m.start()
-    # print(m.error_urls)
+    m.start()
+    print(m.error_urls)
 
     # demo_detail_url = 'http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20150911_3983844.shtml'
     # m.parse_sh_detail(demo_detail_url)
@@ -299,4 +313,4 @@ if __name__ == "__main__":
     # sz
     # m.sz_start()
 
-    m.parse_json_content('http://www.szse.cn/disclosure/notice/general/t20200430_576647.json')
+    # m.parse_json_content('http://www.szse.cn/disclosure/notice/general/t20200430_576647.json')
