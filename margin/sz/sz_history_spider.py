@@ -280,13 +280,13 @@ sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sz_histor
 # remote 
 sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
 --env LOCAL=0 \
---name sz_history \
+--name margin_sz_list \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sz_history:v1  
 
 # local
 sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
 --env LOCAL=1 \
---name sz_history \
+--name margin_sz_list \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sz_history:v1  
 
 '''
