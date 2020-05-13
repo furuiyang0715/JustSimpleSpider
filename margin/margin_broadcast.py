@@ -12,6 +12,7 @@ import requests
 from apscheduler.schedulers.blocking import BlockingScheduler
 from lxml import html
 
+sys.path.append('./../')
 from margin.base import MarginBase, logger
 
 
