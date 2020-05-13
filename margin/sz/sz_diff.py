@@ -208,7 +208,7 @@ class SzGener(MarginBase):
         logger.info("{} 和 {} 的 diff 结果: add: {} , delete: {}".format(dt1, dt2, to_add_set, to_delete_set))
         local_str = "本地" if LOCAL else "远程"
         type_str = "融资" if type == 1 else "融券"
-        msg = "{}:{} 变更记录生成: {} 和 {} 的 diff 结果: add: {} , delete: {}".format(local_str, type_str, dt1, dt2, to_add_set, to_delete_set)
+        msg = "深交所: {}:{} 变更记录生成: {} 和 {} 的 diff 结果: add: {} , delete: {}".format(local_str, type_str, dt1, dt2, to_add_set, to_delete_set)
 
         if to_add_set:
             for inner_code in to_add_set:
