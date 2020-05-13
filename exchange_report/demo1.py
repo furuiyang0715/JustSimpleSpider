@@ -8,7 +8,7 @@ import requests
 
 
 class SHReport(object):
-
+    """上交所行情"""
     def __init__(self):
         self.url = 'http://yunhq.sse.com.cn:32041//v1/sh1/list/exchange/equity?'
         self.headers = {
@@ -23,6 +23,11 @@ class SHReport(object):
             'Referer': 'http://www.sse.com.cn/market/price/report/',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36',
         }
+        self.sub_type_map = {
+            "ASH": "主板A股",
+            "BSH": "主板B股",
+            "KSH": "科创板",
+        }
 
     def get_params(self):
         _timestamp = int(time.time()*1000)
@@ -35,7 +40,6 @@ class SHReport(object):
             "_": _timestamp,    # 当前的一个时间戳
         }
         param = urlencode(data)
-        # print(param)
         return param
 
     def start(self):
@@ -64,13 +68,19 @@ class SHReport(object):
                  item['ChgRate'],      # 涨跌幅 chg_rate(%)
                  item['Volume'],       # 成交量(股) volume, 网页上显示的是 手, 1 手等于 100 股
                  item['Amount'],       # 成交额(元) amount， 网页上是万元
-                 item['TradePhase'],   # 振幅 tradephase
+                 item['TradePhase'],   # tradephase
                  item['Change'],       # 涨跌 change
                  item['AmpRate'],      # 振幅 amp_rate
                  item['CPXXSubType'],
                  item['CPXXProdusta']
                  ) = one
+
+                item['CPXXSubType'] = self.sub_type_map.get(item['CPXXSubType'])
+                item.pop('CPXXProdusta')
+                item.pop('TradePhase')
+
                 print(item)
+
                 # {'SecuCode': '600000',
                 # 'SecuAbbr': '浦发银行',
                 # 'Open': 10.31,
@@ -86,7 +96,7 @@ class SHReport(object):
                 # 'AmpRate': 1.06,
                 # 'CPXXSubType': 'ASH',
                 # 'CPXXProdusta': '   D  F             '}
-                sys.exit(0)
+                # sys.exit(0)
 
 
 if __name__ == "__main__":

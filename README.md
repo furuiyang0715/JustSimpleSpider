@@ -124,3 +124,8 @@
 
 ## 融资融券标的变更 
 - margin
+
+## 交易所行情
+- exchange_report
+    - 上交所 http://www.sse.com.cn/market/price/report/
+    - 深交所 http://www.szse.cn/market/trend/index.html
