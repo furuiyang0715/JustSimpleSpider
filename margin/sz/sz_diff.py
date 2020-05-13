@@ -14,23 +14,7 @@ from margin.configs import LOCAL, FIRST
 class SzGener(MarginBase):
     def __init__(self):
         super(SzGener, self).__init__()
-        # 爬虫库
         self.sz_history_table_name = 'sz_margin_history'
-
-        # 深交所的公告页
-        self.announcemen_web = 'http://www.szse.cn/disclosure/margin/business/index.html'
-        # 深交所的公告接口  TODO
-        self.announcemen_web_api = 'http://www.szse.cn/api/search/content?random=0.5530111979175076'
-        '''
-        post 请求 
-        接口数据： 
-        keyword: 融资融券
-        time: 0
-        range: title
-        channelCode[]: business_news
-        currentPage: 1
-        pageSize: 20
-        '''
 
     def load_juyuan(self):
         """将聚源已有的数据导入"""
@@ -252,10 +236,10 @@ class SzGener(MarginBase):
                 logger.info("type: {}, add 记录条数 {}".format(type, count))
 
         if type == 1:
-            base_sql = '''update {} set OutDate = '{}', TargetFlag = 2 where SecuMarket = 90 and InnerCode = {}\
+            base_sql = '''update {} set OutDate = '{}', TargetFlag = 0 where SecuMarket = 90 and InnerCode = {}\
             and TargetCategory = 10  and TargetFlag = 1; '''
         else:
-            base_sql = '''update {} set OutDate = '{}', TargetFlag = 2 where SecuMarket = 90 and InnerCode = {}\
+            base_sql = '''update {} set OutDate = '{}', TargetFlag = 0 where SecuMarket = 90 and InnerCode = {}\
             and TargetCategory = 20  and TargetFlag = 1; '''
 
         if to_delete_set:
