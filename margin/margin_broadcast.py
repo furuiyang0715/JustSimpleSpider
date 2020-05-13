@@ -10,7 +10,7 @@ from urllib.parse import urljoin
 import requests
 from lxml import html
 
-from margin.base import MarginBase
+from margin.base import MarginBase, logger
 
 
 class MarginBroadcast(MarginBase):
@@ -42,6 +42,30 @@ class MarginBroadcast(MarginBase):
         }
 
         self.announcement_table = 'margin_announcement'
+
+    def _create_table(self):
+        """对公告爬虫建表 """
+        # firelds = ['title', 'link', 'time', 'content', 'keyword']
+
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `{}` (
+          `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+          `market` int(11) DEFAULT NULL COMMENT '证券市场',  
+          `title` varchar(200) DEFAULT NULL COMMENT '公告标题',
+          `link` varchar(200) DEFAULT NULL COMMENT '公告链接',
+          `content` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '公告内容',
+          `keyword` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '公告关键词',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `un2` (`market`, `link`) USING BTREE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='交易所融资融券公告信息';
+        
+        '''.format(self.announcement_table)
+        spider = self._init_pool(self.spider_cfg)
+        spider.insert(sql)
+        spider.dispose()
+        logger.info('建表成功 ')
 
     def _make_sz_params(self, page_num):
         '''
@@ -95,6 +119,7 @@ class MarginBroadcast(MarginBase):
                 for a in announcements:
                     # print(a)
                     item = dict()
+                    item['market'] = 90  # 深交所
                     item['title'] = a.get("doctitle")
                     item['link'] = a.get("docpuburl")
                     item['time'] = self.trans_dt(a.get('docpubtime'))
@@ -104,7 +129,7 @@ class MarginBroadcast(MarginBase):
                     item['content'] = content
 
                     print(item)
-                    #
+
 
             sys.exit(0)
 
@@ -168,6 +193,7 @@ class MarginBroadcast(MarginBase):
             broadcasts = doc.xpath(".//div[@class='sse_list_1 js_createPage']/dl/dd")
             for b in broadcasts:
                 item = dict()
+                item['market'] = 83  # 上交所
 
                 show_dt_str = b.xpath("./span")[0].text_content()
                 show_dt = datetime.datetime.strptime(show_dt_str, self.dt_format)
