@@ -7,6 +7,7 @@ from collections import Counter
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 sys.path.append('./../')
+from margin.boardcast_analyze import board_task
 from margin.configs import FIRST, LOCAL
 from margin.base import MarginBase, logger
 
@@ -280,7 +281,7 @@ def diff_task():
     now = lambda: time.time()
     start_time = now()
     ShSync().start()
-    logger.info(f"用时: {now() - start_time} 秒")    # (end)大概是 80s (dispose)大概是 425s
+    logger.info(f"用时: {now() - start_time} 秒")
 
 
 if __name__ == "__main__":
@@ -288,6 +289,7 @@ if __name__ == "__main__":
     diff_task()
 
     scheduler.add_job(diff_task, 'cron', hour='16, 23', max_instances=10, id="sh_diff_task")
+    scheduler.add_job(board_task, 'cron', hour='0', max_instances=10, id="board_task")
     logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
     try:
         scheduler.start()

@@ -1,11 +1,8 @@
-# Python 语义分析
-# 查询出文档内容:
-# 对最近 3 天的发布进行播报
-# 提取出公告中的证券代码
 import datetime
-import pprint
 import re
+import sys
 
+sys.path.append('./../')
 from margin.base import MarginBase
 
 
@@ -14,7 +11,7 @@ class BoardCast(MarginBase):
     def __init__(self):
         super(BoardCast, self).__init__()
         # 展示这个时间点之后的公告
-        self.offset = 20
+        self.offset = 10
         self.early_day = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min) - datetime.timedelta(days=self.offset)
         self.table = 'margin_announcement'
 
@@ -81,12 +78,9 @@ class BoardCast(MarginBase):
                     msg += '\n'
             msg += "*"*20 + '\n'
 
-        print(msg)
-        # self.ding(msg)
+        self.ding(msg)
 
 
-if __name__ == "__main__":
-    # ret = BoardCast().show_info(83)
-    # print(pprint.pformat(ret))
-
+def board_task():
     BoardCast().start()
+
