@@ -1,6 +1,7 @@
 """post 公告接口"""
 import datetime
 import json
+import os
 import random
 import re
 import sys
@@ -8,6 +9,7 @@ import time
 from urllib.parse import urljoin
 
 import requests
+from apscheduler.schedulers.blocking import BlockingScheduler
 from lxml import html
 
 from margin.base import MarginBase, logger
@@ -348,6 +350,44 @@ class MarginBroadcast(MarginBase):
         logger.info(self.error_pages)
 
 
+def task():
+    """公告爬虫"""
+    now = lambda: time.time()
+    start_time = now()
+    MarginBroadcast().start()
+    logger.info(f"用时: {now() - start_time} 秒")
+
+
 if __name__ == "__main__":
-    m = MarginBroadcast()
-    m.start()
+    scheduler = BlockingScheduler()
+    task()
+
+    scheduler.add_job(task, 'cron', hour='0', max_instances=10, id="boardcast_task")
+    logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
+    try:
+        scheduler.start()
+    except (KeyboardInterrupt, SystemExit):
+        pass
+    except Exception as e:
+        logger.info(f"本次任务执行出错{e}")
+        sys.exit(0)
+
+
+'''部署 
+docker build -f Dockerfile_broadcast -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/broadcast:v1 .
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/broadcast:v1 
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/broadcast:v1 
+
+# remote 
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
+--env LOCAL=0 \
+--name broadcast \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/broadcast:v1  
+
+# local
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
+--env LOCAL=1 \
+--name broadcast \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/broadcast:v1  
+
+'''
