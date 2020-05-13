@@ -204,10 +204,10 @@ class ShSync(MarginBase):
             logger.info("type: {}, add 记录条数 {}".format(type, count))
         else:   # 被移出列表的情况
             if type == 1:    # 融资
-                base_sql = '''update {} set OutDate = '{}', TargetFlag = 2 where SecuMarket = 83 and InnerCode = {}\
+                base_sql = '''update {} set OutDate = '{}', TargetFlag = 0 where SecuMarket = 83 and InnerCode = {}\
                 and TargetCategory = 10  and TargetFlag = 1; '''
             else:    # 融券
-                base_sql = '''update {} set OutDate = '{}', TargetFlag = 2 where SecuMarket = 83 and InnerCode = {}\
+                base_sql = '''update {} set OutDate = '{}', TargetFlag = 0 where SecuMarket = 83 and InnerCode = {}\
                 and TargetCategory = 20  and TargetFlag = 1; '''
 
             sql = base_sql.format(self.target_table_name, dt, inner_code)
