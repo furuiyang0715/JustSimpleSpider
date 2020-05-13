@@ -16,6 +16,8 @@ from margin.base import MarginBase, logger
 class MarginBroadcast(MarginBase):
     def __init__(self):
         super(MarginBroadcast, self).__init__()
+        self. firelds = ['title', 'link', 'time', 'content', 'keyword']
+
         # sh
         self.sh_url = 'http://www.sse.com.cn/disclosure/magin/announcement/s_index.htm'
         self.sh_base_url = 'http://www.sse.com.cn/disclosure/magin/announcement/s_index_{}.htm'
@@ -24,6 +26,7 @@ class MarginBroadcast(MarginBase):
 
         # sz
         self.sz_url = 'http://www.szse.cn/api/search/content?random={}'.format(random.random())
+        self.error_pages = []
         self.headers = {
             'Accept': 'application/json, text/javascript, */*; q=0.01',
             'Accept-Encoding': 'gzip, deflate',
@@ -45,14 +48,13 @@ class MarginBroadcast(MarginBase):
 
     def _create_table(self):
         """对公告爬虫建表 """
-        # firelds = ['title', 'link', 'time', 'content', 'keyword']
-
         sql = '''
         CREATE TABLE IF NOT EXISTS `{}` (
           `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
           `market` int(11) DEFAULT NULL COMMENT '证券市场',  
           `title` varchar(200) DEFAULT NULL COMMENT '公告标题',
           `link` varchar(200) DEFAULT NULL COMMENT '公告链接',
+          `time` datetime NOT NULL COMMENT '公告发布时间', 
           `content` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '公告内容',
           `keyword` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '公告关键词',
           `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
@@ -108,7 +110,9 @@ class MarginBroadcast(MarginBase):
         return ret
 
     def sz_start(self):
+        client = self._init_pool(self.spider_cfg)
         for page in range(1, 8):
+            logger.info("page is {}".format(page))
             datas = self._make_sz_params(page)
             resp = requests.post(self.sz_url, headers=self.headers, data=datas)
             # print(resp)
@@ -127,11 +131,13 @@ class MarginBroadcast(MarginBase):
                     content_json_url = urljoin("http://www.szse.cn", a.get("docpubjsonurl"))
                     content = self.parse_json_content(content_json_url)
                     item['content'] = content
-
-                    print(item)
-
-
-            sys.exit(0)
+                    self._save(client, item, self.announcement_table, self.firelds)
+            else:
+                self.error_pages.append(page)
+        try:
+            client.dispose()
+        except:
+            pass
 
     def _process_content(self, vs):
         """
@@ -167,7 +173,7 @@ class MarginBroadcast(MarginBase):
         _str = _str.replace(u'\xa0', u'')  # 把 \xa0 直接去除
         return _str
 
-    def start(self):
+    def sh_start(self):
         for page in range(1, 23):
             if page == 1:
                 url = self.sh_url
@@ -176,6 +182,7 @@ class MarginBroadcast(MarginBase):
             self.post_sh(url)
 
     def post_sh(self, url):
+        client = self._init_pool(self.spider_cfg)
         resp = requests.post(url)
         if resp.status_code == 200:
             body = resp.text
@@ -217,8 +224,11 @@ class MarginBroadcast(MarginBase):
                     item['content'] = content
                     item['keyword'] = keyword
 
-                print(item)
-                # TODO 暂时的想法是将其存入 mongo 中
+                self._save(client, item, self.announcement_table, self.firelds)
+        try:
+            client.dispose()
+        except:
+            pass
 
     def parse_sh_detail(self, url):
         """
@@ -327,16 +337,17 @@ class MarginBroadcast(MarginBase):
             # print(">>>> ", words_str)
             return {"content": content, "keyword": words_str}
 
+    def start(self):
+        self._create_table()
+
+        self.sh_start()
+
+        self.sz_start()
+
+        logger.info(self.error_urls)
+        logger.info(self.error_pages)
+
 
 if __name__ == "__main__":
     m = MarginBroadcast()
     m.start()
-    print(m.error_urls)
-
-    # demo_detail_url = 'http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20150911_3983844.shtml'
-    # m.parse_sh_detail(demo_detail_url)
-
-    # sz
-    # m.sz_start()
-
-    # m.parse_json_content('http://www.szse.cn/disclosure/notice/general/t20200430_576647.json')
