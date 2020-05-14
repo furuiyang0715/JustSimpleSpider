@@ -1,3 +1,6 @@
+import datetime
+import random
+
 import xlrd
 
 from exchange_report.base import ReportBase
@@ -10,6 +13,9 @@ class SZReport(ReportBase):
         self.fields = ['TradingDay', 'SecuCode', 'InnerCode', 'SecuAbbr', 'PrevClose', 'Close',
                        'RiseFall', 'Amount', 'PERatio']
         self.table_name = 'szse_dailyquote'
+        self.base_url = 'http://www.szse.cn/api/report/ShowReport?SHOWTYPE=xlsx&CATALOGID=1815_stock&TABKEY=tab1&txtBeginDate={}&txtEndDate={}&radioClass=00%2C20%2C30&txtSite=all&random={}'
+        self.check_day = (datetime.datetime.combine(datetime.datetime.today(), datetime.time.min) - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+        self.file_url = self.base_url.format(self.check_day, self.check_day, random.random())
 
     def _create_table(self):
         sql = '''
@@ -34,6 +40,11 @@ class SZReport(ReportBase):
         client.insert(sql)
         client.dispose()
 
+    def load_file(self):
+        """下载昨天的行情文件"""
+
+        pass
+
     def start(self):
         self._create_table()
 
@@ -57,4 +68,5 @@ class SZReport(ReportBase):
 
 
 if __name__ == "__main__":
-    SZReport().start()
+    print(SZReport().file_url)
+    # SZReport().start()
