@@ -37,14 +37,14 @@ class SHReport(ReportBase):
         self.fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'TradingDay', 'Open', 'High', 'Low',
                        'Last', 'PrevClose', 'ChgRate', 'Volume', 'Amount', 'RiseFall', 'AmpRate', 'CPXXSubType']
 
-    def get_params(self):
+    def get_params(self, begin):
         _timestamp = int(time.time()*1000)
         data = {
             'callback': 'jQuery1124010159023820477953_1589359759776',
             'select': 'code,name,open,high,low,last,prev_close,chg_rate,volume,amount,tradephase,change,amp_rate,cpxxsubtype,cpxxprodusta',
             'order': '',
-            'begin': 0,
-            'end': 25,
+            'begin': begin,
+            'end': begin + 25,
             "_": _timestamp,    # 当前的一个时间戳
         }
         param = urlencode(data)
@@ -82,60 +82,65 @@ class SHReport(ReportBase):
 
     def start(self):
         self._create_table()
+        begin = 0
+        while True:
+            url = self.url+self.get_params(begin)
+            logger.info(url)
+            resp = requests.get(url, headers=self.headers)
+            if resp.status_code == 200:
+                ret = resp.text
+                ret = re.findall("jQuery\d{22}_\d{13}\((.*)\)", ret)[0]
+                py_datas = json.loads(ret)
+                _date = py_datas.get("date")
+                _time = py_datas.get("time")
+                trade_day = datetime.datetime.strptime(str(_date), "%Y%m%d")
 
-        url = self.url+self.get_params()
-        logger.info(url)
-        resp = requests.get(url, headers=self.headers)
-        if resp.status_code == 200:
-            ret = resp.text
-            ret = re.findall("jQuery\d{22}_\d{13}\((.*)\)", ret)[0]
-            py_datas = json.loads(ret)
-            _date = py_datas.get("date")
-            _time = py_datas.get("time")
-            trade_day = datetime.datetime.strptime(str(_date), "%Y%m%d")
+                _total = py_datas.get("total")
+                _list = py_datas.get("list")
+                # code,name,open,high,low,last,prev_close,chg_rate,volume,amount,tradephase,
+                # change,amp_rate,cpxxsubtype,cpxxprodusta
+                if not _list:
+                    # 没有数据的时候 _list 的结果为空
+                    break
 
-            _total = py_datas.get("total")
-            _list = py_datas.get("list")
-            # code,name,open,high,low,last,prev_close,chg_rate,volume,amount,tradephase,
-            # change,amp_rate,cpxxsubtype,cpxxprodusta
+                client = self._init_pool(self.spider_cfg)
+                for one in _list:
+                    item = dict()
+                    (item['SecuCode'],     # 证券代码 code
+                     item['SecuAbbr'],     # 证券简称 name
+                     item['Open'],         # 开盘 open
+                     item['High'],         # 最高 high
+                     item['Low'],          # 最低 low
+                     item['Last'],         # 最新 last
+                     item['PrevClose'],    # 前收 prev_close
+                     item['ChgRate'],      # 涨跌幅 chg_rate(%)
+                     item['Volume'],       # 成交量(股) volume, 网页上显示的是 手, 1 手等于 100 股
+                     item['Amount'],       # 成交额(元) amount， 网页上是万元
+                     item['TradePhase'],   # tradephase
+                     item['RiseFall'],      # 涨跌 change --> FIX change 是 mysql 关键字
+                     item['AmpRate'],      # 振幅 amp_rate
+                     item['CPXXSubType'],
+                     item['CPXXProdusta']
+                     ) = one
 
-            client = self._init_pool(self.spider_cfg)
-            for one in _list:
-                item = dict()
-                (item['SecuCode'],     # 证券代码 code
-                 item['SecuAbbr'],     # 证券简称 name
-                 item['Open'],         # 开盘 open
-                 item['High'],         # 最高 high
-                 item['Low'],          # 最低 low
-                 item['Last'],         # 最新 last
-                 item['PrevClose'],    # 前收 prev_close
-                 item['ChgRate'],      # 涨跌幅 chg_rate(%)
-                 item['Volume'],       # 成交量(股) volume, 网页上显示的是 手, 1 手等于 100 股
-                 item['Amount'],       # 成交额(元) amount， 网页上是万元
-                 item['TradePhase'],   # tradephase
-                 item['RiseFall'],      # 涨跌 change --> FIX change 是 mysql 关键字
-                 item['AmpRate'],      # 振幅 amp_rate
-                 item['CPXXSubType'],
-                 item['CPXXProdusta']
-                 ) = one
+                    # 将类型版块进行转换
+                    item['CPXXSubType'] = self.sub_type_map.get(item['CPXXSubType'])
+                    inner_code = self.get_inner_code(item['SecuCode'])
+                    if not inner_code:
+                        raise Exception("No InnerCode.")
 
-                # 将类型版块进行转换
-                item['CPXXSubType'] = self.sub_type_map.get(item['CPXXSubType'])
-                inner_code = self.get_inner_code(item['SecuCode'])
-                if not inner_code:
-                    raise Exception("No InnerCode.")
+                    item['InnerCode'] = inner_code
+                    item['TradingDay'] = str(trade_day)
 
-                item['InnerCode'] = inner_code
-                item['TradingDay'] = str(trade_day)
+                    # 去掉不需要的字段
+                    item.pop('CPXXProdusta')
+                    item.pop('TradePhase')
+                    self._save(client, item, self.table_name, self.fields)
 
-                # 去掉不需要的字段
-                item.pop('CPXXProdusta')
-                item.pop('TradePhase')
-                ret = self._save(client, item, self.table_name, self.fields)
-
-            client.dispose()
-        else:
-            raise
+                client.dispose()
+            else:
+                raise
+            begin += 25  # 每页获取 25 个
 
 
 if __name__ == "__main__":
