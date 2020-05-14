@@ -121,20 +121,21 @@ class SHReport(ReportBase):
                  ) = one
 
                 item['CPXXSubType'] = self.sub_type_map.get(item['CPXXSubType'])
-                item['InnerCode'] = self.get_inner_code(item['SecuCode'])
+                inner_code = self.get_inner_code(item['SecuCode'])
+                if not inner_code:
+                    raise
+                item['InnerCode'] = inner_code
                 item['TradingDay'] = str(trade_day)
 
                 item.pop('CPXXProdusta')
                 item.pop('TradePhase')
 
                 logger.info(item)
-                ret = self._save(client, item, self.table_name, [])
+                ret = self._save(client, item, self.table_name, self.fields)
 
                 if not ret:
                     raise
-
                 sys.exit(0)
-
             client.dispose()
         else:
             raise
