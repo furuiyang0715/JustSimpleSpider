@@ -5,6 +5,7 @@ import traceback
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 sys.path.append("./../")
+from exchange_report.configs import LOCAL
 from exchange_report.base import logger
 from exchange_report.sh_report import SHReport
 from exchange_report.sz_report import SZReport
@@ -13,11 +14,12 @@ from exchange_report.sz_report import SZReport
 def task():
     sh_runner = SHReport()
     sz_runner = SZReport()
+    local_str = "本地" if LOCAL else "远程"
 
     try:
         sh_runner.start()
         sz_runner.start()
-        msg = sh_runner.select_count() + '\n' + sz_runner.select_count()
+        msg = "{} >> 交易所行情: ".format(local_str) + sh_runner.select_count() + '\n' + sz_runner.select_count()
     except Exception as e:
         traceback.print_exc()
         sh_runner.ding("行情数据爬取失败:  {}".format(e))
@@ -30,7 +32,7 @@ if __name__ == "__main__":
     task()
 
     # 15:02, 15:50, 8:00
-    scheduler.add_job(task, 'cron', hour='8, 15', min='2, 50',  max_instances=10, id="task")
+    scheduler.add_job(task, 'cron', hour='8, 15', minute='2, 50',  max_instances=10, id="task")
     logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
     try:
         scheduler.start()
