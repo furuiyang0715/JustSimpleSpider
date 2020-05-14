@@ -76,6 +76,16 @@ class SZReport(ReportBase):
         """14,044,875.30 """
         return float(amount.replace(',', ''))
 
+    def select_count(self):
+        """获取数据库中当前的插入信息"""
+        client = self._init_pool(self.spider_cfg)
+        sql = '''
+        select count(*) as total from {} where TradingDay = '{}'; 
+        '''.format(self.table_name, self.check_day)
+        ret = client.select_one(sql).get("total")
+        msg = "深交所 {} 入库 {} 条 ".format(self.check_day, ret)
+        return msg
+
     def read_xlsx(self, dt: datetime.datetime):
         dt = dt.strftime("%Y-%m-%d")
         dirname, filename = os.path.split(os.path.abspath(__file__))

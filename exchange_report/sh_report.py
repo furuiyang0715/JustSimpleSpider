@@ -33,7 +33,7 @@ class SHReport(ReportBase):
             "BSH": "主板B股",
             "KSH": "科创板",
         }
-        self.table_name = 'exchange_dailyquote'
+        self.table_name = 'see_dailyquote'
         self.fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'TradingDay', 'Open', 'High', 'Low',
                        'Last', 'PrevClose', 'ChgRate', 'Volume', 'Amount', 'RiseFall', 'AmpRate', 'CPXXSubType']
 
@@ -79,6 +79,17 @@ class SHReport(ReportBase):
         client = self._init_pool(self.spider_cfg)
         client.insert(sql)
         client.dispose()
+
+    def select_count(self):
+        """获取数据库中当前的插入信息"""
+        client = self._init_pool(self.spider_cfg)
+        _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
+        sql = '''
+        select count(*) as total from {} where TradingDay = '{}'; 
+        '''.format(self.table_name, _today)
+        ret = client.select_one(sql).get("total")
+        msg = "上交所 {} 入库 {} 条 ".format(_today, ret)
+        return msg
 
     def start(self):
         self._create_table()
