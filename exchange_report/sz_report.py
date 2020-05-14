@@ -17,7 +17,8 @@ class SZReport(ReportBase):
                        'RiseFall', 'Amount', 'PERatio']
         self.table_name = 'szse_dailyquote'
         self.base_url = 'http://www.szse.cn/api/report/ShowReport?SHOWTYPE=xlsx&CATALOGID=1815_stock&TABKEY=tab1&txtBeginDate={}&txtEndDate={}&radioClass=00%2C20%2C30&txtSite=all&random={}'
-        self.check_day = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min) - datetime.timedelta(days=1)
+        self._today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
+        self.check_day = self._today - datetime.timedelta(days=1)
 
     def _create_table(self):
         sql = '''
@@ -68,9 +69,13 @@ class SZReport(ReportBase):
     def start(self):
         self._create_table()
 
+        # 在当天收盘前只能拿到前一天的数据
         self.load_xlsx(self.check_day)
-
         self.read_xlsx(self.check_day)
+
+        # 在当天收盘后可以拿到今天最新的数据
+        self.load_xlsx(self._today)
+        self.read_xlsx(self._today)
 
     def _re_amount(self, amount: str):
         """14,044,875.30 """
@@ -94,6 +99,11 @@ class SZReport(ReportBase):
         # sheet_names = wb.sheet_names()
         ws = wb.sheet_by_name('股票行情')
         _rows = ws.nrows
+        # print(">>> ", _rows)
+        if _rows < 10:
+            logger.warning("{} 当天无数据".format(dt))
+            return
+
         client = self._init_pool(self.spider_cfg)
         for idx in range(1, _rows):
             _line = ws.row_values(idx)
@@ -121,3 +131,5 @@ class SZReport(ReportBase):
 
 if __name__ == "__main__":
     SZReport().start()
+    # SZReport().load_xlsx(SZReport()._today + datetime.timedelta(days=1))
+    # SZReport().read_xlsx(SZReport()._today + datetime.timedelta(days=1))
