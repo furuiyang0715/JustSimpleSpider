@@ -5,7 +5,7 @@ from gne import GeneralNewsExtractor
 from lxml import html
 
 sys.path.append("./../../")
-from takungpao import Base
+from takungpao.hkstock_cjss import Base
 
 
 class ZhongGuoJingJi(Base):

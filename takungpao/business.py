@@ -1,4 +1,4 @@
-from takungpao import ZhongGuoJingJi
+from takungpao.zhongguojingji import ZhongGuoJingJi
 
 
 class Business(ZhongGuoJingJi):

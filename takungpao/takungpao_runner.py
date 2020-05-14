@@ -1,21 +1,21 @@
 import threadpool
 
-from takungpao import Business
-from takungpao import DiChan
-from takungpao import EconomicObserver
-from takungpao import GuoJiJingJi
-from takungpao import HKStock
-from takungpao import HKCaiJing
-from takungpao import HKStock_CJSS
-from takungpao import HKStock_GJJJ
-from takungpao import HKStock_GSYW
-from takungpao import HKStock_JGSD
-from takungpao import HKStock_JJYZ
-from takungpao import HKStock_QQGS
-from takungpao import NewFinanceTrend
-from takungpao import FK
-from takungpao import Travel
-from takungpao import ZhongGuoJingJi
+from takungpao.business import Business
+from takungpao.dichan import DiChan
+from takungpao.economic_observer import EconomicObserver
+from takungpao.guojijingji import GuoJiJingJi
+from takungpao.hk_stock import HKStock
+from takungpao.hkcaijing import HKCaiJing
+from takungpao.hkstock_cjss import HKStock_CJSS
+from takungpao.hkstock_gjjj import HKStock_GJJJ
+from takungpao.hkstock_gsyw import HKStock_GSYW
+from takungpao.hkstock_jgsd import HKStock_JGSD
+from takungpao.hkstock_jjyz import HKStock_JJYZ
+from takungpao.hkstock_qqgs import HKStock_QQGS
+from takungpao.new_finance_trend import NewFinanceTrend
+from takungpao.takungpao_fk import FK
+from takungpao.takungpao_travel import Travel
+from takungpao.zhongguojingji import ZhongGuoJingJi
 
 
 class TakungpaoSchedule(object):
@@ -43,12 +43,6 @@ class TakungpaoSchedule(object):
             ZhongGuoJingJi,  # 中国经济
         ]
 
-        # # just test
-        # for cls in class_lst:
-        #     ins = cls()
-        #     print(ins.name)
-
-        # instance 列表
         ins_list = [cls() for cls in class_lst]
 
         pool = threadpool.ThreadPool(4)
@@ -58,6 +52,5 @@ class TakungpaoSchedule(object):
 
 
 if __name__ == "__main__":
-
     sche = TakungpaoSchedule()
     sche.start()
