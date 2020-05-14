@@ -88,7 +88,13 @@ class SZReport(ReportBase):
         select count(*) as total from {} where TradingDay = '{}'; 
         '''.format(self.table_name, self.check_day)
         ret = client.select_one(sql).get("total")
-        msg = "深交所 {} 入库 {} 条 ".format(self.check_day, ret)
+
+        sql2 = '''
+        select count(*) as total from {} where TradingDay = '{}';  
+        '''.format(self.table_name, self._today)
+        ret2 = client.select_one(sql2).get("total")
+
+        msg = "深交所 {} 入库 {} 条 ; {} 入库 {} 条".format(self.check_day, ret, self._today, ret2)
         return msg
 
     def read_xlsx(self, dt: datetime.datetime):
