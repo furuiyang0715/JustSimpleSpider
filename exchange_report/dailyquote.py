@@ -3,7 +3,6 @@ import json
 import re
 import sys
 import time
-import traceback
 from urllib.parse import urlencode
 
 import requests
@@ -93,7 +92,7 @@ class SHReport(ReportBase):
             py_datas = json.loads(ret)
             _date = py_datas.get("date")
             _time = py_datas.get("time")
-            trade_day = datetime.datetime.strptime(str(_date) + str(_time), "%Y%m%d%H%M%S")
+            trade_day = datetime.datetime.strptime(str(_date), "%Y%m%d")
 
             _total = py_datas.get("total")
             _list = py_datas.get("list")
@@ -120,22 +119,20 @@ class SHReport(ReportBase):
                  item['CPXXProdusta']
                  ) = one
 
+                # 将类型版块进行转换
                 item['CPXXSubType'] = self.sub_type_map.get(item['CPXXSubType'])
                 inner_code = self.get_inner_code(item['SecuCode'])
                 if not inner_code:
-                    raise
+                    raise Exception("No InnerCode.")
+
                 item['InnerCode'] = inner_code
                 item['TradingDay'] = str(trade_day)
 
+                # 去掉不需要的字段
                 item.pop('CPXXProdusta')
                 item.pop('TradePhase')
-
-                logger.info(item)
                 ret = self._save(client, item, self.table_name, self.fields)
 
-                if not ret:
-                    raise
-                sys.exit(0)
             client.dispose()
         else:
             raise
