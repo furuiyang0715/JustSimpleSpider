@@ -3,6 +3,7 @@ import hashlib
 import hmac
 import json
 import logging
+import sys
 import time
 import traceback
 
@@ -190,3 +191,17 @@ class ReportBase(object):
         ret = clinet.select_all(sql)
         ret = [r.get("InnerCode") for r in ret]
         return ret
+
+    def callbackfunc(self, blocknum, blocksize, totalsize):
+        """
+        下载文件的回调函数
+        :param blocknum: 已经下载的数据块
+        :param blocksize:  数据块的大小
+        :param totalsize: 远程文件的大小
+        :return:
+        """
+        percent = 100.0 * blocknum * blocksize / totalsize
+        if percent > 100:
+            percent = 100
+        sys.stdout.write("\r%6.2f%%" % percent)
+        sys.stdout.flush()
