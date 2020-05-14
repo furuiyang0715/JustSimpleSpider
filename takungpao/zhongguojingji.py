@@ -1,9 +1,11 @@
 import datetime
+import sys
 
 from gne import GeneralNewsExtractor
 from lxml import html
 
-from PublicOpinion.takungpao.hkstock_cjss import Base
+sys.path.append("./../../")
+from takungpao import Base
 
 
 class ZhongGuoJingJi(Base):

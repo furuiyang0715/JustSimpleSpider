@@ -1,7 +1,7 @@
 from gne import GeneralNewsExtractor
 from lxml import html
 
-from PublicOpinion.takungpao.hkstock_cjss import Base
+from takungpao import Base
 
 
 class FK(Base):

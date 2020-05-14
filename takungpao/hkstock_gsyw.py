@@ -1,4 +1,4 @@
-from PublicOpinion.takungpao.hkstock_cjss import HKStock_CJSS
+from takungpao import HKStock_CJSS
 
 
 class HKStock_GSYW(HKStock_CJSS):

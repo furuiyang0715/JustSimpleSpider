@@ -1,21 +1,21 @@
 import threadpool
 
-from PublicOpinion.takungpao.business import Business
-from PublicOpinion.takungpao.dichan import DiChan
-from PublicOpinion.takungpao.economic_observer import EconomicObserver
-from PublicOpinion.takungpao.guojijingji import GuoJiJingJi
-from PublicOpinion.takungpao.hk_stock import HKStock
-from PublicOpinion.takungpao.hkcaijing import HKCaiJing
-from PublicOpinion.takungpao.hkstock_cjss import HKStock_CJSS
-from PublicOpinion.takungpao.hkstock_gjjj import HKStock_GJJJ
-from PublicOpinion.takungpao.hkstock_gsyw import HKStock_GSYW
-from PublicOpinion.takungpao.hkstock_jgsd import HKStock_JGSD
-from PublicOpinion.takungpao.hkstock_jjyz import HKStock_JJYZ
-from PublicOpinion.takungpao.hkstock_qqgs import HKStock_QQGS
-from PublicOpinion.takungpao.new_finance_trend import NewFinanceTrend
-from PublicOpinion.takungpao.takungpao_fk import FK
-from PublicOpinion.takungpao.takungpao_travel import Travel
-from PublicOpinion.takungpao.zhongguojingji import ZhongGuoJingJi
+from takungpao import Business
+from takungpao import DiChan
+from takungpao import EconomicObserver
+from takungpao import GuoJiJingJi
+from takungpao import HKStock
+from takungpao import HKCaiJing
+from takungpao import HKStock_CJSS
+from takungpao import HKStock_GJJJ
+from takungpao import HKStock_GSYW
+from takungpao import HKStock_JGSD
+from takungpao import HKStock_JJYZ
+from takungpao import HKStock_QQGS
+from takungpao import NewFinanceTrend
+from takungpao import FK
+from takungpao import Travel
+from takungpao import ZhongGuoJingJi
 
 
 class TakungpaoSchedule(object):

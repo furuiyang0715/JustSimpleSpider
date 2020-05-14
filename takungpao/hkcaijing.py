@@ -1,4 +1,4 @@
-from PublicOpinion.takungpao.zhongguojingji import ZhongGuoJingJi
+from takungpao import ZhongGuoJingJi
 
 
 class HKCaiJing(ZhongGuoJingJi):

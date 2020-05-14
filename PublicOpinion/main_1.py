@@ -8,7 +8,7 @@ import schedule
 
 sys.path.append("./../")
 from PublicOpinion.jfinfo.jfinfo_runner import JFSchedule
-from PublicOpinion.takungpao.takungpao_runner import TakungpaoSchedule
+from takungpao import TakungpaoSchedule
 
 
 logger = logging.getLogger()
