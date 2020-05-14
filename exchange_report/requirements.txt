@@ -1,0 +1,5 @@
+APScheduler==3.6.3
+PyMySQL==0.9.3
+xlrd==1.2.0
+requests==2.23.0
+DBUtils==1.3
