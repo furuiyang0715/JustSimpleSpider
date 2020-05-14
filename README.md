@@ -84,26 +84,6 @@
         - 热点版块 hotPlateList 
         - 明日 3 大猜想 threeGuessList 
 
-- 大公报财经[takungpao]
-    - 港股频道 
-        - 财经时事 PublicOpinion/takungpao/hkstock_cjss.py
-        - 公司要闻 PublicOpinion/takungpao/hkstock_gsyw.py
-        - 机构视点 PublicOpinion/takungpao/hkstock_jgsd.py
-        - 全球股市 PublicOpinion/takungpao/hkstock_qqgs.py
-        - 国际聚焦 PublicOpinion/takungpao/hkstock_gjjj.py 
-        - 经济一周 PublicOpinion/takungpao/hkstock_jjyz.py 
-    - 风口: PublicOpinion/takungpao/takungpao_fk.py 
-    - 旅游: PublicOpinion/takungpao/takungpao_travel.py 
-    - 首页财经 
-        - 中国经济  PublicOpinion/takungpao/zhongguojingji.py 
-        - 香港财经  PublicOpinion/takungpao/hkcaijing.py 
-        - 国际经济  PublicOpinion/takungpao/guojijingji.py 
-        - 经济观察家  PublicOpinion/takungpao/economic_observer.py 
-        - 港股  PublicOpinion/takungpao/hk_stock.py 
-        - 地产  PublicOpinion/takungpao/dichan.py 
-        - 商业  PublicOpinion/takungpao/business.py 
-        - 新经济浪潮  PublicOpinion/takungpao/economic_observer.py 
-    
 
 ## 官媒 GovSpiders
 - 中国银行 [chinabank]
@@ -129,3 +109,24 @@
 - exchange_report
     - 上交所 http://www.sse.com.cn/market/price/report/
     - 深交所 http://www.szse.cn/market/trend/index.html
+    
+## 大公报
+- takungpao
+    - 港股频道 
+        - 财经时事 PublicOpinion/takungpao/hkstock_cjss.py
+        - 公司要闻 PublicOpinion/takungpao/hkstock_gsyw.py
+        - 机构视点 PublicOpinion/takungpao/hkstock_jgsd.py
+        - 全球股市 PublicOpinion/takungpao/hkstock_qqgs.py
+        - 国际聚焦 PublicOpinion/takungpao/hkstock_gjjj.py 
+        - 经济一周 PublicOpinion/takungpao/hkstock_jjyz.py 
+    - 风口: PublicOpinion/takungpao/takungpao_fk.py 
+    - 旅游: PublicOpinion/takungpao/takungpao_travel.py 
+    - 首页财经 
+        - 中国经济  PublicOpinion/takungpao/zhongguojingji.py 
+        - 香港财经  PublicOpinion/takungpao/hkcaijing.py 
+        - 国际经济  PublicOpinion/takungpao/guojijingji.py 
+        - 经济观察家  PublicOpinion/takungpao/economic_observer.py 
+        - 港股  PublicOpinion/takungpao/hk_stock.py 
+        - 地产  PublicOpinion/takungpao/dichan.py 
+        - 商业  PublicOpinion/takungpao/business.py 
+        - 新经济浪潮  PublicOpinion/takungpao/economic_observer.py 
