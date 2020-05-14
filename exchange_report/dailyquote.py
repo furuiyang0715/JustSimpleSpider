@@ -6,10 +6,14 @@ from urllib.parse import urlencode
 
 import requests
 
+sys.path.append('./../')
+from exchange_report.base import ReportBase
 
-class SHReport(object):
+
+class SHReport(ReportBase):
     """上交所行情"""
     def __init__(self):
+        super(SHReport, self).__init__()
         self.url = 'http://yunhq.sse.com.cn:32041//v1/sh1/list/exchange/equity?'
         self.headers = {
             'Accept': '*/*',
@@ -28,6 +32,7 @@ class SHReport(object):
             "BSH": "主板B股",
             "KSH": "科创板",
         }
+        self.table_name = 'exchange_dailyquote'
 
     def get_params(self):
         _timestamp = int(time.time()*1000)
@@ -41,6 +46,36 @@ class SHReport(object):
         }
         param = urlencode(data)
         return param
+
+    def _create_table(self):
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `{}` (
+          `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+          `SecuCode` varchar(10) DEFAULT NULL COMMENT '证券代码',
+          `InnerCode` int(11) NOT NULL COMMENT '证券内部编码', 
+          `SecuAbbr` varchar(100) DEFAULT NULL COMMENT '证券简称',
+          `TradingDay` datetime NOT NULL COMMENT '交易日',
+          `Open` decimal(10,4) DEFAULT NULL COMMENT '今开盘(元)',
+          `High` decimal(10,4) DEFAULT NULL COMMENT '最高价(元)',
+          `Low` decimal(10,4) DEFAULT NULL COMMENT '最低价(元)',
+          `Last` decimal(10,4) DEFAULT NULL COMMENT '最新价(元)',
+          `PrevClose` decimal(10,4) DEFAULT NULL COMMENT '前收价(元)',
+          `ChgRate` decimal(10,4) DEFAULT NULL COMMENT '涨跌幅(%)',
+          `Volume` decimal(20,0) DEFAULT NULL COMMENT '成交量(股)',
+          `Amount` decimal(19,4) DEFAULT NULL COMMENT '成交金额(元)',
+          `Change` decimal(10,4) DEFAULT NULL COMMENT '涨跌',
+          `AmpRate` decimal(10,4) DEFAULT NULL COMMENT '振幅',
+          `CPXXSubType` varchar(20) DEFAULT NULL COMMENT '版块类型',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
+           UNIQUE KEY `IX_QT_DailyQuote` (`InnerCode`,`TradingDay`),
+           UNIQUE KEY `PK_QT_DailyQuote` (`ID`),
+           KEY `IX_QT_DailyQuote_TradingDay` (`TradingDay`)
+           ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='交易所行情';
+        '''.format(self.table_name)
+        client = self._init_pool(self.spider_cfg)
+        client.insert(sql)
+        client.dispose()
 
     def start(self):
         url = self.url+self.get_params()
@@ -79,7 +114,9 @@ class SHReport(object):
                 item.pop('CPXXProdusta')
                 item.pop('TradePhase')
 
-                print(item)
+                # print(item)
+                # print(list(item.keys()))
+                # ['SecuCode', 'SecuAbbr', 'Open', 'High', 'Low', 'Last', 'PrevClose', 'ChgRate', 'Volume', 'Amount', 'Change', 'AmpRate', 'CPXXSubType']
 
                 # {'SecuCode': '600000',
                 # 'SecuAbbr': '浦发银行',
