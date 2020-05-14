@@ -105,6 +105,9 @@ class SZReport(ReportBase):
             item['PERatio'] = self._re_amount(_line[7])   # 市盈率
             self._save(client, item, self.table_name, self.fields)
 
+        self.rm_file(file_path)
+        client.dispose()
+
 
 if __name__ == "__main__":
     SZReport().start()

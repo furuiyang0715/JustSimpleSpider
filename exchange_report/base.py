@@ -3,6 +3,7 @@ import hashlib
 import hmac
 import json
 import logging
+import os
 import sys
 import time
 import traceback
@@ -205,3 +206,8 @@ class ReportBase(object):
             percent = 100
         sys.stdout.write("\r%6.2f%%" % percent)
         sys.stdout.flush()
+
+    def rm_file(self, file):
+        """清理文件"""
+        os.remove(file)
+        logger.info("删除文件{}成功".format(file))
