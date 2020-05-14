@@ -125,16 +125,17 @@ class SHReport(ReportBase):
 
                     # 将类型版块进行转换
                     item['CPXXSubType'] = self.sub_type_map.get(item['CPXXSubType'])
+                    # TODO 获取聚源让内部编码这一步会拖慢速度
                     inner_code = self.get_inner_code(item['SecuCode'])
                     if not inner_code:
                         raise Exception("No InnerCode.")
-
                     item['InnerCode'] = inner_code
                     item['TradingDay'] = str(trade_day)
 
                     # 去掉不需要的字段
                     item.pop('CPXXProdusta')
                     item.pop('TradePhase')
+                    # print(item)
                     self._save(client, item, self.table_name, self.fields)
 
                 client.dispose()

@@ -130,8 +130,8 @@ class ReportBase(object):
         """
         juyuan = self._init_pool(self.juyuan_cfg)
         # 8 是开放式基金
-        # sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2, 8) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
-        sql = 'SELECT SecuCode,InnerCode from SecuMain;'
+        sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2, 8) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
+        # sql = 'SELECT SecuCode,InnerCode from SecuMain;'
         ret = juyuan.select_all(sql)
         juyuan.dispose()
         info = {}
