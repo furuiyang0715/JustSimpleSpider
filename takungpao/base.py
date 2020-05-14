@@ -78,14 +78,20 @@ class Base(object):
         fields_str = "(" + ",".join(ks) + ")"
         values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
         base_sql = '''INSERT INTO `{}` '''.format(table) + fields_str + ''' values ''' + values_str
-        on_update_sql = ''' ON DUPLICATE KEY UPDATE '''
-        update_vs = []
-        for update_field in update_fields:
-            on_update_sql += '{}=%s,'.format(update_field)
-            update_vs.append(to_insert.get(update_field))
-        on_update_sql = on_update_sql.rstrip(",")
-        sql = base_sql + on_update_sql + """;"""
-        vs.extend(update_vs)
+
+        # 是否在主键冲突时进行更新插入
+        if update_fields:
+            on_update_sql = ''' ON DUPLICATE KEY UPDATE '''
+            update_vs = []
+            for update_field in update_fields:
+                on_update_sql += '{}=%s,'.format(update_field)
+                update_vs.append(to_insert.get(update_field))
+            on_update_sql = on_update_sql.rstrip(",")
+            sql = base_sql + on_update_sql + """;"""
+            vs.extend(update_vs)
+        else:
+            sql = base_sql + """;"""
+
         return sql, tuple(vs)
 
     def _save(self, sql_pool, to_insert, table, update_fields):
