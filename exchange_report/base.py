@@ -110,7 +110,6 @@ class ReportBase(object):
             else:  # 数据已经存在的时候结果为 0
                 # logger.info(count)
                 logger.info("已有数据 {} ".format(to_insert))
-                pass
 
             sql_pool.end()
             return count
@@ -119,7 +118,6 @@ class ReportBase(object):
         ret = self.inner_code_map.get(secu_code)
         if not ret:
             logger.warning("{} 不存在内部编码".format(secu_code))
-            # ret = "undefinded"
             raise
         return ret
 

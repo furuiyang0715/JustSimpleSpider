@@ -1,13 +1,15 @@
+import datetime
 import json
 import re
 import sys
 import time
+import traceback
 from urllib.parse import urlencode
 
 import requests
 
 sys.path.append('./../')
-from exchange_report.base import ReportBase
+from exchange_report.base import ReportBase, logger
 
 
 class SHReport(ReportBase):
@@ -33,6 +35,8 @@ class SHReport(ReportBase):
             "KSH": "科创板",
         }
         self.table_name = 'exchange_dailyquote'
+        self.fields = ['SecuCode', 'InnerCode', 'SecuAbbr', 'TradingDay', 'Open', 'High', 'Low',
+                       'Last', 'PrevClose', 'ChgRate', 'Volume', 'Amount', 'RiseFall', 'AmpRate', 'CPXXSubType']
 
     def get_params(self):
         _timestamp = int(time.time()*1000)
@@ -63,7 +67,7 @@ class SHReport(ReportBase):
           `ChgRate` decimal(10,4) DEFAULT NULL COMMENT '涨跌幅(%)',
           `Volume` decimal(20,0) DEFAULT NULL COMMENT '成交量(股)',
           `Amount` decimal(19,4) DEFAULT NULL COMMENT '成交金额(元)',
-          `Change` decimal(10,4) DEFAULT NULL COMMENT '涨跌',
+          `RiseFall` decimal(10,4) DEFAULT NULL COMMENT '涨跌',
           `AmpRate` decimal(10,4) DEFAULT NULL COMMENT '振幅',
           `CPXXSubType` varchar(20) DEFAULT NULL COMMENT '版块类型',
           `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
@@ -78,8 +82,10 @@ class SHReport(ReportBase):
         client.dispose()
 
     def start(self):
+        self._create_table()
+
         url = self.url+self.get_params()
-        # print(url)
+        logger.info(url)
         resp = requests.get(url, headers=self.headers)
         if resp.status_code == 200:
             ret = resp.text
@@ -87,10 +93,14 @@ class SHReport(ReportBase):
             py_datas = json.loads(ret)
             _date = py_datas.get("date")
             _time = py_datas.get("time")
+            trade_day = datetime.datetime.strptime(str(_date) + str(_time), "%Y%m%d%H%M%S")
+
             _total = py_datas.get("total")
             _list = py_datas.get("list")
             # code,name,open,high,low,last,prev_close,chg_rate,volume,amount,tradephase,
             # change,amp_rate,cpxxsubtype,cpxxprodusta
+
+            client = self._init_pool(self.spider_cfg)
             for one in _list:
                 item = dict()
                 (item['SecuCode'],     # 证券代码 code
@@ -104,39 +114,32 @@ class SHReport(ReportBase):
                  item['Volume'],       # 成交量(股) volume, 网页上显示的是 手, 1 手等于 100 股
                  item['Amount'],       # 成交额(元) amount， 网页上是万元
                  item['TradePhase'],   # tradephase
-                 item['Change'],       # 涨跌 change
+                 item['RiseFall'],      # 涨跌 change --> FIX change 是 mysql 关键字
                  item['AmpRate'],      # 振幅 amp_rate
                  item['CPXXSubType'],
                  item['CPXXProdusta']
                  ) = one
 
                 item['CPXXSubType'] = self.sub_type_map.get(item['CPXXSubType'])
+                item['InnerCode'] = self.get_inner_code(item['SecuCode'])
+                item['TradingDay'] = str(trade_day)
+
                 item.pop('CPXXProdusta')
                 item.pop('TradePhase')
 
-                # print(item)
-                # print(list(item.keys()))
-                # ['SecuCode', 'SecuAbbr', 'Open', 'High', 'Low', 'Last', 'PrevClose', 'ChgRate', 'Volume', 'Amount', 'Change', 'AmpRate', 'CPXXSubType']
+                logger.info(item)
+                ret = self._save(client, item, self.table_name, [])
 
-                # {'SecuCode': '600000',
-                # 'SecuAbbr': '浦发银行',
-                # 'Open': 10.31,
-                # 'High': 10.39,
-                # 'Low': 10.28,
-                # 'Last': 10.38,
-                # 'PrevClose': 10.34,
-                # 'ChgRate': 0.39,
-                # 'Volume': 15574310,
-                # 'Amount': 160783648,
-                # 'TradePhase': 'E110',
-                # 'Change': 0.04,
-                # 'AmpRate': 1.06,
-                # 'CPXXSubType': 'ASH',
-                # 'CPXXProdusta': '   D  F             '}
-                # sys.exit(0)
+                if not ret:
+                    raise
+
+                sys.exit(0)
+
+            client.dispose()
+        else:
+            raise
 
 
 if __name__ == "__main__":
-    # SHReport().get_params()
 
     SHReport().start()
