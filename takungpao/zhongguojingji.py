@@ -1,55 +1,78 @@
 import datetime
 import sys
+import traceback
 
-from gne import GeneralNewsExtractor
 from lxml import html
 
-from takungpao.base import logger
-
 sys.path.append("./../../")
-from takungpao.hkstock_cjss import Base
+from takungpao.base import logger, Base
 
 
 class ZhongGuoJingJi(Base):
-
     def __init__(self):
         super(ZhongGuoJingJi, self).__init__()
         self.name = '中国经济'
         self.first_url = 'http://www.takungpao.com/finance/236132/index.html'
         self.format_url = 'http://www.takungpao.com/finance/236132/{}.html'
-        self.page = 10
-        self.fields = ['pub_date', 'link', 'title', 'article']
-        self.table = 'takungpao'
-        self.extractor = GeneralNewsExtractor()
 
-    def _process_pub_dt(self, pub_date):
-        # 对 pub_date 的各类时间格式进行统一
-        current_dt = datetime.datetime.now()
-        yesterday_dt_str = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-        after_yesterday_dt_str = (datetime.datetime.now() - datetime.timedelta(days=2)).strftime("%Y-%m-%d")
-        if "小时前" in pub_date:  # eg. 20小时前
-            hours = int(pub_date.replace('小时前', ''))
-            pub_date = (current_dt - datetime.timedelta(hours=hours)).strftime("%Y-%m-%d %H:%M:%S")
-        elif "昨天" in pub_date:  # eg. 昨天04:24
-            pub_date = pub_date.replace('昨天', '')
-            pub_date = " ".join([yesterday_dt_str, pub_date])
-        elif '前天' in pub_date:  # eg. 前天11:33
-            pub_date = pub_date.replace("前天", '')
-            pub_date = " ".join([after_yesterday_dt_str, pub_date])
-        else:  # eg. 02-29 04:24
-            pub_date = str(current_dt.year) + '-' + pub_date
-        return pub_date
+    def _parse_total_page(self, link):
+        '''
+        <div class="tkp_page">
+            <a href="/finance/236132/index.html" class="cms_prevpage">上一页</a>
+            <div class="cms_curpage">1</div>
+            <a href="/finance/236132/2.html" class="cms_page">2</a>
+            <a href="/finance/236132/3.html" class="cms_page">3</a>
+            <a href="/finance/236132/4.html" class="cms_page">4</a>
+            <a href="/finance/236132/5.html" class="cms_page">5</a>
+            <a href="/finance/236132/6.html" class="cms_page">6</a>
+            <a href="/finance/236132/7.html" class="cms_page">7</a>
+            <a href="/finance/236132/8.html" class="cms_page">8</a>
+            <a href="/finance/236132/9.html" class="cms_page">9</a>
+            <a href="/finance/236132/10.html" class="cms_page">10</a>
+            <a href="/finance/236132/2.html" class="cms_nextpage">下一页</a>
+        </div>
+        '''
+        list_resp = self.get(link)
+        if list_resp:
+            body = list_resp.text
+            doc = html.fromstring(body)
+            page = int(doc.xpath("//div[@class='tkp_page']/a[@class='cms_page']")[-1].text_content())
+            return page
 
     def _parse_detail(self, link):
+        """解析详情页内容
+        """
+        '''
+        <div class="tkp_con_author"><span>2020-05-16 04:24:25</span><span>大公报</span> </div>
+        '''
+
+        '''
+        <h2 class="tkp_con_author">時間：
+            <span style="color:#666; margin-right:35px;">2020-04-23 11:15:32</span>來源：
+            <span style="color:#666;">
+                <a href="http://www.takungpao.com/" target="_blank" style="color:#AAA">大公网</a>
+            </span>
+        </h2>
+        '''
         detail_resp = self.get(link)
         if detail_resp:
             body = detail_resp.text
+            doc = html.fromstring(body)
+            try:
+                source = doc.xpath("//div[@class='tkp_con_author']/span")[-1].text_content()
+            except:
+                try:
+                    source = doc.xpath("//h2[@class='tkp_con_author']/span")[-1].text_content()
+                except:
+                    source = '大公报'
+
             result = self.extractor.extract(body)
             content = result.get("content")
-            return content
+            return {"source": source, "content": content}
+        else:
+            return {}
 
     def _parse_list(self, list_url):
-        items = []
         list_resp = self.get(list_url)
         if list_resp:
             list_page = list_resp.text
@@ -70,25 +93,32 @@ class ZhongGuoJingJi(Base):
                 pub_date = self._process_pub_dt(pub_date)
                 item['pub_date'] = pub_date
 
-                article = self._parse_detail(link)
-                if article:
-                    article = self._process_content(article)
-                    item['article'] = article
-                    items.append(item)
-                    logger.info(item)
-                    # self._save(item)
-        return items
+                ret = self._parse_detail(link)
+                item['article'] = ret.get("content")
+                item['source'] = ret.get("source")
+                logger.info(item)
 
-    def start(self):
-        for page in range(1, self.page + 1):
+    def _start(self):
+        page = self._parse_total_page(self.first_url)
+        logger.info("总页数 {}".format(page))
+        for page in range(1, page+1):
             logger.info("PAGE {}".format(page))
             if page == 1:
                 list_url = self.first_url
             else:
                 list_url = self.format_url.format(page)
-            items = self._parse_list(list_url)
+            self._parse_list(list_url)
+
+    def start(self):
+        try:
+            self._start()
+        except Exception as e:
+            raise e
 
 
 if __name__ == "__main__":
     zg = ZhongGuoJingJi()
-    zg.start()
+    try:
+        zg.start()
+    except:
+        traceback.print_exc()
