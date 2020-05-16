@@ -65,6 +65,8 @@ class Base(object):
         self.extractor = GeneralNewsExtractor()
         self.fields = ['pub_date', 'link', 'title', 'article', 'source']
         self.table = 'takungpao'
+        # TODO 增量逻辑
+        self.by_the_time = datetime.datetime.today() - datetime.timedelta(days=2)
 
     def _init_pool(self, cfg: dict):
         """
@@ -115,14 +117,13 @@ class Base(object):
             traceback.print_exc()
             logger.warning("失败")
         else:
-            if count == 1:  # 插入新数据的时候结果为 1
+            if count == 1:
                 logger.info("插入新数据 {}".format(to_insert))
 
             elif count == 2:
                 logger.info("刷新数据 {}".format(to_insert))
 
             else:  # 数据已经存在的时候结果为 0
-                # logger.info(count)
                 logger.info("已有数据 {} ".format(to_insert))
 
             sql_pool.end()
@@ -245,3 +246,11 @@ class Base(object):
         client = self._init_pool(self.spider_cfg)
         client.insert(sql)
         client.dispose()
+
+    def start(self):
+        self._create_table()
+
+        try:
+            self._start()
+        except Exception as e:
+            raise e

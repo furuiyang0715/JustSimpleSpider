@@ -1,4 +1,3 @@
-import datetime
 import sys
 import traceback
 
@@ -74,6 +73,7 @@ class ZhongGuoJingJi(Base):
 
     def _parse_list(self, list_url):
         list_resp = self.get(list_url)
+        client = self._init_pool(self.spider_cfg)
         if list_resp:
             list_page = list_resp.text
             doc = html.fromstring(list_page)
@@ -96,7 +96,8 @@ class ZhongGuoJingJi(Base):
                 ret = self._parse_detail(link)
                 item['article'] = ret.get("content")
                 item['source'] = ret.get("source")
-                logger.info(item)
+                # logger.info(item)
+                self._save(client, item, self.table, self.fields)
 
     def _start(self):
         page = self._parse_total_page(self.first_url)
@@ -108,12 +109,6 @@ class ZhongGuoJingJi(Base):
             else:
                 list_url = self.format_url.format(page)
             self._parse_list(list_url)
-
-    def start(self):
-        try:
-            self._start()
-        except Exception as e:
-            raise e
 
 
 if __name__ == "__main__":
