@@ -218,3 +218,30 @@ class Base(object):
         else:  # eg. 02-29 04:24
             pub_date = str(current_dt.year) + '-' + pub_date
         return pub_date
+
+    def _create_table(self):
+        """大公报 建表"""
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `takungpao` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `pub_date` datetime NOT NULL COMMENT '发布时间',
+          `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章标题',
+          `link` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章详情页链接',
+          `source` varchar(20) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章来源',
+          `article` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '详情页内容',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `link` (`link`),
+          KEY `pub_date` (`pub_date`),
+          KEY `update_time` (`UPDATETIMEJZ`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='大公报-财经类'; 
+        '''
+
+        '''
+        ALTER TABLE takungpao ADD source varchar(20) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章来源';
+        update takungpao set source = '大公报'; 
+        '''
+        client = self._init_pool(self.spider_cfg)
+        client.insert(sql)
+        client.dispose()
