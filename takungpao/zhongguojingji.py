@@ -4,6 +4,8 @@ import sys
 from gne import GeneralNewsExtractor
 from lxml import html
 
+from takungpao.base import logger
+
 sys.path.append("./../../")
 from takungpao.hkstock_cjss import Base
 
@@ -36,7 +38,6 @@ class ZhongGuoJingJi(Base):
             pub_date = " ".join([after_yesterday_dt_str, pub_date])
         else:  # eg. 02-29 04:24
             pub_date = str(current_dt.year) + '-' + pub_date
-        # print(pub_date)
         return pub_date
 
     def _parse_detail(self, link):
@@ -57,39 +58,37 @@ class ZhongGuoJingJi(Base):
             for news in news_list:
                 item = {}
                 link = news.xpath('./dd[@class="intro"]/a/@href')[0]
-                # print(link)
                 item['link'] = link
 
                 title = news.xpath("./dd/a/@title")[0]
-                # print(title)
+                title = self._process_content(title)
+                # 去除其中的字节顺序标记符
+                title = title.replace("\ufeff", '')
                 item['title'] = title
 
                 pub_date = news.xpath("./dd[@class='sort']/text()")[0]
                 pub_date = self._process_pub_dt(pub_date)
-                # print(pub_date)
                 item['pub_date'] = pub_date
 
                 article = self._parse_detail(link)
                 if article:
                     article = self._process_content(article)
                     item['article'] = article
-                    print(item)
                     items.append(item)
+                    logger.info(item)
+                    # self._save(item)
         return items
 
-    def _start(self):
-
+    def start(self):
         for page in range(1, self.page + 1):
-            print("page >>>", page)
+            logger.info("PAGE {}".format(page))
             if page == 1:
                 list_url = self.first_url
             else:
                 list_url = self.format_url.format(page)
             items = self._parse_list(list_url)
-            self.save(items)
 
 
 if __name__ == "__main__":
-
     zg = ZhongGuoJingJi()
     zg.start()
