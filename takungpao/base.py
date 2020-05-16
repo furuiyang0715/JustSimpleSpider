@@ -1,11 +1,18 @@
+import datetime
 import logging
+import sys
+import time
 import traceback
+from random import random
 
+import requests
+
+sys.path.append("./../")
 from takungpao.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER,
                                SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST,
                                PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER, PRODUCT_MYSQL_PASSWORD,
                                PRODUCT_MYSQL_DB, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD, JUY_DB,
-                               DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB)
+                               DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB, LOCAL, LOCAL_PROXY_URL, PROXY_URL)
 from takungpao.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -52,6 +59,7 @@ class Base(object):
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 (KHTML, '
                           'like Gecko) Chrome/79.0.3945.117 Safari/537.36'
         }
+        self.use_proxy = True  # 是否使用代理的开关
 
     def _init_pool(self, cfg: dict):
         """
@@ -115,43 +123,42 @@ class Base(object):
             sql_pool.end()
             return count
 
-    # def _get_proxy(self):
-    #     if self.local:
-    #         return requests.get(LOCAL_PROXY_URL).text.strip()
-    #     else:
-    #         random_num = random.randint(0, 10)
-    #         if random_num % 2:
-    #             time.sleep(1)
-    #             return requests.get(PROXY_URL).text.strip()
-    #         else:
-    #             return requests.get(LOCAL_PROXY_URL).text.strip()
+    def _get_proxy(self):
+        if LOCAL:
+            return requests.get(LOCAL_PROXY_URL).text.strip()
+        else:
+            random_num = random.randint(0, 10)
+            if random_num % 2:
+                time.sleep(1)
+                return requests.get(PROXY_URL).text.strip()
+            else:
+                return requests.get(LOCAL_PROXY_URL).text.strip()
 
-    # def get(self, url):
-    #     if not self.use_proxy:
-    #         return requests.get(url, headers=self.headers)
-    #
-    #     count = 0
-    #     while True:
-    #         count += 1
-    #         if count > 10:
-    #             return None
-    #         try:
-    #             proxy = {"proxy": self._get_proxy()}
-    #             print("proxy is >> {}".format(proxy))
-    #             resp = requests.get(url, headers=self.headers, proxies=proxy)
-    #         except:
-    #             traceback.print_exc()
-    #             time.sleep(0.5)
-    #         else:
-    #             if resp.status_code == 200:
-    #                 return resp
-    #             elif resp.status_code == 404:
-    #                 return None
-    #             else:
-    #                 print("status_code: >> {}".format(resp.status_code))
-    #                 time.sleep(1)
-    #                 pass
-    #
-    # def convert_dt(self, time_stamp):
-    #     d = str(datetime.datetime.fromtimestamp(time_stamp))
-    #     return d
+    def get(self, url):
+        if not self.use_proxy:
+            return requests.get(url, headers=self.headers)
+
+        count = 0
+        while True:
+            count += 1
+            if count > 10:
+                return None
+            try:
+                proxy = {"proxy": self._get_proxy()}
+                logger.info("proxy is >> {}".format(proxy))
+                resp = requests.get(url, headers=self.headers, proxies=proxy)
+            except:
+                traceback.print_exc()
+                time.sleep(0.5)
+            else:
+                if resp.status_code == 200:
+                    return resp
+                elif resp.status_code == 404:
+                    return None
+                else:
+                    logger.warning("status_code: >> {}".format(resp.status_code))
+                    time.sleep(1)
+
+    def convert_dt(self, time_stamp):
+        d = str(datetime.datetime.fromtimestamp(time_stamp))
+        return d
