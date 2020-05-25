@@ -119,6 +119,8 @@ class ReportBase(object):
             logger.warning("失败")
         else:
             logger.info("批量插入的数量是{}".format(count))
+            sql_pool.end()
+            return count
 
     def _save(self, sql_pool, to_insert, table, update_fields):
         try:
