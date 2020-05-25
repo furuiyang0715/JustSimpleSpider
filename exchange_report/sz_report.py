@@ -150,8 +150,17 @@ class SZReport(ReportBase):
         self.rm_file(file_path)
         client.dispose()
 
+    def batch_insert_test(self):
+        client = self._init_pool(self.spider_cfg)
+        items = [{'TradingDay': '2020-05-22', 'SecuCode': '000001', 'InnerCode': 3, 'SecuAbbr': '平安银行', 'PrevClose': 13.4, 'Close': 12.92, 'RiseFall': -3.58, 'Amount': 1119433491.01, 'PERatio': 9.18}, {'TradingDay': '2020-05-22', 'SecuCode': '000002', 'InnerCode': 6, 'SecuAbbr': '万  科Ａ', 'PrevClose': 25.58, 'Close': 25.16, 'RiseFall': -1.64, 'Amount': 1351549738.66, 'PERatio': 7.32}, {'TradingDay': '2020-05-22', 'SecuCode': '000004', 'InnerCode': 14, 'SecuAbbr': '国农科技', 'PrevClose': 28.5, 'Close': 28.11, 'RiseFall': -1.37, 'Amount': 47612183.69, 'PERatio': 1495.21}, {'TradingDay': '2020-05-22', 'SecuCode': '000005', 'InnerCode': 17, 'SecuAbbr': '世纪星源', 'PrevClose': 2.5, 'Close': 2.5, 'RiseFall': 0.0, 'Amount': 9221078.0, 'PERatio': 17.78}, {'TradingDay': '2020-05-22', 'SecuCode': '000006', 'InnerCode': 20, 'SecuAbbr': '深振业Ａ', 'PrevClose': 4.79, 'Close': 4.68, 'RiseFall': -2.3, 'Amount': 40639782.14, 'PERatio': 7.89}, {'TradingDay': '2020-05-22', 'SecuCode': '000007', 'InnerCode': 23, 'SecuAbbr': '全新好', 'PrevClose': 7.85, 'Close': 8.05, 'RiseFall': 2.55, 'Amount': 58021968.43, 'PERatio': 125.19}, {'TradingDay': '2020-05-22', 'SecuCode': '000008', 'InnerCode': 26, 'SecuAbbr': '神州高铁', 'PrevClose': 3.0, 'Close': 2.96, 'RiseFall': -1.33, 'Amount': 39423770.55, 'PERatio': 18.95}, {'TradingDay': '2020-05-22', 'SecuCode': '000009', 'InnerCode': 28, 'SecuAbbr': '中国宝安', 'PrevClose': 6.78, 'Close': 6.55, 'RiseFall': -3.39, 'Amount': 390400688.62, 'PERatio': 56.08}, {'TradingDay': '2020-05-22', 'SecuCode': '000010', 'InnerCode': 31, 'SecuAbbr': '*ST美丽', 'PrevClose': 4.01, 'Close': 4.01, 'RiseFall': 0.0, 'Amount': 6873765.0, 'PERatio': 70.72}, {'TradingDay': '2020-05-22', 'SecuCode': '000011', 'InnerCode': 34, 'SecuAbbr': '深物业A', 'PrevClose': 8.59, 'Close': 8.29, 'RiseFall': -3.49, 'Amount': 27985153.78, 'PERatio': 6.04}, {'TradingDay': '2020-05-22', 'SecuCode': '000012', 'InnerCode': 38, 'SecuAbbr': '南  玻Ａ', 'PrevClose': 4.62, 'Close': 4.52, 'RiseFall': -2.16, 'Amount': 60775608.01, 'PERatio': 26.17}]
+        self._batch_save(client, items, self.table_name, self.fields)
+        # self._save(client, items[0], self.table_name, self.fields)
+        client.dispose()
+
 
 if __name__ == "__main__":
     # SZReport().start()
 
-    SZReport().get_history_datas()
+    # SZReport().get_history_datas()
+
+    SZReport().batch_insert_test()
