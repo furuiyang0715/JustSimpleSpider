@@ -66,6 +66,18 @@ class SZReport(ReportBase):
         else:
             return file_path
 
+    def get_history_datas(self):
+        """获取深交所全部能拿到的历史数据"""
+        _start = self.check_day   # 昨天
+        _end = datetime.datetime(2020, 1, 1)
+        _dt = _start
+        while _dt >= _end:
+            logger.info(_dt)
+            self.load_xlsx(_dt)
+            self.read_xlsx(_dt)
+            _dt -= datetime.timedelta(days=1)
+            print()
+
     def start(self):
         self._create_table()
 
@@ -136,6 +148,6 @@ class SZReport(ReportBase):
 
 
 if __name__ == "__main__":
-    SZReport().start()
-    # SZReport().load_xlsx(SZReport()._today + datetime.timedelta(days=1))
-    # SZReport().read_xlsx(SZReport()._today + datetime.timedelta(days=1))
+    # SZReport().start()
+
+    SZReport().get_history_datas()
