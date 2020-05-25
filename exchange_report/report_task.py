@@ -27,6 +27,15 @@ def task():
         sh_runner.ding(msg)
 
 
+def task_history():
+    sz_runner = SZReport()
+    sz_runner.get_history_datas()
+
+
+if __name__ == "__main__":
+    task_history()
+
+
 if __name__ == "__main__":
     scheduler = BlockingScheduler()
     task()

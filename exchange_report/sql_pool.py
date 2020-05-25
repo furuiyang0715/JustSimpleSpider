@@ -20,24 +20,31 @@ class PyMysqlPoolBase(object):
                  port,
                  user,
                  password,
-                 db=None):
+                 db=None, init=True):
         self.db_host = host
         self.db_port = int(port)
         self.user = user
         self.password = str(password)
         self.db = db
-        self.connection = self._getConn()
-        self.cursor = self.connection.cursor()
+        self.connection = None
+        self.cursor = None
+        if init:
+            self.init
 
+    @property
+    def init(self):
+        self._getConn
+
+    @property
     def _getConn(self):
         """
         @summary: 静态方法，从连接池中取出连接
         @return MySQLdb.connection
         """
         if PyMysqlPoolBase._pool is None:
-            _pool = PooledDB(creator=pymysql,
-                             mincached=1,
-                             maxcached=20,
+            _pool = PooledDB(creator=pymysql,    # 用以链接数据库的模块
+                             mincached=1,        # 初始化时，连接池中至少创建的空闲链接 0 表示不创建
+                             maxcached=20,       # 链接池中最多闲置的链接，0和None不限制
                              host=self.db_host,
                              port=self.db_port,
                              user=self.user,
@@ -46,13 +53,14 @@ class PyMysqlPoolBase(object):
                              use_unicode=True,
                              charset="utf8",
                              cursorclass=DictCursor)
-        return _pool.connection()
+        self.connection = _pool.connection()
 
     def _exec_sql(self, sql, param=None):
-        if param is None:
-            count = self.cursor.execute(sql)
-        else:
-            count = self.cursor.execute(sql, param)
+        with self.connection.cursor() as cursor:
+            if param is None:
+                count = cursor.execute(sql)
+            else:
+                count = cursor.execute(sql, param)
         return count
 
     def insert(self, sql, params=None):
@@ -65,18 +73,21 @@ class PyMysqlPoolBase(object):
         return self._exec_sql(sql, params)
 
     def select_all(self, sql, params=None):
-        self.cursor.execute(sql, params)
-        results = self.cursor.fetchall()
+        with self.connection.cursor() as cursor:
+            cursor.execute(sql, params)
+            results = cursor.fetchall()
         return results
 
     def select_many(self, sql, params=None, size=1):
-        self.cursor.execute(sql, params)
-        results = self.cursor.fetchmany(size)
+        with self.connection.cursor() as cursor:
+            cursor.execute(sql, params)
+            results = cursor.fetchmany(size)
         return results
 
     def select_one(self, sql, params=None):
-        self.cursor.execute(sql, params)
-        result = self.cursor.fetchone()
+        with self.connection.cursor() as cursor:
+            cursor.execute(sql, params)
+            result = cursor.fetchone()
         return result
 
     def insert_many(self, sql, values):
@@ -86,7 +97,8 @@ class PyMysqlPoolBase(object):
         @param values:要插入的记录数据tuple(tuple)/list[list]
         @return: count 受影响的行数
         """
-        count = self.cursor.executemany(sql, values)
+        with self.connection.cursor() as cursor:
+            count = cursor.executemany(sql, values)
         return count
 
     def update(self, sql, param=None):
@@ -130,5 +142,5 @@ class PyMysqlPoolBase(object):
             self.end('commit')
         else:
             self.end('rollback')
-        self.cursor.close()
         self.connection.close()
+

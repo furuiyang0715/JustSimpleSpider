@@ -1,11 +1,13 @@
 import datetime
 import os
 import random
+import sys
 import urllib
 from urllib.request import urlretrieve
 
 import xlrd
 
+sys.path.append("./../")
 from exchange_report.base import ReportBase, logger
 
 
@@ -69,7 +71,8 @@ class SZReport(ReportBase):
     def get_history_datas(self):
         """获取深交所全部能拿到的历史数据"""
         _start = self.check_day   # 昨天
-        _end = datetime.datetime(2020, 1, 1)
+        # 网站可以找到的最早时间
+        _end = datetime.datetime(2004, 12, 31)
         _dt = _start
         while _dt >= _end:
             logger.info(_dt)
@@ -120,6 +123,7 @@ class SZReport(ReportBase):
         # print(">>> ", _rows)
         if _rows < 10:
             logger.warning("{} 当天无数据".format(dt))
+            self.rm_file(file_path)
             return
 
         client = self._init_pool(self.spider_cfg)
