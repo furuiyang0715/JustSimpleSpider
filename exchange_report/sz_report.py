@@ -71,7 +71,7 @@ class SZReport(ReportBase):
 
     def get_history_datas(self):
         """获取深交所全部能拿到的历史数据"""
-        _start = datetime.datetime(2020, 4, 14)
+        _start = datetime.datetime(2020, 5, 24)
         # 网站可以找到的最早时间
         _end = datetime.datetime(2004, 12, 31)
         _dt = _start
