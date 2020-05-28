@@ -105,6 +105,9 @@
 ## 融资融券标的变更 
 - margin
 
+## 交易所日历新闻发布 
+- CalendarNewsRelease
+
 ## 交易所行情
 - exchange_report
     - 上交所 http://www.sse.com.cn/market/price/report/
