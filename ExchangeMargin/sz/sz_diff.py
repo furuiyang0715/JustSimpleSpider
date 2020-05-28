@@ -7,8 +7,8 @@ import time
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 sys.path.append('./../')
-from margin.base import MarginBase, logger
-from margin.configs import LOCAL, FIRST
+from ExchangeMargin.base import MarginBase, logger
+from ExchangeMargin.configs import LOCAL, FIRST
 
 
 class SzGener(MarginBase):

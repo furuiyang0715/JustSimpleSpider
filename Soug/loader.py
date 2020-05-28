@@ -6,14 +6,14 @@ import requests
 from urllib.request import urlretrieve
 from bs4 import BeautifulSoup
 
-from soug.tools import startChinese, getChinese, byte2str, startPy, getPyTable
+from Soug.tools import startChinese, getChinese, byte2str, startPy, getPyTable
 
 
 class SouGSpider(object):
     def __init__(self):
         self.base_url = "http://pinyin.sogou.com"
         self.homepage_url = "http://pinyin.sogou.com/dict/"
-        self.base_dir = "/Users/furuiyang/gitzip/JustSimpleSpider/soug/ppcsv"
+        self.base_dir = "/Soug/ppcsv"
 
     def callbackfunc(self, blocknum, blocksize, totalsize):
         """

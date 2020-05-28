@@ -97,22 +97,22 @@
     - 最新发布
 
 ## 百度百科 
-- baidu 
-
-## 搜狗词库 
-- soug
-
-## 融资融券标的变更 
-- margin
+- Baidu 
 
 ## 交易所日历新闻发布 
 - CalendarNewsRelease
 
+## 融资融券标的变更 
+- ExchangeMargin
+
 ## 交易所行情
-- exchange_report
+- ExchangeReport
     - 上交所 http://www.sse.com.cn/market/price/report/
     - 深交所 http://www.szse.cn/market/trend/index.html
-    
+
+## 搜狗词库 
+- Soug
+ 
 ## 大公报
 - takungpao
     - 港股频道 

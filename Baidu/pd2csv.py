@@ -3,9 +3,9 @@ import os
 import pandas as pd
 from sqlalchemy import create_engine
 
-from baidu.configs import MYSQL_PASSWORD
+from Baidu.configs import MYSQL_PASSWORD
 
-csv_dir = '/Users/furuiyang/gitzip/JustSimpleSpider/baidu/final_csv_dir'
+csv_dir = '/Baidu/final_csv_dir'
 
 
 def listfiles(ldir: str, r: bool = True):

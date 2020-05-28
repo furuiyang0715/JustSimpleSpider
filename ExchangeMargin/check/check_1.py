@@ -1,6 +1,6 @@
 import datetime
 
-from margin.base import MarginBase
+from ExchangeMargin.base import MarginBase
 
 '''聚源库\目标库\历史记录库
 mysql> select * from MT_TargetSecurities limit 1;

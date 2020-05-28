@@ -11,7 +11,7 @@ import requests
 import xlrd
 
 sys.path.append('./../../')
-from margin.base import MarginBase, logger
+from ExchangeMargin.base import MarginBase, logger
 
 
 class DetailSpider(MarginBase):

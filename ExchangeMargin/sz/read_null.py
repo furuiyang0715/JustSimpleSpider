@@ -2,7 +2,7 @@
 
 import xlrd
 
-file = '/Users/furuiyang/gitzip/JustSimpleSpider/margin/sz/data_dir/2020-05-10.xlsx'
+file = '/ExchangeMargin/sz/data_dir/2020-05-10.xlsx'
 
 
 def read_xlrd(file):

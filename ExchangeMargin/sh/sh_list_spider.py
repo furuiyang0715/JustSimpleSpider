@@ -11,8 +11,8 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from lxml import html
 
 sys.path.append("./../")
-from margin.configs import LOCAL
-from margin.base import MarginBase, logger
+from ExchangeMargin.configs import LOCAL
+from ExchangeMargin.base import MarginBase, logger
 
 
 class SHMarginSpider(MarginBase):

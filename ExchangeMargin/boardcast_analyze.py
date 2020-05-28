@@ -3,7 +3,7 @@ import re
 import sys
 
 sys.path.append('./../')
-from margin.base import MarginBase
+from ExchangeMargin.base import MarginBase
 
 
 class BoardCast(MarginBase):

@@ -10,9 +10,9 @@ from urllib.request import urlretrieve
 import xlrd
 
 sys.path.append('./../')
-from margin.configs import LOCAL
+from ExchangeMargin.configs import LOCAL
 from apscheduler.schedulers.blocking import BlockingScheduler
-from margin.base import MarginBase, logger
+from ExchangeMargin.base import MarginBase, logger
 
 
 class SzListSpider(MarginBase):
@@ -32,7 +32,7 @@ class SzListSpider(MarginBase):
         self.end_dt = datetime.datetime(self.year, 12, 31)
         self.history_table_name = 'sz_margin_history'
         # 存在历史数据的文件夹
-        self.data_dir = '/Users/furuiyang/gitzip/JustSimpleSpider/margin/sz/data_dir'
+        self.data_dir = '/ExchangeMargin/sz/data_dir'
 
     def read(self):
         """将历史数据存入数据库 """

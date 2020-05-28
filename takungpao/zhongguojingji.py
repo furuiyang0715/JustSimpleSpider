@@ -47,7 +47,7 @@ class ZhongGuoJingJi(Base):
 
         '''
         <h2 class="tkp_con_author">時間：
-            <span style="color:#666; margin-right:35px;">2020-04-23 11:15:32</span>來源：
+            <span style="color:#666; ExchangeMargin-right:35px;">2020-04-23 11:15:32</span>來源：
             <span style="color:#666;">
                 <a href="http://www.takungpao.com/" target="_blank" style="color:#AAA">大公网</a>
             </span>

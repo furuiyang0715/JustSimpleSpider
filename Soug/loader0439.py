@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from lxml import html
 
 
-from soug.tools import startChinese, getChinese, byte2str, startPy, getPyTable
+from Soug.tools import startChinese, getChinese, byte2str, startPy, getPyTable
 
 base_url = 'https://pinyin.sogou.com/dict/cate/index/{}'
 
@@ -334,7 +334,7 @@ def mv_dirs():
     data_dir = '/Users/furuiyang/mydata/origin'
     for name in os.listdir(data_dir):
         if name in needs.values():
-            command = 'mv /Users/furuiyang/mydata/origin/{}  /Users/furuiyang/gitzip/JustSimpleSpider/soug/origin/'.format(name)
+            command = 'mv /Users/furuiyang/mydata/origin/{}  /Users/furuiyang/gitzip/JustSimpleSpider/Soug/origin/'.format(name)
             print(command)
             try:
                 os.system(command)
@@ -343,7 +343,7 @@ def mv_dirs():
 
 
 def _check():
-    data_dir = '/Users/furuiyang/gitzip/JustSimpleSpider/soug/origin'
+    data_dir = '/Soug/origin'
     for name in os.listdir(data_dir):
         if name not in list(needs.values()):
             print(name)

@@ -7,9 +7,9 @@ from collections import Counter
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 sys.path.append('./../')
-from margin.boardcast_analyze import board_task
-from margin.configs import FIRST, LOCAL
-from margin.base import MarginBase, logger
+from ExchangeMargin.boardcast_analyze import board_task
+from ExchangeMargin.configs import FIRST, LOCAL
+from ExchangeMargin.base import MarginBase, logger
 
 
 class ShSync(MarginBase):
