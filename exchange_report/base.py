@@ -144,7 +144,7 @@ class ReportBase(object):
         ret = self.inner_code_map.get(secu_code)
         if not ret:
             logger.warning("{} 不存在内部编码".format(secu_code))
-            raise
+            return None
         return ret
 
     @property

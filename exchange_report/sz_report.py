@@ -2,17 +2,18 @@ import datetime
 import os
 import random
 import sys
-import time
 import urllib
 from urllib.request import urlretrieve
 
 import xlrd
 
-sys.path.append("./../")
-from exchange_report.base import ReportBase, logger
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
+from base import SpiderBase, logger
 
 
-class SZReport(ReportBase):
+class SZReport(SpiderBase):
     """深交所行情爬虫"""
     def __init__(self):
         super(SZReport, self).__init__()
@@ -71,7 +72,7 @@ class SZReport(ReportBase):
 
     def get_history_datas(self):
         """获取深交所全部能拿到的历史数据"""
-        _start = datetime.datetime(2020, 5, 24)
+        _start = datetime.datetime(2019, 12, 13)
         # 网站可以找到的最早时间
         _end = datetime.datetime(2004, 12, 31)
         _dt = _start
@@ -138,7 +139,8 @@ class SZReport(ReportBase):
             item['SecuCode'] = secu_code     # 证券代码
             inner_code = self.get_inner_code(secu_code)
             if not inner_code:
-                raise
+                continue
+                # raise
             item['InnerCode'] = inner_code
             item['SecuAbbr'] = _line[2]            # 证券简称
             item['PrevClose'] = float(_line[3])    # 前收
@@ -164,9 +166,13 @@ class SZReport(ReportBase):
     #     client.dispose()
 
 
-if __name__ == "__main__":
-    _now = lambda: time.time()
-    t1 = _now()
-    # SZReport().start()
+def task_daily():
+    SZReport().start()
+
+
+def history_task():
     SZReport().get_history_datas()
-    logger.info("用时: {} s".format(_now() - t1))
+
+
+if __name__ == "__main__":
+    history_task()
