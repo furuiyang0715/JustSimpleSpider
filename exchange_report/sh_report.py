@@ -7,6 +7,7 @@ import time
 from urllib.parse import urlencode
 
 import requests
+import schedule
 
 cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
@@ -158,6 +159,17 @@ class SHReport(SpiderBase):
             begin += 25  # 每页获取 25 个
 
 
-if __name__ == "__main__":
-
+def sh_task():
     SHReport().start()
+
+
+if __name__ == "__main__":
+    sh_task()
+    # 15:02, 15:50, 8:00
+    schedule.every().day.at("08:00").do(sh_task)
+    schedule.every().day.at("15:02").do(sh_task)
+    schedule.every().day.at("15:50").do(sh_task)
+    while True:
+        print("当前调度系统中的任务列表是{}".format(schedule.jobs))
+        schedule.run_pending()
+        time.sleep(180)
