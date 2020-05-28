@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 import re
 import sys
 import time
@@ -7,11 +8,13 @@ from urllib.parse import urlencode
 
 import requests
 
-sys.path.append('./../')
-from exchange_report.base import ReportBase, logger
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
+from base import SpiderBase, logger
 
 
-class SHReport(ReportBase):
+class SHReport(SpiderBase):
     """上交所行情"""
     def __init__(self):
         super(SHReport, self).__init__()

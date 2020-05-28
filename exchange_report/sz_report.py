@@ -2,9 +2,11 @@ import datetime
 import os
 import random
 import sys
+import time
 import urllib
 from urllib.request import urlretrieve
 
+import schedule
 import xlrd
 
 cur_path = os.path.split(os.path.realpath(__file__))[0]
@@ -175,4 +177,17 @@ def history_task():
 
 
 if __name__ == "__main__":
-    history_task()
+    task_flag = os.environ.get("TASK", "SZ")
+    if task_flag == "SZ":
+        task_daily()
+        # 15:02, 15:50, 8:00
+        schedule.every().day.at("08:00").do(task_daily)
+        schedule.every().day.at("15:02").do(task_daily)
+        schedule.every().day.at("15:50").do(task_daily)
+        while True:
+            print("当前调度系统中的任务列表是{}".format(schedule.jobs))
+            schedule.run_pending()
+            time.sleep(180)
+
+    elif task_flag == "SZ_HIS":
+        history_task()
