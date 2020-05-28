@@ -9,7 +9,7 @@ class FK(Base):
         super(FK, self).__init__()
         self.list_url = 'http://finance.takungpao.com/fk/'
         self.extractor = GeneralNewsExtractor()
-        self.table = 'takungpao'
+        self.table = 'Takungpao'
         self.name = '风口'
         self.fields = ['link', 'title', 'pub_date', 'article']
 

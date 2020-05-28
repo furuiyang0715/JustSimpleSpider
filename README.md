@@ -114,7 +114,7 @@
 - Soug
  
 ## 大公报
-- takungpao
+- Takungpao
     - 港股频道 
         - 财经时事 PublicOpinion/takungpao/hkstock_cjss.py
         - 公司要闻 PublicOpinion/takungpao/hkstock_gsyw.py

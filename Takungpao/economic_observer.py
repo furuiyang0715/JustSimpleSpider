@@ -15,7 +15,7 @@ class EconomicObserver(Base):
         self.format_url = 'http://www.takungpao.com/finance/236134/{}.html'
         self.page = 10
         self.fields = ['pub_date', 'link', 'title', 'article']
-        self.table = 'takungpao'
+        self.table = 'Takungpao'
         self.extractor = GeneralNewsExtractor()
 
     def _process_pub_dt(self, pub_date):

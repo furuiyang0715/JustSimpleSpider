@@ -10,7 +10,7 @@ class Travel(Base):
         self.first_url = 'http://finance.takungpao.com/travel/index.html'
         self.format_url = 'http://finance.takungpao.com/travel/index_{}.html'
         self.name = '旅游'
-        self.table = 'takungpao'
+        self.table = 'Takungpao'
         self.fields = ['link', 'title', 'pub_date', 'article']
         self.extractor = GeneralNewsExtractor()
         self.page = 19

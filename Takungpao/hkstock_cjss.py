@@ -13,7 +13,7 @@ class HKStock_CJSS(Base):
         self.first_url = 'http://finance.takungpao.com/hkstock/cjss/index.html'
         self.format_url = "http://finance.takungpao.com/hkstock/cjss/index_{}.html"
         self.extractor = GeneralNewsExtractor()
-        self.table = 'takungpao'
+        self.table = 'Takungpao'
         self.fields = ['link', 'title', 'pub_date', 'article']
 
     def _parse_detail(self, body):

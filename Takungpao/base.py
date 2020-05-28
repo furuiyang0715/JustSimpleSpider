@@ -65,7 +65,7 @@ class Base(object):
         self.use_proxy = True  # 是否使用代理的开关
         self.extractor = GeneralNewsExtractor()
         self.fields = ['pub_date', 'link', 'title', 'article', 'source']
-        self.table = 'takungpao'
+        self.table = 'Takungpao'
         # TODO 增量逻辑
         self.by_the_time = datetime.datetime.today() - datetime.timedelta(days=2)
 
@@ -224,7 +224,7 @@ class Base(object):
     def _create_table(self):
         """大公报 建表"""
         sql = '''
-        CREATE TABLE IF NOT EXISTS `takungpao` (
+        CREATE TABLE IF NOT EXISTS `Takungpao` (
           `id` int(11) NOT NULL AUTO_INCREMENT,
           `pub_date` datetime NOT NULL COMMENT '发布时间',
           `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章标题',
@@ -241,8 +241,8 @@ class Base(object):
         '''
 
         '''
-        ALTER TABLE takungpao ADD source varchar(20) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章来源';
-        update takungpao set source = '大公报'; 
+        ALTER TABLE Takungpao ADD source varchar(20) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章来源';
+        update Takungpao set source = '大公报'; 
         '''
         client = self._init_pool(self.spider_cfg)
         client.insert(sql)
