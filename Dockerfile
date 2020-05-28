@@ -4,12 +4,12 @@ ENV TZ=Asia/Shanghai
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN mkdir /NewsGenerator
+RUN mkdir /JustSimpleSpider
 
-WORKDIR /NewsGenerator
+WORKDIR /JustSimpleSpider
 
-ADD . /NewsGenerator
+ADD . /JustSimpleSpider
 
-WORKDIR /NewsGenerator
+WORKDIR /JustSimpleSpider
 
 RUN pip install -r requirements.txt -i https://pypi.douban.com/simple
