@@ -117,3 +117,4 @@ temp/*
 *.scel
 *.xls
 *.xlsx
+_temp.py

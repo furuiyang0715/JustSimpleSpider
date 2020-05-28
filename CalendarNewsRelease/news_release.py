@@ -3,8 +3,16 @@ import json
 import os
 import csv
 import datetime
+import sys
+import time
+
 import requests as req
+import schedule
 from lxml import html
+
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
 
 from base import SpiderBase
 
@@ -162,7 +170,20 @@ class CalendarNews(SpiderBase):
             print("未知的存储方式")
 
 
-if __name__ == "__main__":
-    # CalendarNews(save_type="csv").start()
-
+def task():
     CalendarNews(save_type="sql").start()
+
+
+def main():
+    task()
+
+    schedule.every(2).days.do(task)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1800)
+
+
+if __name__ == "__main__":
+
+    main()
