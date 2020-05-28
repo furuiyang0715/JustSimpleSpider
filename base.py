@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 
-class ReportBase(object):
+class SpiderBase(object):
 
     spider_cfg = {  # 爬虫库
         "host": SPIDER_MYSQL_HOST,

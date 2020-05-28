@@ -6,6 +6,8 @@ import datetime
 import requests as req
 from lxml import html
 
+from base import SpiderBase
+
 
 class SaveCSV(object):
 
@@ -37,7 +39,7 @@ class SaveCSV(object):
                 f.write(json.dumps(item) + ",\n")
 
 
-class CalendarNews(object):
+class CalendarNews(SpiderBase):
     month_map = {
         "一月": 1,
         "二月": 2,
@@ -66,10 +68,34 @@ class CalendarNews(object):
     ]
 
     def __init__(self, save_type='csv'):
+        super(CalendarNews, self).__init__()
         self.url = 'https://sc.hkex.com.hk/TuniS/www.hkex.com.hk/News/News-Release?sc_lang=zh-HK&Year=ALL&NewsCategory=&currentCount={}'.format(2000)
         self.table_name = 'calendar_news'
         self.fields = ['PubDate', 'NewsTag', 'NewsUrl', 'NewsTitle']
         self.save_type = save_type
+        self.client = None
+
+    def __del__(self):
+        if self.client:
+            self.client.dispose()
+
+    def _create_table(self):
+        self.client = self._init_pool(self.spider_cfg)
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `{}` (
+          `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+          `PubDate` datetime NOT NULL COMMENT '新闻发布时间',
+          `NewsTag` varchar(20) NOT NULL COMMENT '新闻类别标签', 
+          `NewsUrl` varchar(200) DEFAULT NULL COMMENT '链接', 
+          `NewsTitle` varchar(200) DEFAULT NULL COMMENT '标题',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `un2` (`PubDate`, `NewsUrl`) USING BTREE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='交易所日历新闻';
+        '''.format(self.table_name)
+        self.client.insert(sql)
+        self.client.end()
 
     def get_items(self):
         resp = req.get(self.url)
@@ -98,12 +124,14 @@ class CalendarNews(object):
                 except:
                     news_url = one.xpath(".//a[@class='news-releases__section--content-title ']/@href")[0]
                     news_title = one.xpath(".//a[@class='news-releases__section--content-title ']")[0].text_content()
-                item['PubDate'] = news_dt
-                item['NewsTag'] = news_tag
-                item['NewsUrl'] = news_url
-                item['NewsTitle'] = news_title.strip()
-                print(item)
-                items.append(item)
+
+                if news_dt and news_tag and news_url and news_title:
+                    item['PubDate'] = news_dt
+                    item['NewsTag'] = news_tag
+                    item['NewsUrl'] = news_url
+                    item['NewsTitle'] = news_title.strip()
+                    items.append(item)
+
             return items
         else:
             print(resp.status_code)
@@ -121,15 +149,20 @@ class CalendarNews(object):
 
     def start(self):
         items = self.get_items()
-        if self.save_type == "csv":
-            # self.save_csv(items)
-            print(len(items))
-        elif self.save_type == "sql":
-            pass
+        if not items:
+            return
 
+        if self.save_type == "csv":
+            self.save_csv(items)
+        elif self.save_type == "sql":
+            self._create_table()
+            print(len(items))
+            self._batch_save(self.client, items, self.table_name, self.fields)
         else:
             print("未知的存储方式")
 
 
 if __name__ == "__main__":
-    CalendarNews().get_items()
+    # CalendarNews(save_type="csv").start()
+
+    CalendarNews(save_type="sql").start()
