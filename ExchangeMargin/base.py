@@ -1,4 +1,5 @@
 import base64
+import datetime
 import hashlib
 import hmac
 import json
@@ -13,7 +14,7 @@ from ExchangeMargin.configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER
                                     SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER,
                                     PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD,
                                     JUY_DB, DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB, SECRET, TOKEN, TEST_MYSQL_HOST,
-                                    TEST_MYSQL_PORT, TEST_MYSQL_USER, TEST_MYSQL_PASSWORD, TEST_MYSQL_DB)
+                                    TEST_MYSQL_PORT, TEST_MYSQL_USER, TEST_MYSQL_PASSWORD, TEST_MYSQL_DB, LOCAL)
 from ExchangeMargin.sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -67,6 +68,7 @@ class MarginBase(object):
     def __init__(self):
         self.target_table_name = 'stk_mttargetsecurities'
         self.juyuan_table_name = 'MT_TargetSecurities'
+        self.is_local = LOCAL
 
     def _init_pool(self, cfg: dict):
         """
@@ -231,7 +233,97 @@ class MarginBase(object):
         dc_client.dispose()
         test_client.dispose()
 
+    def select_error_datas(self):
+        sql = '''
+        select id  from stk_mttargetsecurities where SecuMarket = 83 and  InDate = '2020-05-11' \
+and InnerCode in  (select InnerCode  from stk_mttargetsecurities  group by InnerCode having count(1) > 2); 
+        '''
+        dc_client = self._init_pool(self.dc_cfg)
+        ret = dc_client.select_all(sql)
+        ids = [r.get("id") for r in ret]
+        print(len(ids))
+        dc_client.dispose()
+
+        sql = '''delete from stk_mttargetsecurities where id in {};'''.format(tuple(ids))
+        if self.is_local:
+            client = self._init_pool(self.test_cfg)
+        else:
+            client = self._init_pool(self.product_cfg)
+
+        count = client.delete(sql)
+        print(count)
+        client.dispose()
+
+        infos = {
+            230468: '2020-06-10 00:00:00',
+            237992: '2020-06-02 00:00:00',
+            237387: '2020-05-18 00:00:00',
+            237998: '2020-05-21 00:00:00',
+            256016: '2020-05-18 00:00:00',
+            254577: '2020-06-08 00:00:00',
+            256017:  '2020-06-09 00:00:00',
+            268701: '2020-06-16 00:00:00',
+            260383: '2020-06-12 00:00:00',
+         }
+
+        items = []
+        for inner_code, in_date in infos.items():
+            print(inner_code, in_date)
+            item = {'SecuMarket': 83,
+                    "InnerCode": inner_code,
+                    "InDate": in_date,
+                    "TargetCategory": 10,
+                    'TargetFlag': 1,
+                    'UpdateTime': datetime.datetime.now()
+                    }
+            items.append(item)
+        ret = self._batch_save(client, items, 'stk_mttargetsecurities', [])
+        print(ret)
+
+        infos2 = {
+            268701: '2020-06-16 00:00:00',
+        }
+        items2 = []
+        for inner_code, in_date in infos2.items():
+            item = {'SecuMarket': 83,
+                    "InnerCode": inner_code,
+                    "InDate": in_date,
+                    "TargetCategory": 20,
+                    'TargetFlag': 1,
+                    'UpdateTime': datetime.datetime.now()
+                    }
+            items2.append(item)
+        ret = self._batch_save(client, items2, 'stk_mttargetsecurities', [])
+        print(ret)
+
+        client.dispose()
+
+    def list_check(self):
+        # 今日的清单
+        test_client = self._init_pool(self.test_cfg)
+        sql = '''select InnerCode from margin_sh_list_spider where ListDate = '2020-06-17' and TargetCategory = 20; '''
+        ret = test_client.select_all(sql)
+        list_datas = set([r.get("InnerCode") for r in ret])
+        print(list_datas)
+        test_client.dispose()
+
+        # dc 的清单
+        # dc_client = self._init_pool(self.dc_cfg)
+        dc_client = self._init_pool(self.test_cfg)
+        sql = '''select InnerCode from stk_mttargetsecurities where TargetFlag = 1 and TargetCategory = 20 and SecuMarket = 83; '''
+        ret = dc_client.select_all(sql)
+        dc_datas = set([r.get("InnerCode") for r in ret])
+        print(dc_datas)
+        dc_client.dispose()
+
+        print(dc_datas == list_datas)
+        print(dc_datas - list_datas)
+        print(list_datas - dc_datas)
+
 
 if __name__ == "__main__":
     mb = MarginBase()
-    mb.sync_dc2test("stk_mttargetsecurities")
+    # mb.sync_dc2test("stk_mttargetsecurities")
+    # mb.select_error_datas()
+    # mb.list_check()
+    mb.select_error_datas()
