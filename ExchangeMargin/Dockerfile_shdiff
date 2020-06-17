@@ -4,13 +4,13 @@ ENV TZ=Asia/Shanghai
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN mkdir /margin
+RUN mkdir /ExchangeMargin
 
-WORKDIR /margin
+WORKDIR /ExchangeMargin
 
-ADD . /margin
+ADD . /ExchangeMargin
 
-WORKDIR /margin
+WORKDIR /ExchangeMargin
 
 RUN pip install -r requirements.txt -i https://pypi.douban.com/simple
 
