@@ -243,9 +243,14 @@ class ShSync(MarginBase):
             20: "融券",
         }
         for _type in (10, 20):
+            # 昨日的清单
             _yester_day_list = self.get_spider_dt_list(_yester_day, _type)
-            _before_yester_day_list = self.get_spider_dt_list(_before_yester_day, _type)
+            # 前日的清单
+            _before_yester_day_list = self.get_spider_dt_list(_before_yester_day, _type)\
+
             print(_yester_day_list, _before_yester_day_list)
+
+            # TODO 数据未修改生效
             if _yester_day and _before_yester_day:
                 to_add = set(_yester_day_list) - set(_before_yester_day_list)
                 to_delete = set(_before_yester_day_list) - set(_yester_day_list)
@@ -262,7 +267,9 @@ class ShSync(MarginBase):
 
         msg += '一致性检查: \n'
 
+        # 状态计算清单
         dc_list_10 = set(sorted(self.product_dt_datas(83, 10)))
+        # 真正清单
         spider_list_10 = set(sorted(self.get_spider_latest_list(83, 10)))
         msg += "融资一致性 check : dc_list - latest_list_spider >> {},latest_list_spider - dc_list>>{} \n".format(
             dc_list_10 - spider_list_10, spider_list_10 - dc_list_10)
@@ -288,16 +295,16 @@ if __name__ == "__main__":
     scheduler = BlockingScheduler()
     diff_task()
 
-    scheduler.add_job(diff_task, 'cron', hour='16, 23', max_instances=10, id="sh_diff_task")
-    scheduler.add_job(board_task, 'cron', hour='0', max_instances=10, id="board_task")
-    logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
-    try:
-        scheduler.start()
-    except (KeyboardInterrupt, SystemExit):
-        pass
-    except Exception as e:
-        logger.info(f"本次任务执行出错{e}")
-        sys.exit(0)
+    # scheduler.add_job(diff_task, 'cron', hour='16, 23', max_instances=10, id="sh_diff_task")
+    # scheduler.add_job(board_task, 'cron', hour='0', max_instances=10, id="board_task")
+    # logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
+    # try:
+    #     scheduler.start()
+    # except (KeyboardInterrupt, SystemExit):
+    #     pass
+    # except Exception as e:
+    #     logger.info(f"本次任务执行出错{e}")
+    #     sys.exit(0)
 
 '''部署
 docker build -f Dockerfile_shdiff -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_diff:v1 .
@@ -318,4 +325,13 @@ sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
 --name margin_sh_diff \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_diff:v1  
 
+'''
+
+'''
+融资一致性 check : dc_list - latest_list_spider >> {1208, 1268},latest_list_spider - dc_list>>{237994, 229891, 235021, 252151} 
+1208 >>  600086 >> 东方金钰
+1268 >>  600146 >> 商赢环球
+
+
+select * from stk_mttargetsecurities where InnerCode in ('1268', '1208') ; 
 '''

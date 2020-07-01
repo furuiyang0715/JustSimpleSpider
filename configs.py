@@ -65,6 +65,9 @@ else:
     PRODUCT_MYSQL_PASSWORD = env.get("PRODUCT_MYSQL_PASSWORD", cf.get('product', 'PRODUCT_MYSQL_PASSWORD'))
     PRODUCT_MYSQL_DB = env.get("PRODUCT_MYSQL_DB", cf.get('product', 'PRODUCT_MYSQL_DB'))
 
+# socal password
+WEIBO_PASSWORD = env.get("WEIBO_PASSWORD", cf.get('social', 'WEIBO_PASSWORD'))
+
 
 if __name__ == "__main__":
     import sys

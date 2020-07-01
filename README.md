@@ -133,3 +133,7 @@
         - 地产  PublicOpinion/takungpao/dichan.py 
         - 商业  PublicOpinion/takungpao/business.py 
         - 新经济浪潮  PublicOpinion/takungpao/economic_observer.py 
+
+## TODOs
+- 将监控合并 不重要监控反向输出 
+- 

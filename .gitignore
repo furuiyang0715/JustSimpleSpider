@@ -118,3 +118,4 @@ temp/*
 *.xls
 *.xlsx
 _temp.py
+*.png
