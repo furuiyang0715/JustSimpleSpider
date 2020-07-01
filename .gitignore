@@ -119,3 +119,4 @@ temp/*
 *.xlsx
 _temp.py
 *.png
+*.json
