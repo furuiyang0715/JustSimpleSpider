@@ -20,3 +20,29 @@ _gbk = s.encode("GBK")
 print(_gbk)
 ret5 = _gbk.decode("GBK")
 print(ret5)
+
+
+# requests 的请求头以及响应头
+import requests
+
+url = 'http://www.baidu.com'
+resp = requests.get(url)
+print(resp)
+# 请求头
+print(resp.request.headers)
+# 响应头
+print(resp.headers)
+# 网页的二进制数据
+content = resp.content
+print(content)
+# 网页数据
+text = content.decode()
+print(text)
+
+# 使用 requests 下载一张图片保存到本地
+img_url = 'http://n1-q.mafengwo.net/s11/M00/6A/39/wKgBEFqfiOGAQIfFAAEiFjXBMNM09.jpeg?imageMogr2%2Fthumbnail%2F%21690x450r%2Fgravity%2FCenter%2Fcrop%2F%21690x450%2Fquality%2F90%7Cwatermark%2F1%2Fimage%2FaHR0cDovL2IxLXEubWFmZW5nd28ubmV0L3MxMS9NMDAvNDQvOUIvd0tnQkVGc1A1UnlBRHY3cEFBQUhaWlVQUmxROTkwLnBuZw%3D%3D%2Fgravity%2FSouthEast%2Fdx%2F10%2Fdy%2F11'
+resp = requests.get(img_url)
+print(resp)
+content = resp.content
+with open("kl.png", "wb") as f:
+    f.write(content)
