@@ -14,10 +14,22 @@ class DoubanMovieSpider(object):
         response = requests.get(url, headers=self.headers)
         return response.content.decode()
 
+    # def get_movie_list(self, json_str):
+    #     dic = json.loads(json_str)
+    #     movie_list = dic['subject_collection_items']
+    #     return movie_list
+
     def get_movie_list(self, json_str):
         dic = json.loads(json_str)
+
+        count = dic['count']
+        start = dic['start']
+        next_start = start + count
+        if next_start >= dic['total']:
+            next_start = None
+
         movie_list = dic['subject_collection_items']
-        return movie_list
+        return movie_list, next_start
 
     def save_movie_list(self, movie_list):
         with open("movies.csv", 'a', encoding='utf8') as f:
@@ -25,11 +37,21 @@ class DoubanMovieSpider(object):
                 json.dump(movie, f, ensure_ascii=False)
                 f.write("\n")
 
+    # def run(self):
+    #     url = self.url_pattern.format(0)
+    #     json_str = self.get_json_from_url(url)
+    #     movie_list = self.get_movie_list(json_str)
+    #     self.save_movie_list(movie_list)
+
     def run(self):
-        url = self.url_pattern.format(0)
-        json_str = self.get_json_from_url(url)
-        movie_list = self.get_movie_list(json_str)
-        self.save_movie_list(movie_list)
+        start = 0
+        while True:
+            url = self.url_pattern.format(start)
+            json_str = self.get_json_from_url(url)
+            movie_list, start = self.get_movie_list(json_str)
+            self.save_movie_list(movie_list)
+            if start is None:
+                break
 
 
 if __name__ == "__main__":
