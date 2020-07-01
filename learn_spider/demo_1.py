@@ -46,3 +46,11 @@ print(resp)
 content = resp.content
 with open("kl.png", "wb") as f:
     f.write(content)
+
+# 为请求加上请求头
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36',
+}
+resp = requests.get("http://www.baidu.com", headers=headers)
+print(resp.text)
+
