@@ -54,3 +54,11 @@ headers = {
 resp = requests.get("http://www.baidu.com", headers=headers)
 print(resp.text)
 
+
+# 发送一个 post 请求
+data = {
+    'name': 'ruiyang'
+}
+
+response = requests.post("http://httpbin.org/post", data=data)
+print(response.content.decode())
