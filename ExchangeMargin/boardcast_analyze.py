@@ -29,9 +29,7 @@ class BoardCast(MarginBase):
         return board_info
 
     def show_sql_info(self, secu_code):
-        """
-        查看 datacenter 数据库的情况
-        """
+        """查看 datacenter 数据库的情况"""
         self._dc_init()
         format_str = "聚源内部编码: {} 列出时间: {}, 移除时间: {} 当前是否在清单内: {}\n"
         inner_code = self.get_inner_code(secu_code)
