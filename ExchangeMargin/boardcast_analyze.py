@@ -84,7 +84,7 @@ class BoardCast(MarginBase):
 
         print(msg)
 
-        self.ding(msg)
+        # self.ding(msg)
 
 
 def board_task():

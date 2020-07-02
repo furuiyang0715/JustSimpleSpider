@@ -284,19 +284,19 @@ class MarginBase(object):
         else:
             logger.warning("钉钉消息发送失败")
 
-    # def product_dt_datas(self, market, category):
-    #     """
-    #
-    #     :param market:
-    #     :param category:
-    #     :return:
-    #     """
-    #     clinet = self._init_pool(self.dc_cfg)
-    #     sql = '''select InnerCode from {} where SecuMarket = {} and TargetCategory = {} and TargetFlag = 1;
-    #     '''.format(self.target_table_name, market, category)
-    #     ret = clinet.select_all(sql)
-    #     ret = [r.get("InnerCode") for r in ret]
-    #     return ret
+    def product_dt_datas(self, market, category):
+        """
+        dc 中的当前选出列表
+        :param market:
+        :param category:
+        :return:
+        """
+        clinet = self._init_pool(self.dc_cfg)
+        sql = '''select InnerCode from {} where SecuMarket = {} and TargetCategory = {} and TargetFlag = 1;
+        '''.format(self.target_table_name, market, category)
+        ret = clinet.select_all(sql)
+        ret = [r.get("InnerCode") for r in ret]
+        return ret
 
 #     def sync_dc2test(self, table_name):
 #         dc_client = self._init_pool(self.dc_cfg)

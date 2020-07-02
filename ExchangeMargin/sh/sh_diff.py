@@ -1,210 +1,87 @@
 import datetime
 import os
 import sys
-import time
-from collections import Counter
 
-from apscheduler.schedulers.blocking import BlockingScheduler
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
 
-sys.path.append('./../')
-from ExchangeMargin.boardcast_analyze import board_task
-from ExchangeMargin.configs import FIRST, LOCAL
+from ExchangeMargin.configs import LOCAL
 from ExchangeMargin.base import MarginBase, logger
 
 
 class ShSync(MarginBase):
     """上交融资融券标的正式表记录生成
     思路: list spider 的时间是连续的, 在某一天将昨天和前天的数据进行 diff, 得到 to_add 和 to_delete。
-
     核对中发现: 将某只证券移出会出公告, 但是将其加入的时候不会。 因无法回溯历史列表，使用 detail 列表的 diff 替代。 存疑。
-
-    运行时间: 在每天的 16点以及 23 点运行
-
+    运行时间: 在每天的 12 点运行
     """
     def __init__(self):
         super(ShSync, self).__init__()
         self.spider_table_name = 'margin_sh_list_spider'
-
-    def show_juyuan_datas(self, juyuan=1):
-        """
-        分析聚源[正式库]已有的数据
-        因为正式库和聚源库字段一致
-        只在首次运行时进行此分析
-        """
-        if juyuan:
-            table = self.juyuan_table_name
-            client = self._init_pool(self.juyuan_cfg)
-        else:
-            table = self.target_table_name
-            client = self._init_pool(self.product_cfg)
-        # 上交所融资买入标的列表
-        sql1 = '''select InnerCode from {} where TargetFlag = 1 and SecuMarket = 83 and TargetCategory = 10;'''.format(table)
-        ret1 = client.select_all(sql1)
-        ret1 = [r.get("InnerCode") for r in ret1]
-        print(Counter(ret1))    # Counter({1346: 2, 1131: 1, 1133: 1, ...
-        s_lst = set(self.get_spider_latest_list(83, 10))
-        print(set(ret1) - s_lst)    # {1250, 2051, 1346, 1612, 1293, 1868, 1205, 2908, 1694}
-        print(s_lst - set(ret1))    # {240096, 234476, 232095}
-
-        # 上交所融券卖出标的列表
-        sql2 = '''select InnerCode from {} where TargetFlag = 1 and SecuMarket = 83 and TargetCategory = 20;'''.format(table)
-        ret2 = client.select_all(sql2)
-        ret2 = [r.get("InnerCode") for r in ret2]
-        print(Counter(ret2))  # Counter({1346: 2, 1131: 1, 1133: 1, 1154: 1, ..
-        s_lst = set(self.get_spider_latest_list(83, 20))
-        print(set(ret2) - s_lst)  # {1250, 2051, 1346, 1612, 1293, 1868, 1205, 2908, 1694}
-        print(s_lst - set(ret2))  # {240096, 234476, 232095}
-
-        print(set(ret1) == set(ret2))
-
-        # # 查询聚源的最近更新时间
-        # sql5 = '''select max(UpdateTime) as max_dt from MT_TargetSecurities ; '''
-        # ret5 = juyuan.select_one(sql5).get("max_dt")
-        # print(ret5)    # 2020-04-20 09:04:01
-
-        '''TODO 需要在历史数据中进行查询的几个 
-        mysql> select InnerCode, SecuCode, ChiName from secumain where InnerCode in (240096, 234476, 232095);
-        +-----------+----------+-----------------------------------------------+
-        | InnerCode | SecuCode | ChiName                                       |
-        +-----------+----------+-----------------------------------------------+
-        |    232095 | 688466   | 金科环境股份有限公司                          |
-        |    234476 | 688365   | 杭州光云科技股份有限公司                      |
-        |    240096 | 688318   | 深圳市财富趋势科技股份有限公司                |
-        +-----------+----------+-----------------------------------------------+
-        3 rows in set (0.01 sec)
-        TODO  这几个最近更新进去的 似乎只会发移出公告 而不会发列入公告 .. 
-    
-        '''
-
-        '''只能从历史的交易明细中尝试找一下列入日期 
-        select * from margin_sh_detail_spider where InnerCode = '232095' order by ListDate ;    # 2020-05-08 00:00:00 
-        select * from margin_sh_detail_spider where InnerCode = '234476' order by ListDate ;    # 2020-04-29 00:00:00 
-        select * from margin_sh_detail_spider where InnerCode = '240096' order by ListDate ;    # 2020-04-27 00:00:00 
-        '''
-
-        client.dispose()
-
-    def parse_detail(self):
-        """根据历史明细生成数据"""
-        self._update("232095", datetime.datetime(2020, 5, 8), 1, 1)
-        self._update("232095", datetime.datetime(2020, 5, 8), 2, 1)
-
-        self._update("234476", datetime.datetime(2020, 4, 29), 1, 1)
-        self._update("234476", datetime.datetime(2020, 4, 29), 2, 1)
-
-        self._update("240096", datetime.datetime(2020, 4, 27), 1, 1)
-        self._update("240096", datetime.datetime(2020, 4, 27), 2, 1)
-
-        # TODO  待明细信息出具后观察
-        self._update("226097", datetime.datetime(2020, 5, 11), 1, 1)
-        self._update("226097", datetime.datetime(2020, 5, 11), 2, 1)
+        self.fields = ["SecuMarket", "InnerCode", "InDate", "OutDate", "TargetCategory", "TargetFlag", "ChangeReasonDesc"]
 
     def get_spider_latest_list(self, market, category):
         """获取爬虫库中最新的清单"""
-        spider = self._init_pool(self.spider_cfg)
+        self._spider_init()
         sql = '''select InnerCode from {} where ListDate = (select max(ListDate) from {} \
         where SecuMarket = {} and TargetCategory = {}) and SecuMarket = {} and TargetCategory = {}; 
         '''.format(self.spider_table_name, self.spider_table_name, market, category, market, category)
-        ret = spider.select_all(sql)
+        ret = self.spider_client.select_all(sql)
         ret = [r.get("InnerCode") for r in ret]
         return ret
 
     def get_spider_dt_list(self, dt, category):
         """获取爬虫库中具体某一天的清单"""
-        spider = self._init_pool(self.spider_cfg)
-
+        self._spider_init()
         sql_dt = '''select max(ListDate) as mx from {} where ListDate <= '{}' and SecuMarket =83 and TargetCategory = {}; 
         '''.format(self.spider_table_name, dt, category)
-        dt_ = spider.select_one(sql_dt).get("mx")
+        dt_ = self.spider_client.select_one(sql_dt).get("mx")
         logger.info("距离 {} 最近的之前的一天是{}".format(dt, dt_))
         if dt_:
             sql = '''select InnerCode from {} where ListDate = '{}' and SecuMarket = 83 and TargetCategory = {};
             '''.format(self.spider_table_name, dt_, category)
-            ret = spider.select_all(sql)
+            ret = self.spider_client.select_all(sql)
             ret = [r.get("InnerCode") for r in ret]
             return ret
         else:
             return []
-
-    def parse_announcement(self):
-        """从公告中手动提取更改信息 """
-        # 公告链接地址: http://www.sse.com.cn/disclosure/magin/announcement/
-
-        # 在聚源的最大更新时间之后的有：
-        # (1) 4.23 的公告: http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20200423_5052948.shtml
-        # 内容: 在2020年4月24日将天津松江（600225） 调出融资融券标的证券名单
-        inner_code = self.get_inner_code('600225')
-        # print(inner_code)  # 1346
-        self._update(inner_code, datetime.datetime(2020, 4, 24), 1, 0)
-        self._update(inner_code, datetime.datetime(2020, 4, 24), 2, 0)
-
-        # (2) 4.28 的公告: http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20200428_5067981.shtml
-        # 内容: 在2020年4月29日将 博信股份（600083） 调出融资融券标的证券名单
-        inner_code = self.get_inner_code("600083")
-        # print(inner_code)   # 1205
-        self._update(inner_code, datetime.datetime(2020, 4, 29), 1, 0)
-        self._update(inner_code, datetime.datetime(2020, 4, 29), 2, 0)
-
-        # (3）4.29 的公告: http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20200429_5075757.shtml
-        # 内容: 于2020年4月30日将 交大昂立（600530）和宏图高科（600122）调出融资融券标的证券名单
-        inner_code_1 = self.get_inner_code('600530')
-        inner_code_2 = self.get_inner_code('600122')
-        # print(inner_code_1, inner_code_2)  # 1694 1250
-        self._update(inner_code_1, datetime.datetime(2020, 4, 30), 1, 0)
-        self._update(inner_code_1, datetime.datetime(2020, 4, 30), 2, 0)
-
-        self._update(inner_code_2, datetime.datetime(2020, 4, 30), 1, 0)
-        self._update(inner_code_2, datetime.datetime(2020, 4, 30), 2, 0)
-
-        # (4) 4.30 的公告:http://www.sse.com.cn/disclosure/magin/announcement/ssereport/c/c_20200430_5085195.shtml
-        # 内容: 于2020年5月6日将 美都能源（600175）、六国化工（600470）、飞乐音响（600651）、安信信托（600816）和宜华生活（600978）调出融资融券标的证券名单。
-        in_co_1 = self.get_inner_code('600175')
-        in_co_2 = self.get_inner_code('600470')
-        in_co_3 = self.get_inner_code('600651')
-        in_co_4 = self.get_inner_code('600816')
-        in_co_5 = self.get_inner_code('600978')
-        # print(in_co_1, in_co_2, in_co_3, in_co_4, in_co_5)  # 1293 1612 1868 2051 2908
-        for in_co in (in_co_1, in_co_2, in_co_3, in_co_4, in_co_5):
-            self._update(in_co, datetime.datetime(2020, 5, 6), 1, 0)
-            self._update(in_co, datetime.datetime(2020, 5, 6), 2, 0)
 
     def _update(self, inner_code, dt, type, to_add):
         """
         数据库操作封装
         :param inner_code: 聚源内部编码
         :param dt: 变更发生时间
-        :param type: 1 融资 2 融券
+        :param type: 10 融资 20 融券
         :param to_add: 1 移入 0 移出
         :return:
         """
-        # 正式库表的字段
-        fields = ["SecuMarket", "InnerCode", "InDate", "OutDate", "TargetCategory", "TargetFlag", "ChangeReasonDesc"]
-        target = self._init_pool(self.product_cfg)
+        self._target_init()
         if to_add:  # 被列入的情况
-            if type == 1:    # 融资
+            if type == 10:    # 融资
                 item = {
                     "SecuMarket": 83,   # 上交所
-                    "InnerCode": inner_code,
+                    "InnerCode": inner_code,  # 聚源内部编码
                     "InDate": dt,  # 被列入的时间
                     'TargetCategory': 10,   # 融资
                     'TargetFlag': 1,
-                    'ChangeReasonDesc': '',
+                    'ChangeReasonDesc': None,
                     'UpdateTime': datetime.datetime.now(),
                 }
             else:
                 item = {
                     "SecuMarket": 83,
-                    "InnerCode": inner_code,
+                    "InnerCode": inner_code,   # 聚源内部编码
                     "InDate": dt,
                     'TargetCategory': 20,   # 融券
                     'TargetFlag': 1,
-                    'ChangeReasonDesc': '',
+                    'ChangeReasonDesc': None,
                     'UpdateTime': datetime.datetime.now(),
                 }
-            count = self._save(target, item, self.target_table_name, fields)
-            logger.info("type: {}, add 记录条数 {}".format(type, count))
+            count = self._save(self.target_client, item, self.target_table_name, self.fields)
+
         else:   # 被移出列表的情况
-            if type == 1:    # 融资
+            if type == 10:    # 融资
                 base_sql = '''update {} set OutDate = '{}', TargetFlag = 0 where SecuMarket = 83 and InnerCode = {}\
                 and TargetCategory = 10  and TargetFlag = 1; '''
             else:    # 融券
@@ -212,13 +89,8 @@ class ShSync(MarginBase):
                 and TargetCategory = 20  and TargetFlag = 1; '''
 
             sql = base_sql.format(self.target_table_name, dt, inner_code)
-            ret = target.update(sql)
-            logger.info("type: {}, update 记录条数是 {}".format(type, ret))
-        try:
-            target.dispose()
-        except:
-            logger.warning("dispose error")
-            raise
+            count = self.target_client.update(sql)
+            self.target_client.end()
 
     def start(self):
         msg = ''
@@ -226,12 +98,6 @@ class ShSync(MarginBase):
         local_str = "本地测试: " if LOCAL else "远程: "
         msg += local_str
         msg += '上交所数据生成:\n'
-
-        if FIRST:
-            self.show_juyuan_datas()
-            self.parse_announcement()
-            self.parse_detail()
-            self.show_juyuan_datas(juyuan=0)
 
         _today = datetime.datetime.combine(datetime.datetime.today(), datetime.time.min)
         _yester_day = _today - datetime.timedelta(days=1)
@@ -243,27 +109,27 @@ class ShSync(MarginBase):
             20: "融券",
         }
         for _type in (10, 20):
+            logger.info(_type)
             # 昨日的清单
             _yester_day_list = self.get_spider_dt_list(_yester_day, _type)
             # 前日的清单
-            _before_yester_day_list = self.get_spider_dt_list(_before_yester_day, _type)\
+            _before_yester_day_list = self.get_spider_dt_list(_before_yester_day, _type)
+            print(len(_yester_day_list), len(_before_yester_day_list))
 
-            print(_yester_day_list, _before_yester_day_list)
-
-            # TODO 数据未修改生效
             if _yester_day and _before_yester_day:
                 to_add = set(_yester_day_list) - set(_before_yester_day_list)
                 to_delete = set(_before_yester_day_list) - set(_yester_day_list)
-                logger.info("to_add: {}, to_delete: {}".format(to_add, to_delete))
-                msg += "{}: to_add: {}, to_delete: {}\n".format(_type_str_map.get(_type), to_add, to_delete)
+                logger.info("需新增数据: {}, 需删除数据: {}".format(to_add, to_delete))
+                msg += "{}: 需新增数据: {}, 需删除数据: {}\n".format(_type_str_map.get(_type), to_add, to_delete)
+
                 if to_add:
                     for one in to_add:
+                        # 数据 时间 融资融券类型 移入移出类型
                         self._update(one, _yester_day, _type, 1)
+
                 if to_delete:
                     for one in to_delete:
                         self._update(one, _yester_day, _type, 0)
-
-        # print(msg)
 
         msg += '一致性检查: \n'
 
@@ -284,54 +150,43 @@ class ShSync(MarginBase):
 
 
 def diff_task():
-    """对比两天清单差异的任务"""
-    now = lambda: time.time()
-    start_time = now()
     ShSync().start()
-    logger.info(f"用时: {now() - start_time} 秒")
 
 
 if __name__ == "__main__":
-    scheduler = BlockingScheduler()
     diff_task()
 
-    # scheduler.add_job(diff_task, 'cron', hour='16, 23', max_instances=10, id="sh_diff_task")
-    # scheduler.add_job(board_task, 'cron', hour='0', max_instances=10, id="board_task")
-    # logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
-    # try:
-    #     scheduler.start()
-    # except (KeyboardInterrupt, SystemExit):
-    #     pass
-    # except Exception as e:
-    #     logger.info(f"本次任务执行出错{e}")
-    #     sys.exit(0)
 
 '''部署
 docker build -f Dockerfile_shdiff -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_diff:v1 .
-docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_diff:v1 
-sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_diff:v1 
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_diff:v1
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_diff:v1
 
-# remote 
+# remote
 sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
 --env LOCAL=0 \
 --env FIRST=0 \
 --name margin_sh_diff \
-registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_diff:v1  
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_diff:v1
 
 # local
 sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
 --env LOCAL=1 \
 --env FIRST=0 \
 --name margin_sh_diff \
-registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_diff:v1  
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_diff:v1
+'''
+
+
+'''删除的sql语句 
+update  stk_mttargetsecurities set OutDate = '2020-07-01', TargetFlag = 0 where id in (10865, 10899); 
 
 '''
 
-'''
-融资一致性 check : dc_list - latest_list_spider >> {1208, 1268},latest_list_spider - dc_list>>{237994, 229891, 235021, 252151} 
-1208 >>  600086 >> 东方金钰
-1268 >>  600146 >> 商赢环球
-
-
-select * from stk_mttargetsecurities where InnerCode in ('1268', '1208') ; 
+'''新增的sql语句
+260652 6.30 
+233605  7.1 
+select * from stk_mttargetsecurities where InnerCode in (260652, 233605) ; 
+insert into stk_mttargetsecurities (SecuMarket, InnerCode, InDate,  TargetCategory, TargetFlag,  UpdateTime) values (83, 260652, '2020-06-30 00:00:00', 10, 1, '2020-07-01 16:00:02'); 
+insert into stk_mttargetsecurities (SecuMarket, InnerCode, InDate,  TargetCategory, TargetFlag,  UpdateTime) values (83,  233605, '2020-07-01 00:00:00', 10, 1, '2020-07-01 16:00:01'); 
 '''
