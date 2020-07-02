@@ -1,12 +1,15 @@
 # coding=utf8
 import datetime
+import os
 import re
 import sys
 import demjson
 import requests
 from lxml import html
 
-sys.path.append("./../")
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
 
 from ExchangeMargin.configs import LOCAL
 from ExchangeMargin.base import MarginBase, logger
@@ -44,9 +47,8 @@ class SHMarginSpider(MarginBase):
           UNIQUE KEY `un2` (`SecuMarket`, `TargetCategory`,`ListDate`, `InnerCode`) USING BTREE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='融资融券标的证券清单';
         '''.format(self.spider_table_name)
-        spider = self._init_pool(self.spider_cfg)
-        spider.insert(sql)
-        spider.dispose()
+        self.spider_client.insert(sql)
+        self.spider_client.end()
 
     def start(self):
         """
@@ -55,7 +57,10 @@ class SHMarginSpider(MarginBase):
         </a></li><li><a href="#tableData_960" data-toggle="tab">融资融券可充抵保证金证券一览表
         """
         msg = '本地测试:\n' if LOCAL else "远程:\n"
+
+        self._spider_init()
         self._create_table()
+
         resp = requests.get(self.url)
         if resp.status_code == 200:
             page = resp.text.encode("ISO-8859-1").decode("utf-8")
@@ -75,6 +80,7 @@ class SHMarginSpider(MarginBase):
             for data in list_datas:
                 if data:
                     lst_datas.append(data)
+            items = []
             for data in lst_datas:
                 item = dict()
                 item['SerialNumber'] = int(data[0])    # str
@@ -87,7 +93,8 @@ class SHMarginSpider(MarginBase):
                 item['SecuCode'] = secu_code
                 inner_code = self.get_inner_code(secu_code)
                 item['InnerCode'] = inner_code
-                self._save(spider, item, self.spider_table_name, fields)
+                items.append(item)
+            self._batch_save(self.spider_client, items, self.spider_table_name, fields)
 
             msg += "{} 上交所的融券卖出标的爬虫入库成功\n".format(show_dt)
 
@@ -103,6 +110,7 @@ class SHMarginSpider(MarginBase):
                     lst_datas.append(data)
             # 编号 证券代码 证券简称
             # [['1', '510050 ', '50ETF '], ['2', '510180 ', '180ETF '], ...
+            items = []
             for data in lst_datas:
                 item = dict()
                 item['SerialNumber'] = int(data[0])
@@ -115,17 +123,11 @@ class SHMarginSpider(MarginBase):
                 item['SecuCode'] = secu_code
                 inner_code = self.get_inner_code(secu_code)
                 item['InnerCode'] = inner_code
-                self._save(spider, item, self.spider_table_name, fields)
+                items.append(item)
+            self._batch_save(self.spider_client, items, self.spider_table_name, fields)
 
             msg += "{} 上交所的融资买入标的爬虫入库成功\n".format(show_dt)
-
-            try:
-                spider.dispose()
-            except:
-                logger.warning("dispose error")
-                raise
-            else:
-                self.ding(msg)
+            self.ding(msg)
         else:
             raise Exception("网页请求失败")
 
@@ -135,34 +137,24 @@ def sh_list_task():
 
 
 if __name__ == '__main__':
-    # scheduler = BlockingScheduler()
     sh_list_task()
 
-    # scheduler.add_job(sh_list_task, 'cron', hour='3, 9, 15', max_instances=10, id="sh_spider_list_task")
-    # logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
-    # try:
-    #     scheduler.start()
-    # except (KeyboardInterrupt, SystemExit):
-    #     pass
-    # except Exception as e:
-    #     logger.info(f"本次任务执行出错{e}")
-    #     sys.exit(0)
 
-'''
-docker build -f Dockerfile_shlist -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_list:v1 .
-docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_list:v1
-sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_list:v1
 
-# remote 
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
---env LOCAL=0 \
---name margin_sh_list \
-registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_list:v1
-
-# local
-sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
---env LOCAL=1 \
---name margin_sh_list \
-registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_list:v1 
-
-'''
+# '''
+# docker build -f Dockerfile_shlist -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_list:v1 .
+# docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_list:v1
+# sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_list:v1
+#
+# # remote
+# sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
+# --env LOCAL=0 \
+# --name margin_sh_list \
+# registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_list:v1
+#
+# # local
+# sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
+# --env LOCAL=1 \
+# --name margin_sh_list \
+# registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_list:v1
+# '''
