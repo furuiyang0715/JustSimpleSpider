@@ -1,16 +1,13 @@
 # coding=utf8
 import datetime
-import os
 import re
 import sys
-import time
-
 import demjson
 import requests
-from apscheduler.schedulers.blocking import BlockingScheduler
 from lxml import html
 
 sys.path.append("./../")
+
 from ExchangeMargin.configs import LOCAL
 from ExchangeMargin.base import MarginBase, logger
 
@@ -134,25 +131,22 @@ class SHMarginSpider(MarginBase):
 
 
 def sh_list_task():
-    now = lambda: time.time()
-    start_dt = now()
     SHMarginSpider().start()
-    logger.info("耗时: {} 秒".format(now() - start_dt))
 
 
 if __name__ == '__main__':
-    scheduler = BlockingScheduler()
+    # scheduler = BlockingScheduler()
     sh_list_task()
 
-    scheduler.add_job(sh_list_task, 'cron', hour='3, 9, 15', max_instances=10, id="sh_spider_list_task")
-    logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
-    try:
-        scheduler.start()
-    except (KeyboardInterrupt, SystemExit):
-        pass
-    except Exception as e:
-        logger.info(f"本次任务执行出错{e}")
-        sys.exit(0)
+    # scheduler.add_job(sh_list_task, 'cron', hour='3, 9, 15', max_instances=10, id="sh_spider_list_task")
+    # logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
+    # try:
+    #     scheduler.start()
+    # except (KeyboardInterrupt, SystemExit):
+    #     pass
+    # except Exception as e:
+    #     logger.info(f"本次任务执行出错{e}")
+    #     sys.exit(0)
 
 '''
 docker build -f Dockerfile_shlist -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_list:v1 .
