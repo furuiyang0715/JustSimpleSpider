@@ -17,7 +17,7 @@ from ExchangeMargin.base import MarginBase, logger
 
 
 class MarginBroadcast(MarginBase):
-    """爬虫公告表"""
+    """爬取上交所和深交所的融资融券公告"""
     def __init__(self):
         super(MarginBroadcast, self).__init__()
         self. firelds = ['title', 'link', 'time', 'content', 'keyword']

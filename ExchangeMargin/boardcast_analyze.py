@@ -1,13 +1,17 @@
 import datetime
+import os
 import re
 import sys
 
-sys.path.append('./../')
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
+
 from ExchangeMargin.base import MarginBase
 
 
 class BoardCast(MarginBase):
-    """公告播报 """
+    """公告播报"""
     def __init__(self):
         super(BoardCast, self).__init__()
         # 展示这个时间点之后的公告
@@ -16,22 +20,25 @@ class BoardCast(MarginBase):
         self.table = 'margin_announcement'
 
     def show_info(self, market):
-        client = self._init_pool(self.spider_cfg)
+        """选择爬虫库的原始资讯数据"""
+        self._spider_init()
         sql = """
         select time, content from {} where market = {} and time >= '{}'; 
         """.format(self.table, market, self.early_day)
-        board_info = client.select_all(sql)
-        client.dispose()
+        board_info = self.spider_client.select_all(sql)
         return board_info
 
     def show_sql_info(self, secu_code):
-        format_str = "INNERCODE: {} IN: {}, OUT: {} FLAG: {}\n"
+        """
+        查看 datacenter 数据库的情况
+        """
+        self._dc_init()
+        format_str = "聚源内部编码: {} 列出时间: {}, 移除时间: {} 当前是否在清单内: {}\n"
         inner_code = self.get_inner_code(secu_code)
-        client = self._init_pool(self.dc_cfg)
         sql = """
         select * from {} where InnerCode = {};  
         """.format(self.target_table_name, inner_code)
-        ret = client.select_all(sql)
+        ret = self.dc_client.select_all(sql)
         # 将其转化为 str 语句
         msg1 = '融资:'
         msg2 = '融券:'
@@ -40,7 +47,6 @@ class BoardCast(MarginBase):
                 msg1 += format_str.format(r.get("InnerCode"), r.get("InDate"), r.get("OutDate"), r.get("TargetFlag"))
             else:
                 msg2 += format_str.format(r.get("InnerCode"), r.get("InDate"), r.get("OutDate"), r.get("TargetFlag"))
-
         return msg1 + msg2
 
     def start(self):
@@ -78,9 +84,14 @@ class BoardCast(MarginBase):
                     msg += '\n'
             msg += "*"*20 + '\n'
 
+        print(msg)
+
         self.ding(msg)
 
 
 def board_task():
     BoardCast().start()
 
+
+if __name__ == "__main__":
+    board_task()
