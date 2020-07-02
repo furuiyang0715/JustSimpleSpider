@@ -12,10 +12,12 @@ from lxml import html
 cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
-from base import SpiderBase, logger
+
+from ExchangeMargin.base import MarginBase, logger
 
 
-class MarginBroadcast(SpiderBase):
+class MarginBroadcast(MarginBase):
+    """爬虫公告表"""
     def __init__(self):
         super(MarginBroadcast, self).__init__()
         self. firelds = ['title', 'link', 'time', 'content', 'keyword']
@@ -50,6 +52,7 @@ class MarginBroadcast(SpiderBase):
 
     def _create_table(self):
         """对公告爬虫建表 """
+        self._spider_init()
         sql = '''
         CREATE TABLE IF NOT EXISTS `{}` (
           `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
@@ -66,10 +69,8 @@ class MarginBroadcast(SpiderBase):
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='交易所融资融券公告信息';
         
         '''.format(self.announcement_table)
-        spider = self._init_pool(self.spider_cfg)
-        spider.insert(sql)
-        spider.dispose()
-        logger.info('建表成功 ')
+        self.spider_client.insert(sql)
+        logger.info("爬虫公告表建表成功")
 
     def _make_sz_params(self, page_num):
         '''
@@ -112,7 +113,7 @@ class MarginBroadcast(SpiderBase):
         return ret
 
     def sz_start(self):
-        client = self._init_pool(self.spider_cfg)
+        self._spider_init()
         for page in range(1, 8):
             logger.info("page is {}".format(page))
             datas = self._make_sz_params(page)
@@ -122,6 +123,7 @@ class MarginBroadcast(SpiderBase):
                 ret = resp.text
                 py_ret = json.loads(ret)
                 announcements = py_ret.get("data")
+                items = []
                 for a in announcements:
                     # print(a)
                     item = dict()
@@ -133,13 +135,11 @@ class MarginBroadcast(SpiderBase):
                     content_json_url = urljoin("http://www.szse.cn", a.get("docpubjsonurl"))
                     content = self.parse_json_content(content_json_url)
                     item['content'] = content
-                    self._save(client, item, self.announcement_table, self.firelds)
+                    items.append(item)
+                print(items)
+                ret = self._batch_save(self.spider_client, items, self.announcement_table, self.firelds)
             else:
                 self.error_pages.append(page)
-        try:
-            client.dispose()
-        except:
-            pass
 
     def sh_start(self):
         for page in range(1, 23):
@@ -150,7 +150,7 @@ class MarginBroadcast(SpiderBase):
             self.post_sh(url)
 
     def post_sh(self, url):
-        client = self._init_pool(self.spider_cfg)
+        self._spider_init()
         resp = requests.post(url)
         if resp.status_code == 200:
             body = resp.text
@@ -159,13 +159,8 @@ class MarginBroadcast(SpiderBase):
             except:
                 self.error_urls.append(url)
             doc = html.fromstring(body)
-            '''
-            <dd>
-                 <span>2020-04-30</span>
-                 <a href="/disclosure/magin/announcement/ssereport/c/c_20200430_5085195.shtml" title="关于融资融券标的证券调整的公告" target="_blank">关于融资融券标的证券调整的公告 </a>
-            </dd>
-            '''
             broadcasts = doc.xpath(".//div[@class='sse_list_1 js_createPage']/dl/dd")
+            items = []
             for b in broadcasts:
                 item = dict()
                 item['market'] = 83  # 上交所
@@ -178,7 +173,6 @@ class MarginBroadcast(SpiderBase):
                 item['title'] = title
 
                 href = b.xpath("./a/@href")[0]
-                # http://www.sse.com.cn/   disclosure/magin/announcement/ssereport/c/c_20200430_5085195.shtml
                 href = urljoin("http://www.sse.com.cn/", href)
                 item['link'] = href
 
@@ -191,12 +185,10 @@ class MarginBroadcast(SpiderBase):
                     keyword = ret.get("keyword")
                     item['content'] = content
                     item['keyword'] = keyword
+                items.append(item)
 
-                self._save(client, item, self.announcement_table, self.firelds)
-        try:
-            client.dispose()
-        except:
-            pass
+            print(items)
+            ret = self._batch_save(self.spider_client, items, self.announcement_table, self.firelds)
 
     def parse_sh_detail(self, url):
         """
@@ -211,52 +203,6 @@ class MarginBroadcast(SpiderBase):
                 body = body.encode("ISO-8859-1").decode("utf-8")
             except:
                 self.error_urls.append(url)
-
-            # print(body)
-
-            # 文章正文
-            '''
-            <div class="allZoom">  
-                <p style="text-align: center;">上证公告（交易）〔2020〕007号</p>
-                <p>　　2020年5月6日，美都能源（600175）、六国化工（600470）、飞乐音响（600651）、安信信托（600816）和宜华生活（600978）被实施退市风险警示。根据《上海证券交易所融资融券交易实施细则》第三十一条规定，本所于2020年5月6日起将以上证券调出融资融券标的证券名单。</p>
-                <p>　　特此公告。<br />&nbsp;</p>
-                <p>　　上海证券交易所</p>
-                <p>　　2020年4月30日</p>
-            </div> 
-            或者: 
-            
-            <div class="article-infor">
-                <h2>关于融资融券标的证券调整的公告</h2>
-                
-                <div class="article_opt">
-                    <span class="js_output_apphide">
-                        <a href="##" class="js_myCollection sseicon2-icon_nocollection"></a>
-                        <a href="javascript:window.print();" class="mobile_hide sseicon-icon_print"></a>
-                        <a href="##" class="zoom sseicon-icon_fontSizeUp" data-type="zoom_in"></a>
-                        <a href="##" class="zoom sseicon-icon_fontSizeDown" data-type="zoom_out"></a>
-                    </span>
-                    <i> 2013-04-26</i>
-                </div>
-                
-                <p>　　2013年5月2日，中达股份（证券代码：600074）被实施退市风险警示。根据《上海证券交易所融资融券交易实施细则》第二十九条规定，本所于2013年5月2日起将该证券调出融资融券标的证券名单。<br />&nbsp;</p>
-                <p>　　特此公告。<br />&nbsp;</p>
-                <p>　　上海证券交易所</p>
-                <p>　　2013年4月26日</p>
-                
-                <div class="share js_output_apphide">分享：
-                    <span>
-                        <a href="javascript:void(0);" class="sinaico"> </a>
-                        <a href="javascript:void(0);" class="wechatico">
-                            <div class="feedback_slide" id="article_qrcode"><s></s><
-                                span class="qrcode_details">微信扫一扫，分享好友</span>
-                            </div>
-                        </a>
-                        <a href="javascript:void(0);" class="tencentico"> </a>
-                    </span>
-                </div>
-            
-            </div>
-            '''
             doc = html.fromstring(body)
             try:
                 # TODO 对 content 进行去噪处理
@@ -272,25 +218,7 @@ class MarginBroadcast(SpiderBase):
 
             if content:
                 content = self._process_content(content)
-
             # 提取本篇的关键词
-            '''
-            <p style="display:none">
-                <fjtignoreurl>
-                    <span  id="searchTitle">
-                        关于融资融券标的证券调整的公告
-                    </span>
-                    <span  id="keywords">
-                            600978,
-                            600816,
-                            600651,
-                            600470,
-                            600175,
-                            融资融券标的证券调整,
-                    </span>
-                </fjtignoreurl>
-            </p>
-            '''
             try:
                 key_words = doc.xpath("//span[@id='keywords']")[0].text_content().split()
                 words = []
@@ -300,9 +228,6 @@ class MarginBroadcast(SpiderBase):
                 words_str = ','.join(words)
             except:
                 words_str = ''
-
-            # print(">>> ", content)
-            # print(">>>> ", words_str)
             return {"content": content, "keyword": words_str}
 
     def start(self):
@@ -317,11 +242,7 @@ class MarginBroadcast(SpiderBase):
 
 
 def task():
-    """公告爬虫"""
-    now = lambda: time.time()
-    start_time = now()
     MarginBroadcast().start()
-    logger.info(f"用时: {now() - start_time} 秒")
 
 
 if __name__ == "__main__":

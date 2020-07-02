@@ -4,6 +4,7 @@ import hmac
 import json
 import logging
 import os
+import re
 import sys
 import time
 import traceback
@@ -80,6 +81,7 @@ class MarginBase(object):
         self.target_client = None
         self.juyuan_client = None
         self.test_client = None
+        self.spider_client = None
 
     def _init_pool(self, cfg: dict):
         """
@@ -113,9 +115,15 @@ class MarginBase(object):
         if not self.test_client:
             self.test_client = self._init_pool(self.test_cfg)
 
+    def _spider_init(self):
+        if not self.spider_client:
+            self.spider_client = self._init_pool(self.spider_cfg)
+
     def __del__(self):
         for sql_client in (self.dc_client, self.target_client,
-                           self.juyuan_client, self.test_client):
+                           self.juyuan_client, self.test_client,
+                           self.spider_client,
+                           ):
             if sql_client:
                 sql_client.dispose()
 
@@ -161,6 +169,41 @@ class MarginBase(object):
             logger.info("批量插入的数量是{}".format(count))
             sql_pool.end()
             return count
+
+    def _process_content(self, vs):
+        """
+        去除 4 字节的 utf-8 字符，否则插入 mysql 时会出错
+        :param vs:
+        :return:
+        """
+        try:
+            # python UCS-4 build的处理方式
+            highpoints = re.compile(u'[\U00010000-\U0010ffff]')
+        except re.error:
+            # python UCS-2 build的处理方式
+            highpoints = re.compile(u'[\uD800-\uDBFF][\uDC00-\uDFFF]')
+
+        params = list()
+        for v in vs:
+            # 对插入数据进行一些处理
+            nv = highpoints.sub(u'', v)
+            nv = self._filter_char(nv)
+            if nv.strip():     # 不需要在字符串之间保留空格
+                params.append(nv)
+        # print(params)
+        return "".join(params)
+
+    @staticmethod
+    def _filter_char(_str):
+        """处理特殊的空白字符"""
+        for cha in ['\n', '\r', '\t',
+                    '\u200a', '\u200b', '\u200c', '\u200d', '\u200e',
+                    '\u202a', '\u202b', '\u202c', '\u202d', '\u202e',
+                    ]:
+            _str = _str.replace(cha, '')
+        # _str = _str.replace(u'\xa0', u' ')  # 把 \xa0 替换成普通的空格
+        _str = _str.replace(u'\xa0', u'')  # 把 \xa0 直接去除
+        return _str
 
     def _save(self, sql_pool, to_insert, table, update_fields):
         try:
