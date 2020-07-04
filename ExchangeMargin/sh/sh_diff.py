@@ -1,6 +1,9 @@
 import datetime
 import os
 import sys
+import time
+
+import schedule
 
 cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
@@ -156,6 +159,12 @@ def diff_task():
 if __name__ == "__main__":
     diff_task()
 
+    schedule.every().day.at("12:00").do(diff_task)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(10)
+
 
 '''部署
 docker build -f Dockerfile_shdiff -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_diff:v1 .
@@ -165,14 +174,12 @@ sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_diff:v
 # remote
 sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
 --env LOCAL=0 \
---env FIRST=0 \
 --name margin_sh_diff \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_diff:v1
 
 # local
 sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
 --env LOCAL=1 \
---env FIRST=0 \
 --name margin_sh_diff \
 registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/margin_sh_diff:v1
 '''
@@ -189,4 +196,5 @@ update  stk_mttargetsecurities set OutDate = '2020-07-01', TargetFlag = 0 where 
 select * from stk_mttargetsecurities where InnerCode in (260652, 233605) ; 
 insert into stk_mttargetsecurities (SecuMarket, InnerCode, InDate,  TargetCategory, TargetFlag,  UpdateTime) values (83, 260652, '2020-06-30 00:00:00', 10, 1, '2020-07-01 16:00:02'); 
 insert into stk_mttargetsecurities (SecuMarket, InnerCode, InDate,  TargetCategory, TargetFlag,  UpdateTime) values (83,  233605, '2020-07-01 00:00:00', 10, 1, '2020-07-01 16:00:01'); 
+
 '''
