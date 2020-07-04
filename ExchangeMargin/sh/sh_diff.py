@@ -6,7 +6,7 @@ import time
 import schedule
 
 cur_path = os.path.split(os.path.realpath(__file__))[0]
-file_path = os.path.abspath(os.path.join(cur_path, ".."))
+file_path = os.path.abspath(os.path.join(cur_path, "../.."))
 sys.path.insert(0, file_path)
 
 from ExchangeMargin.configs import LOCAL
