@@ -1,5 +1,4 @@
 import base64
-import copy
 import hashlib
 import hmac
 import json
@@ -24,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class SpiderBase(object):
-
+    # 数据库基本配置
     spider_cfg = {  # 爬虫库
         "host": SPIDER_MYSQL_HOST,
         "port": SPIDER_MYSQL_PORT,
@@ -41,8 +40,7 @@ class SpiderBase(object):
         "db": PRODUCT_MYSQL_DB,
     }
 
-    # 聚源数据库
-    juyuan_cfg = {
+    juyuan_cfg = {  # 聚源数据库
         "host": JUY_HOST,
         "port": JUY_PORT,
         "user": JUY_USER,
@@ -50,8 +48,7 @@ class SpiderBase(object):
         "db": JUY_DB,
     }
 
-    # 数据中心库
-    dc_cfg = {
+    dc_cfg = {  # 数据中心库
         "host": DC_HOST,
         "port": DC_PORT,
         "user": DC_USER,
@@ -60,7 +57,38 @@ class SpiderBase(object):
     }
 
     def __init__(self):
-        pass
+        self.dc_client = None
+        self.product_client = None
+        self.juyuan_client = None
+        self.spider_client = None
+        # 请求头
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 (KHTML, '
+                          'like Gecko) Chrome/79.0.3945.117 Safari/537.36'
+        }
+
+    # 数据库连接初始化
+    def _dc_init(self):
+        if not self.dc_client:
+            self.dc_client = self._init_pool(self.dc_cfg)
+
+    def _product_init(self):
+        if not self.product_client:
+            self.product_client = self._init_pool(self.product_cfg)
+
+    def _juyuan_init(self):
+        if not self.juyuan_client:
+            self.juyuan_client = self._init_pool(self.juyuan_cfg)
+
+    def _spider_init(self):
+        if not self.spider_client:
+            self.spider_client = self._init_pool(self.spider_cfg)
+
+    def __del__(self):
+        """结束时销毁已经存在的数据库连接"""
+        for _client in (self.dc_client, self.product_client, self.juyuan_client, self.spider_client):
+            if _client is not None:
+                _client.dispose()
 
     def _init_pool(self, cfg: dict):
         """
@@ -79,6 +107,7 @@ class SpiderBase(object):
         return pool
 
     def contract_sql(self, datas, table: str, update_fields: list):
+        """拼接 sql 语句"""
         if not isinstance(datas, list):
             datas = [datas, ]
 
@@ -112,6 +141,7 @@ class SpiderBase(object):
         return sql, params
 
     def _batch_save(self, sql_pool, to_inserts, table, update_fields):
+        """批量插入"""
         try:
             sql, values = self.contract_sql(to_inserts, table, update_fields)
             count = sql_pool.insert_many(sql, values)
@@ -124,6 +154,7 @@ class SpiderBase(object):
             return count
 
     def _save(self, sql_pool, to_insert, table, update_fields):
+        """单个插入"""
         try:
             insert_sql, values = self.contract_sql(to_insert, table, update_fields)
             value = values[0]
@@ -142,6 +173,7 @@ class SpiderBase(object):
             return count
 
     def get_inner_code(self, secu_code):
+        """获取聚源内部编码"""
         ret = self.inner_code_map.get(secu_code)
         if not ret:
             logger.warning("{} 不存在内部编码".format(secu_code))
@@ -155,12 +187,10 @@ class SpiderBase(object):
         https://dd.gildata.com/#/tableShow/27/column///
         https://dd.gildata.com/#/tableShow/718/column///
         """
-        juyuan = self._init_pool(self.juyuan_cfg)
         # 8 是开放式基金
         sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2, 8) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
         # sql = 'SELECT SecuCode,InnerCode from SecuMain;'
-        ret = juyuan.select_all(sql)
-        juyuan.dispose()
+        ret = self.juyuan_client.select_all(sql)
         info = {}
         for r in ret:
             key = r.get("SecuCode")
@@ -169,6 +199,7 @@ class SpiderBase(object):
         return info
 
     def ding(self, msg):
+        """发送钉钉预警消息"""
         def get_url():
             timestamp = str(round(time.time() * 1000))
             secret_enc = SECRET.encode('utf-8')
@@ -204,19 +235,37 @@ class SpiderBase(object):
         else:
             logger.warning("钉钉消息发送失败")
 
-    def product_dt_datas(self, market, category):
-        """
+    def _filter_char(self, _str):
+        """处理特殊的空白字符"""
+        for cha in ['\n', '\r', '\t',
+                    '\u200a', '\u200b', '\u200c', '\u200d', '\u200e',
+                    '\u202a', '\u202b', '\u202c', '\u202d', '\u202e',
+                    ]:
+            _str = _str.replace(cha, '')
+        # _str = _str.replace(u'\xa0', u' ')  # 把 \xa0 替换成普通的空格
+        _str = _str.replace(u'\xa0', u'')  # 把 \xa0 直接去除
+        return _str
 
-        :param market:
-        :param category:
-        :return:
+    def _process_content(self, vs):
         """
-        clinet = self._init_pool(self.dc_cfg)
-        sql = '''select InnerCode from {} where SecuMarket = {} and TargetCategory = {} and TargetFlag = 1; 
-        '''.format(self.target_table_name, market, category)
-        ret = clinet.select_all(sql)
-        ret = [r.get("InnerCode") for r in ret]
-        return ret
+        去除 4 字节的 utf-8 字符，否则插入 mysql 时会出错
+        """
+        try:
+            # python UCS-4 build的处理方式
+            highpoints = re.compile(u'[\U00010000-\U0010ffff]')
+        except re.error:
+            # python UCS-2 build的处理方式
+            highpoints = re.compile(u'[\uD800-\uDBFF][\uDC00-\uDFFF]')
+
+        params = list()
+        for v in vs:
+            # 对插入数据进行一些处理
+            nv = highpoints.sub(u'', v)
+            nv = self._filter_char(nv)
+            if nv.strip():     # 不需要在字符串之间保留空格
+                params.append(nv)
+        # print(params)
+        return "".join(params)
 
     def callbackfunc(self, blocknum, blocksize, totalsize):
         """
@@ -236,37 +285,3 @@ class SpiderBase(object):
         """清理文件"""
         os.remove(file)
         logger.info("删除文件{}成功".format(file))
-
-    def _filter_char(self, _str):
-        """处理特殊的空白字符"""
-        for cha in ['\n', '\r', '\t',
-                    '\u200a', '\u200b', '\u200c', '\u200d', '\u200e',
-                    '\u202a', '\u202b', '\u202c', '\u202d', '\u202e',
-                    ]:
-            _str = _str.replace(cha, '')
-        # _str = _str.replace(u'\xa0', u' ')  # 把 \xa0 替换成普通的空格
-        _str = _str.replace(u'\xa0', u'')  # 把 \xa0 直接去除
-        return _str
-
-    def _process_content(self, vs):
-        """
-        去除 4 字节的 utf-8 字符，否则插入 mysql 时会出错
-        :param vs:
-        :return:
-        """
-        try:
-            # python UCS-4 build的处理方式
-            highpoints = re.compile(u'[\U00010000-\U0010ffff]')
-        except re.error:
-            # python UCS-2 build的处理方式
-            highpoints = re.compile(u'[\uD800-\uDBFF][\uDC00-\uDFFF]')
-
-        params = list()
-        for v in vs:
-            # 对插入数据进行一些处理
-            nv = highpoints.sub(u'', v)
-            nv = self._filter_char(nv)
-            if nv.strip():     # 不需要在字符串之间保留空格
-                params.append(nv)
-        # print(params)
-        return "".join(params)
