@@ -86,6 +86,32 @@ class HKStock_JJYZ(HKStock_CJSS):
         self.format_url = "http://finance.takungpao.com/hkstock/jjyz/index_{}.html"
 
 
+class HKStock_JGSD(HKStock_CJSS):
+    def __init__(self):
+        super(HKStock_JGSD, self).__init__()
+        self.page = 3
+        self.name = '机构视点'
+        self.first_url = 'http://finance.takungpao.com/hkstock/jgsd/index.html'
+        self.format_url = "http://finance.takungpao.com/hkstock/jgsd/index_{}.html"
+
+
+class HKStock_GSYW(HKStock_CJSS):
+    def __init__(self):
+        super(HKStock_GSYW, self).__init__()
+        self.name = '公司要闻'
+        self.first_url = 'http://finance.takungpao.com/hkstock/gsyw/index.html'
+        self.format_url = "http://finance.takungpao.com/hkstock/gsyw/index_{}.html"
+
+
+class HKStock_GJJJ(HKStock_CJSS):
+    def __init__(self):
+        super(HKStock_GJJJ, self).__init__()
+        self.page = 3
+        self.name = '国际聚焦'
+        self.first_url = 'http://finance.takungpao.com/hkstock/gjjj/index.html'
+        self.format_url = "http://finance.takungpao.com/hkstock/gjjj/index_{}.html"
+
+
 if __name__ == "__main__":
     # cjss = HKStock_CJSS()
     # cjss.start()
@@ -93,5 +119,14 @@ if __name__ == "__main__":
     # qqgs = HKStock_QQGS()
     # qqgs.start()
 
-    jjyz = HKStock_JJYZ()
-    jjyz.start()
+    # jjyz = HKStock_JJYZ()
+    # jjyz.start()
+
+    # jgsd = HKStock_JGSD()
+    # jgsd.start()
+
+    # gsyw = HKStock_GSYW()
+    # gsyw.start()
+
+    gjjj = HKStock_GJJJ()
+    gjjj.start()

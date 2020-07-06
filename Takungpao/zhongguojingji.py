@@ -121,9 +121,42 @@ class NewFinanceTrend(ZhongGuoJingJi):
         self.format_url = 'http://www.takungpao.com/finance/236160/{}.html'
 
 
+class HKCaiJing(ZhongGuoJingJi):
+    def __init__(self):
+        super(HKCaiJing, self).__init__()
+        self.name = '香港财经'
+        self.first_url = 'http://www.takungpao.com/finance/236131/index.html'
+        self.format_url = 'http://www.takungpao.com/finance/236131/{}.html'
+
+
+class HKStock(ZhongGuoJingJi):
+    def __init__(self):
+        super(HKStock, self).__init__()
+        self.name = "港股"
+        self.first_url = 'http://www.takungpao.com/finance/236135/index.html'
+        self.format_url = 'http://www.takungpao.com/finance/236135/{}.html'
+
+
+class GuoJiJingJi(ZhongGuoJingJi):
+    def __init__(self):
+        super(GuoJiJingJi, self).__init__()
+        self.name = "国际经济"
+        self.first_url = 'http://www.takungpao.com/finance/236133/index.html'
+        self.format_url = 'http://www.takungpao.com/finance/236133/{}.html'
+
+
 if __name__ == "__main__":
-    zg = ZhongGuoJingJi()
-    zg.start()
+    # zg = ZhongGuoJingJi()
+    # zg.start()
 
     # busi = NewFinanceTrend()
     # busi.start()
+
+    # hkc = HKCaiJing()
+    # hkc.start()
+
+    # hks = HKStock()
+    # hks.start()
+
+    gj = GuoJiJingJi()
+    gj.start()
