@@ -77,9 +77,21 @@ class HKStock_QQGS(HKStock_CJSS):
         self.format_url = "http://finance.takungpao.com/hkstock/qqgs/index_{}.html"
 
 
+class HKStock_JJYZ(HKStock_CJSS):
+    def __init__(self):
+        super(HKStock_JJYZ, self).__init__()
+        self.page = 3
+        self.name = '经济一周'
+        self.first_url = 'http://finance.takungpao.com/hkstock/jjyz/index.html'
+        self.format_url = "http://finance.takungpao.com/hkstock/jjyz/index_{}.html"
+
+
 if __name__ == "__main__":
     # cjss = HKStock_CJSS()
     # cjss.start()
 
-    qqgs = HKStock_QQGS()
-    qqgs.start()
+    # qqgs = HKStock_QQGS()
+    # qqgs.start()
+
+    jjyz = HKStock_JJYZ()
+    jjyz.start()
