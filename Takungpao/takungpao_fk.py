@@ -40,7 +40,7 @@ class FK(TakungpaoBase):
                         print(item)
                         items.append(item)
 
-            fk_save_num = self._batch_save(self.product_client, items, self.table_name, self.fields)
+            fk_save_num = self._batch_save(self.spider_client, items, self.table_name, self.fields)
             logger.info("风口保存的个数是 {}".format(fk_save_num))
 
 
