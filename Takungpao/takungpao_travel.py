@@ -1,28 +1,15 @@
-from gne import GeneralNewsExtractor
 from lxml import html
+from Takungpao.base import TakungpaoBase
+from base import logger
 
-from takungpao import Base
 
-
-class Travel(Base):
+class Travel(TakungpaoBase):
     def __init__(self):
         super(Travel, self).__init__()
         self.first_url = 'http://finance.takungpao.com/travel/index.html'
         self.format_url = 'http://finance.takungpao.com/travel/index_{}.html'
         self.name = '旅游'
-        self.table = 'Takungpao'
-        self.fields = ['link', 'title', 'pub_date', 'article']
-        self.extractor = GeneralNewsExtractor()
-        self.page = 19
-
-    # def _parse_detail(self, body):
-    #     try:
-    #         result = self.extractor.extract(body)
-    #         content = result.get("content")
-    #         return content
-    #     except:
-    #         print("解析详情页失败 ..")
-    #         return None
+        self.page = 5
 
     def _parse_page(self, body):
         '''
@@ -33,12 +20,9 @@ class Travel(Base):
         '''
         doc = html.fromstring(body)
         content = doc.xpath('//div[@class="tpk_text clearfix"]')[0].text_content()
-        # print(content)
-        # sys.exit(0)
         return content.strip()
 
     def _parse_detail(self, link, body):
-        # 很多页 每页图片下面是字的模式
         '''
 <div class="tpk_page clearfix">
     <span class="firstpage">1</span>
@@ -48,19 +32,12 @@ class Travel(Base):
 </div>
         '''
         content1 = self._parse_page(body)
-        # print(content1)
 
         doc = html.fromstring(body)
         page_num_info = doc.xpath('//div[@class="tpk_page clearfix"]')
-
-        # if not page_num_info:
-        #     return content1
-
         page_info = page_num_info[0].text_content()
-
         # 多页图集
         page_info_list = page_info.split()
-        # print(">>>", page_info_list)
         if not page_info_list:
             return content1
 
@@ -80,53 +57,44 @@ class Travel(Base):
     def _parse_list(self, body):
         doc = html.fromstring(body)
         news_list = doc.xpath('//div[@class="txtImgListeach current"]')
-        # print(len(news_list))
-
         items = []
         for news in news_list:
             item = {}
             link = news.xpath("./h3/a/@href")[0]
-            # print(link)
             item['link'] = link
             title = news.xpath("./h3/a")[0].text_content()
-            # print(title)
             item['title'] = title
             pub_date = news.xpath(".//span[@class='time']")[0].text_content()
-            # print(pub_date)
             item['pub_date'] = pub_date
-
             detail_resp = self.get(link)
-            # print("<<<", link)
-            if detail_resp:
+            if detail_resp and detail_resp.status_code == 200:
                 detail_page = detail_resp.text
                 article = self._parse_detail(link, detail_page)
                 if article:
                     article = self._process_content(article)
                     item['article'] = article
-                    print(item)
+                    logger.info(item)
                     items.append(item)
         return items
 
-    def _start(self):
+    def start(self):
+        self._create_table()
+        self._spider_init()
         for page in range(1, self.page+1):
             if page == 1:
                 list_url = self.first_url
             else:
                 list_url = self.format_url.format(page)
             list_resp = self.get(list_url)
-            if list_resp:
+            if list_resp and list_resp.status_code == 200:
                 list_page = list_resp.text
                 items = self._parse_list(list_page)
-                self.save(items)
+                if items:
+                    page_save_num = self._batch_save(self.spider_client, items, self.table_name, self.fields)
+                    logger.info("第{}页保存的个数是是{}".format(page, page_save_num))
 
 
 if __name__ == "__main__":
     t = Travel()
     t.start()
 
-    # _url = "http://finance.takungpao.com/travel/2016-02/3282833.html"
-    # http://finance.takungpao.com/travel/2016-02/3282833_2.html
-    # http://finance.takungpao.com/travel/2016-02/3282833_3.html
-    # body = t.get(_url).text
-    # ret = t._parse_detail(_url, body)
-    # print(ret)
