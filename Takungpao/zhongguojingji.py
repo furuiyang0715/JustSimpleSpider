@@ -87,6 +87,7 @@ class ZhongGuoJingJi(TakungpaoBase):
                 item['title'] = title
 
                 pub_date = news.xpath("./dd[@class='sort']/text()")[0]
+                # print(">>> ", pub_date)
                 pub_date = self._process_pub_dt(pub_date)
                 item['pub_date'] = pub_date
 
@@ -111,6 +112,18 @@ class ZhongGuoJingJi(TakungpaoBase):
             self._parse_list(page, list_url)
 
 
+class NewFinanceTrend(ZhongGuoJingJi):
+    """废弃"""
+    def __init__(self):
+        super(NewFinanceTrend, self).__init__()
+        self.name = '新经济浪潮'
+        self.first_url = 'http://www.takungpao.com/finance/236160/index.html'
+        self.format_url = 'http://www.takungpao.com/finance/236160/{}.html'
+
+
 if __name__ == "__main__":
     zg = ZhongGuoJingJi()
     zg.start()
+
+    # busi = NewFinanceTrend()
+    # busi.start()
