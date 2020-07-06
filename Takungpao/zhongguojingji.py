@@ -1,13 +1,9 @@
-import sys
-import traceback
-
 from lxml import html
+from Takungpao.base import TakungpaoBase
+from base import logger
 
-sys.path.append("./../../")
-from takungpao.base import logger, Base
 
-
-class ZhongGuoJingJi(Base):
+class ZhongGuoJingJi(TakungpaoBase):
     def __init__(self):
         super(ZhongGuoJingJi, self).__init__()
         self.name = '中国经济'
@@ -15,7 +11,7 @@ class ZhongGuoJingJi(Base):
         self.format_url = 'http://www.takungpao.com/finance/236132/{}.html'
 
     def _parse_total_page(self, link):
-        '''
+        '''解析出页面的总页数
         <div class="tkp_page">
             <a href="/finance/236132/index.html" class="cms_prevpage">上一页</a>
             <div class="cms_curpage">1</div>
@@ -71,13 +67,14 @@ class ZhongGuoJingJi(Base):
         else:
             return {}
 
-    def _parse_list(self, list_url):
+    def _parse_list(self, page, list_url):
+        """解析列表页"""
         list_resp = self.get(list_url)
-        client = self._init_pool(self.spider_cfg)
-        if list_resp:
+        if list_resp and list_resp.status_code == 200:
             list_page = list_resp.text
             doc = html.fromstring(list_page)
             news_list = doc.xpath('//div[@class="wrap_left"]/dl[@class="item clearfix"]')
+            items = []
             for news in news_list:
                 item = {}
                 link = news.xpath('./dd[@class="intro"]/a/@href')[0]
@@ -96,10 +93,13 @@ class ZhongGuoJingJi(Base):
                 ret = self._parse_detail(link)
                 item['article'] = ret.get("content")
                 item['source'] = ret.get("source")
-                # logger.info(item)
-                self._save(client, item, self.table, self.fields)
+                items.append(item)
+            self._spider_init()
+            page_save_num = self._batch_save(self.spider_client, items, self.table_name, self.fields)
+            logger.info("第{}页保存的个数是{} ".format(page, page_save_num))
 
-    def _start(self):
+    def start(self):
+        self._create_table()
         page = self._parse_total_page(self.first_url)
         logger.info("总页数 {}".format(page))
         for page in range(1, page+1):
@@ -108,12 +108,9 @@ class ZhongGuoJingJi(Base):
                 list_url = self.first_url
             else:
                 list_url = self.format_url.format(page)
-            self._parse_list(list_url)
+            self._parse_list(page, list_url)
 
 
 if __name__ == "__main__":
     zg = ZhongGuoJingJi()
-    try:
-        zg.start()
-    except:
-        traceback.print_exc()
+    zg.start()

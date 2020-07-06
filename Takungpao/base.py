@@ -19,7 +19,7 @@ from Takungpao.configs import (LOCAL, LOCAL_PROXY_URL, PROXY_URL)
 class TakungpaoBase(SpiderBase):
     def __init__(self):
         super(TakungpaoBase, self).__init__()
-        self.use_proxy = True
+        self.use_proxy = False
         self.extractor = GeneralNewsExtractor()
         self.fields = ['pub_date', 'link', 'title', 'article', 'source']
         self.table_name = 'Takungpao'
