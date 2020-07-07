@@ -67,24 +67,6 @@ class TakungpaoBase(SpiderBase):
         d = str(datetime.datetime.fromtimestamp(time_stamp))
         return d
 
-    def _process_pub_dt(self, pub_date):
-        """对 pub_date 的各类时间格式进行统一"""
-        current_dt = datetime.datetime.now()
-        yesterday_dt_str = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-        after_yesterday_dt_str = (datetime.datetime.now() - datetime.timedelta(days=2)).strftime("%Y-%m-%d")
-        if "小时前" in pub_date:  # eg. 20小时前
-            hours = int(pub_date.replace('小时前', ''))
-            pub_date = (current_dt - datetime.timedelta(hours=hours)).strftime("%Y-%m-%d %H:%M:%S")
-        elif "昨天" in pub_date:  # eg. 昨天04:24
-            pub_date = pub_date.replace('昨天', '')
-            pub_date = " ".join([yesterday_dt_str, pub_date])
-        elif '前天' in pub_date:  # eg. 前天11:33
-            pub_date = pub_date.replace("前天", '')
-            pub_date = " ".join([after_yesterday_dt_str, pub_date])
-        else:  # eg. 02-29 04:24
-            pub_date = str(current_dt.year) + '-' + pub_date
-        return pub_date
-
     def _create_table(self):
         """大公报建表语句"""
         sql = '''
