@@ -289,7 +289,9 @@ class SpiderBase(object):
 
     def _process_pub_dt(self, pub_date, cur_year=None):
         """对 pub_date 的各类时间格式进行统一
-        eg. 25分钟前
+        eg.
+        刚刚
+        25分钟前
         今天09:33
         昨天22:02
         07-05 22:14
@@ -300,6 +302,9 @@ class SpiderBase(object):
         current_dt_str = current_dt.strftime("%Y-%m-%d")
         yesterday_dt_str = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
         after_yesterday_dt_str = (datetime.datetime.now() - datetime.timedelta(days=2)).strftime("%Y-%m-%d")
+        if "刚刚" in pub_date:
+            return current_dt_str
+
         if "小时前" in pub_date:  # eg. 20小时前
             hours = int(pub_date.replace('小时前', ''))
             pub_date = (current_dt - datetime.timedelta(hours=hours)).strftime("%Y-%m-%d %H:%M:%S")
