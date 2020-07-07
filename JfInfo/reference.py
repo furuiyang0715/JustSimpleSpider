@@ -1,3 +1,5 @@
+# coding=utf8
+
 import re
 
 import requests
@@ -143,6 +145,25 @@ class Reference(SpiderBase):
                 logger.info(f"当前页 {num} 入库的个数是 {page_save_num}")
 
 
-if __name__ == "__main__":
-    r = Reference()
-    r.start()
+class HKInfo(Reference):
+    def __init__(self):
+        super(HKInfo, self).__init__()
+        self.index_url = 'http://www.jfinfo.com/reference/HK'
+        self.more_url = 'http://www.jfinfo.com/articles_categories/more?page={}&category_id=83'
+        self.name = '港股资讯'
+
+
+class Research(Reference):
+    def __init__(self):
+        super(Research, self).__init__()
+        self.index_url = 'http://www.jfinfo.com/research'
+        self.more_url = 'http://www.jfinfo.com/articles_categories/more?page={}&category_id=23'
+        self.name = '巨丰研究院'
+
+
+class TZZJY(Reference):
+    def __init__(self):
+        super(TZZJY, self).__init__()
+        self.index_url = 'http://www.jfinfo.com/reference/tzzjy'
+        self.more_url = 'http://www.jfinfo.com/articles_categories/more?page={}&category_id=59'
+        self.name = '投资者教育'

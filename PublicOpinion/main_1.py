@@ -7,7 +7,7 @@ import traceback
 import schedule
 
 sys.path.append("./../")
-from JfInfo.jfinfo_runner import JFSchedule
+from JfInfo.jfinfo_main import JFSchedule
 from takungpao import TakungpaoSchedule
 
 
