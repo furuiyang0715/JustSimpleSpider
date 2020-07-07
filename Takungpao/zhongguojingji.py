@@ -145,6 +145,22 @@ class GuoJiJingJi(ZhongGuoJingJi):
         self.format_url = 'http://www.takungpao.com/finance/236133/{}.html'
 
 
+class DiChan(ZhongGuoJingJi):
+    def __init__(self):
+        super(DiChan, self).__init__()
+        self.name = '地产'
+        self.first_url = 'http://www.takungpao.com/finance/236136/index.html'
+        self.format_url = 'http://www.takungpao.com/finance/236136/{}.html'
+
+
+class Business(ZhongGuoJingJi):
+    def __init__(self):
+        super(Business, self).__init__()
+        self.name = '商业'
+        self.first_url = 'http://www.takungpao.com/finance/236137/index.html'
+        self.format_url = 'http://www.takungpao.com/finance/236137/{}.html'
+
+
 if __name__ == "__main__":
     # zg = ZhongGuoJingJi()
     # zg.start()
@@ -158,5 +174,11 @@ if __name__ == "__main__":
     # hks = HKStock()
     # hks.start()
 
-    gj = GuoJiJingJi()
-    gj.start()
+    # gj = GuoJiJingJi()
+    # gj.start()
+
+    # dc = DiChan()
+    # dc.start()
+
+    busi = Business()
+    busi.start()
