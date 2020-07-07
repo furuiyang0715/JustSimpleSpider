@@ -2,8 +2,10 @@ import time
 
 import schedule
 
+from JfInfo.jfinfo_main import JFSchedule
 from Takungpao.takungpao_main import TakungpaoSchedule
 from base import SpiderBase
+from configs import LOCAL
 
 
 class MainSwith(SpiderBase):
@@ -20,8 +22,10 @@ class MainSwith(SpiderBase):
             inc_count = self.spider_client.select_one(sql).get("inc_count")
             msg += f'{table} 今日新增 {inc_count}\n'
 
-        print(msg)
-        self.ding(msg)
+        if not LOCAL:
+            self.ding(msg)
+        else:
+            print(msg)
 
     def start_task(self, cls, dt_str, at_once=1):
         def task():
@@ -35,9 +39,9 @@ class MainSwith(SpiderBase):
     def run(self):
         self.start_task(TakungpaoSchedule, "00:00", 0)
 
+        self.start_task(JFSchedule, '01:00', 0)
 
-
-        # self.ding_crawl_information()
+        self.ding_crawl_information()
         schedule.every().day.at("17:00").do(self.ding_crawl_information)
 
         while True:
