@@ -6,26 +6,27 @@ import schedule
 
 from JfInfo.jfinfo_main import JFSchedule
 from JuchaoInfo.juchao import JuChaoInfo
+from Money163.netease_money import NetEaseMoney
 from Takungpao.takungpao_main import TakungpaoSchedule
 from base import SpiderBase, logger
 from configs import LOCAL
 
 
-def catch_exceptions(cancel_on_failure=False):
-    def catch_exceptions_decorator(job_func):
-        @functools.wraps(job_func)
-        def wrapper(*args, **kwargs):
-            try:
-                return job_func(*args, **kwargs)
-            except:
-                logger.warning(traceback.format_exc())
-                # sentry.captureException(exc_info=True)
-                if cancel_on_failure:
-                    logger.warning("异常 任务结束: {}".format(schedule.CancelJob))
-                    schedule.cancel_job(job_func)
-                    return schedule.CancelJob
-        return wrapper
-    return catch_exceptions_decorator
+# def catch_exceptions(cancel_on_failure=False):
+#     def catch_exceptions_decorator(job_func):
+#         @functools.wraps(job_func)
+#         def wrapper(*args, **kwargs):
+#             try:
+#                 return job_func(*args, **kwargs)
+#             except:
+#                 logger.warning(traceback.format_exc())
+#                 # sentry.captureException(exc_info=True)
+#                 if cancel_on_failure:
+#                     logger.warning("异常 任务结束: {}".format(schedule.CancelJob))
+#                     schedule.cancel_job(job_func)
+#                     return schedule.CancelJob
+#         return wrapper
+#     return catch_exceptions_decorator
 
 
 class MainSwith(SpiderBase):
@@ -48,7 +49,7 @@ class MainSwith(SpiderBase):
             print(msg)
 
     def start_task(self, cls, dt_str, at_once=1):
-        @catch_exceptions
+        # @catch_exceptions
         def task():
             cls().start()
 
@@ -64,11 +65,13 @@ class MainSwith(SpiderBase):
 
         self.start_task(JuChaoInfo, '02:00', 0)
 
+        self.start_task(NetEaseMoney, '03:00', 1)
+
         self.ding_crawl_information()
         schedule.every().day.at("17:00").do(self.ding_crawl_information)
 
         while True:
-            # print("当前调度系统中的任务列表是{}".format(schedule.jobs))
+            # print("当前调度系统中的任务列表是:\n{}".format(schedule.jobs))
             schedule.run_pending()
             time.sleep(10)
 

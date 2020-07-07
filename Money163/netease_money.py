@@ -6,11 +6,14 @@ from base import SpiderBase, logger
 
 
 class NetEaseMoney(SpiderBase):
+    table_name = "netease_money"
+    dt_benchmark = 'pub_date'
+
     def __init__(self):
         super(NetEaseMoney, self).__init__()
         self.list_url = "http://money.163.com/special/00251G8F/news_json.js"
         self.extractor = GeneralNewsExtractor()
-        self.table_name = "netease_money"
+        self.fields = ['pub_date', 'title', 'link', 'article']
 
     def _parse_list(self, body):
         js_obj = re.findall(r"news:(.*)\};", body)[0]
@@ -73,12 +76,11 @@ class NetEaseMoney(SpiderBase):
 
                 if article:
                     item['article'] = article
-                    print(item)
                     items.append(item)
+                    if len(items) > 30:
+                        break
         else:
             raise Exception("请求无响应")
 
-
-if __name__ == "__main__":
-    m = NetEaseMoney()
-    m.start()
+        if items:
+            self._batch_save(self.spider_client, items, self.table_name, self.fields)
