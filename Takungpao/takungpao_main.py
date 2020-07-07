@@ -28,6 +28,9 @@ class TakungpaoSchedule(object):
         ZhongGuoJingJi,  # 中国经济
     ]
 
+    table_name = 'Takungpao'
+    dt_benchmark = 'pub_date'
+
     def ins_start(self, instance):
         instance.start()
 
