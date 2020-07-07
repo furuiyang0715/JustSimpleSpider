@@ -3,6 +3,7 @@ import time
 import schedule
 
 from JfInfo.jfinfo_main import JFSchedule
+from JuchaoInfo.juchao import JuChaoInfo
 from Takungpao.takungpao_main import TakungpaoSchedule
 from base import SpiderBase
 from configs import LOCAL
@@ -40,6 +41,8 @@ class MainSwith(SpiderBase):
         self.start_task(TakungpaoSchedule, "00:00", 0)
 
         self.start_task(JFSchedule, '01:00', 0)
+
+        self.start_task(JuChaoInfo, '01:00', 0)
 
         self.ding_crawl_information()
         schedule.every().day.at("17:00").do(self.ding_crawl_information)

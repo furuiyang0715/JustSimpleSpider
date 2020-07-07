@@ -8,14 +8,13 @@ import traceback
 import schedule
 
 sys.path.append("./../")
-from PublicOpinion.cls_cn.cls_runner import ClsSchedule
 from PublicOpinion.stcn import runner
 from PublicOpinion.qq_stock import qqStock
 from PublicOpinion.netease_money import Money163
 from PublicOpinion.configs import FIRST
 from PublicOpinion.cn_4_hours import CNStock_2
 from PublicOpinion.cn_hongguan import CNStock
-from PublicOpinion.juchao import JuChaoInfo
+from JuchaoInfo.juchao import JuChaoInfo
 
 
 logger = logging.getLogger()

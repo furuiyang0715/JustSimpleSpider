@@ -1,27 +1,21 @@
 import json
-import logging
 import math
-import pprint
 import time
-
-import pymysql
-import requests as req
-
-from PublicOpinion.configs import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, LOCAL_MYSQL_DB, \
-    LOCAL_MYSQL_HOST, LOCAL_MYSQL_USER, LOCAL_MYSQL_PORT, LOCAL_MYSQL_PASSWORD, LOCAL
-from PublicOpinion.sql_pool import PyMysqlPoolBase
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+import requests
+from base import SpiderBase
 
 
-class JuChaoInfo(object):
+class JuChaoInfo(SpiderBase):
+    """巨潮资讯"""
+    table_name = "juchao_info"
+    dt_benchmark = 'pub_date'
+
     def __init__(self):
+        super(JuChaoInfo, self).__init__()
         self.zuixin_url = "http://webapi.cninfo.com.cn//api/sysapi/p_sysapi1128"
         self.stock_url = "http://webapi.cninfo.com.cn//api/sysapi/p_sysapi1078"
         self.fund_url = "http://webapi.cninfo.com.cn//api/sysapi/p_sysapi1126"
         self.datas_url = "http://webapi.cninfo.com.cn//api/sysapi/p_sysapi1127"
-
         self.mcode = self._generate_mcode()
         self.headers = {
             'Accept': 'application/json, text/javascript, */*; q=0.01',
@@ -38,31 +32,8 @@ class JuChaoInfo(object):
             'Referer': 'http://webapi.cninfo.com.cn/',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36',
             'X-Requested-With': 'XMLHttpRequest',
-
         }
-        self.local = LOCAL
-        if self.local:
-            conf = {
-                "host": LOCAL_MYSQL_HOST,
-                "port": LOCAL_MYSQL_PORT,
-                "user": LOCAL_MYSQL_USER,
-                "password": LOCAL_MYSQL_PASSWORD,
-                "db": LOCAL_MYSQL_DB,
-
-            }
-            self.db = LOCAL_MYSQL_DB
-        else:
-            conf = {
-                "host": MYSQL_HOST,
-                "port": MYSQL_PORT,
-                "user": MYSQL_USER,
-                "password": MYSQL_PASSWORD,
-                "db": MYSQL_DB,
-            }
-            self.db = MYSQL_DB
-        self.sql_pool = PyMysqlPoolBase(**conf)
-        self.table = "juchao_info"
-        self.error_detail = []
+        self.fields = ['code', 'pub_date', 'title', 'category', 'summary']
 
     def _generate_mcode(self):
         dt = str(math.floor(time.time()))
@@ -100,53 +71,20 @@ class JuChaoInfo(object):
         return output
 
     def _get(self, url):
-        resp = req.post(url, headers=self.headers)
-        # print(resp)
+        resp = requests.post(url, headers=self.headers)
         if resp.status_code == 200:
             return resp.text
 
-    def _contract_sql(self, to_insert):
-        ks = []
-        vs = []
-        for k in to_insert:
-            ks.append(k)
-            vs.append(to_insert.get(k))
-        fields_str = "(" + ",".join(ks) + ")"
-        values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
-        base_sql = '''INSERT INTO `{}`.`{}` '''.format(
-            self.db, self.table) + fields_str + ''' values ''' + values_str + ''';'''
-        return base_sql, tuple(vs)
-
-    def _save(self, to_insert):
-        try:
-            insert_sql, values = self._contract_sql(to_insert)
-            count = self.sql_pool.insert(insert_sql, values)
-        except pymysql.err.IntegrityError:
-            logger.info("重复 {}".format(to_insert))
-            return 1
-        except:
-            logger.warning("失败")
-        else:
-            logger.info("保存成功 {}".format(to_insert))
-            return count
-
     def get_list(self, url):
         body = self._get(url)
-        # print(body)
         py_data = json.loads(body)
         result_code = py_data.get("resultcode")
         if result_code == 200:
-            records = py_data.get("records")   # list
-            for record in records:
-                yield record
-
-    def __del__(self):
-        try:
-            self.sql_pool.dispose()
-        except:
-            pass
+            records = py_data.get("records")
+            return records
 
     def _create_table(self):
+        self._spider_init()
         sql = '''
          CREATE TABLE IF NOT EXISTS `juchao_info` (
           `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -162,27 +100,12 @@ class JuChaoInfo(object):
           KEY `pub_date` (`pub_date`),
           KEY `update_time` (`UPDATETIMEJZ`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='巨潮AI资讯'; 
-        '''
-        self.sql_pool.insert(sql)
-        self.sql_pool.end()
-
-    def start(self):
-        self._create_table()
-
-        zuixin_records = self.get_list(self.zuixin_url)
-        self.process_records(zuixin_records, 1128)
-
-        stock_records = self.get_list(self.stock_url)
-        self.process_records(stock_records, 1078)
-
-        fund_records = self.get_list(self.fund_url)
-        self.process_records(fund_records, 1126)
-
-        datas_records = self.get_list(self.datas_url)
-        self.process_records(datas_records, 1127)
+        '''.format(self.table_name)
+        self.spider_client.insert(sql)
+        self.spider_client.end()
 
     def process_records(self, records, type_code):
-        num = 0
+        items = []
         for record in records:
             item = dict()
             pub_date = record.get("DECLAREDATE")
@@ -197,17 +120,27 @@ class JuChaoInfo(object):
             # code = record.get("SECCODE")    # 文章编号
             # link = "http://webapi.cninfo.com.cn/#/aidetail?type=sysapi/p_sysapi{}&scode={}".format(type_code, code)
             # item['link'] = link
-            count = self._save(item)
-            self.sql_pool.connection.commit()
-            if not count:
-                self.error_detail.append(item)
-            num += 1
-            if num >= 10:
-                # print("commit")
-                num = 0
-                self.sql_pool.connection.commit()
+            # print(item)
+            items.append(item)
+        return items
 
+    def start(self):
+        self._create_table()
+        self._spider_init()
 
-if __name__ == "__main__":
-    runner = JuChaoInfo()
-    runner.start()
+        zuixin_records = self.get_list(self.zuixin_url)
+        zuixin_items = self.process_records(zuixin_records, 1128)
+
+        stock_records = self.get_list(self.stock_url)
+        stock_items = self.process_records(stock_records, 1078)
+
+        fund_records = self.get_list(self.fund_url)
+        fund_items = self.process_records(fund_records, 1126)
+
+        datas_records = self.get_list(self.datas_url)
+        datas_items = self.process_records(datas_records, 1127)
+
+        for items in (zuixin_items, stock_items, fund_items, datas_items):
+            print(len(items))
+            save_num = self._batch_save(self.spider_client, items, self.table_name, self.fields)
+            print(save_num)

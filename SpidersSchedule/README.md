@@ -20,6 +20,7 @@
 | 大公财经 | 港股 | zhongguojingji.py |http://www.takungpao.com/finance/236135/index.html|
 | 大公财经 | 地产 | zhongguojingji.py |http://www.takungpao.com/finance/236136/index.html |
 | 大公财经 | 商业 | zhongguojingji.py |http://www.takungpao.com/finance/236137/index.html |
+| 巨潮资讯 | 最新/股票/基金/数据 | juchao.py | http://webapi.cninfo.com.cn/|
 
 
 

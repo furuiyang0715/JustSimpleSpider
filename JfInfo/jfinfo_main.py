@@ -31,8 +31,3 @@ class JFSchedule(object):
             ins = cls()
             logger.info(f"巨丰财经 --> {ins.name}")
             ins.start()
-
-
-if __name__ == "__main__":
-    sche = JFSchedule()
-    sche.start()
