@@ -49,7 +49,7 @@ class MainSwith(SpiderBase):
             print(msg)
 
     def start_task(self, cls, dt_str, at_once=1):
-        # @catch_exceptions
+        # @catch_exceptions(cancel_on_failure=True)
         def task():
             cls().start()
 
