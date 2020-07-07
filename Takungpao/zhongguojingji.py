@@ -103,6 +103,9 @@ class ZhongGuoJingJi(TakungpaoBase):
         self._create_table()
         page = self._parse_total_page(self.first_url)
         logger.info("总页数 {}".format(page))
+
+        # TODO
+        page = 2
         for page in range(1, page+1):
             logger.info("PAGE {}".format(page))
             if page == 1:
@@ -159,26 +162,3 @@ class Business(ZhongGuoJingJi):
         self.name = '商业'
         self.first_url = 'http://www.takungpao.com/finance/236137/index.html'
         self.format_url = 'http://www.takungpao.com/finance/236137/{}.html'
-
-
-if __name__ == "__main__":
-    # zg = ZhongGuoJingJi()
-    # zg.start()
-
-    # busi = NewFinanceTrend()
-    # busi.start()
-
-    # hkc = HKCaiJing()
-    # hkc.start()
-
-    # hks = HKStock()
-    # hks.start()
-
-    # gj = GuoJiJingJi()
-    # gj.start()
-
-    # dc = DiChan()
-    # dc.start()
-
-    busi = Business()
-    busi.start()

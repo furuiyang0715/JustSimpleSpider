@@ -9,7 +9,7 @@ class Travel(TakungpaoBase):
         self.first_url = 'http://finance.takungpao.com/travel/index.html'
         self.format_url = 'http://finance.takungpao.com/travel/index_{}.html'
         self.name = '旅游'
-        self.page = 5
+        self.page = 2
 
     def _parse_page(self, body):
         '''
@@ -73,7 +73,7 @@ class Travel(TakungpaoBase):
                 if article:
                     article = self._process_content(article)
                     item['article'] = article
-                    logger.info(item)
+                    # logger.info(item)
                     items.append(item)
         return items
 
@@ -92,9 +92,3 @@ class Travel(TakungpaoBase):
                 if items:
                     page_save_num = self._batch_save(self.spider_client, items, self.table_name, self.fields)
                     logger.info("第{}页保存的个数是是{}".format(page, page_save_num))
-
-
-if __name__ == "__main__":
-    t = Travel()
-    t.start()
-

@@ -4,6 +4,7 @@ from Takungpao.hkstock_cjss import HKStock_CJSS, HKStock_GJJJ, HKStock_GSYW, HKS
 from Takungpao.takungpao_fk import FK
 from Takungpao.takungpao_travel import Travel
 from Takungpao.zhongguojingji import Business, DiChan, GuoJiJingJi, HKStock, HKCaiJing, NewFinanceTrend, ZhongGuoJingJi
+from base import logger
 
 
 class TakungpaoSchedule(object):
@@ -42,9 +43,5 @@ class TakungpaoSchedule(object):
         """顺次运行"""
         for cls in self.class_lst:
             ins = cls()
+            logger.info(f"大公报 --> {ins.name}")
             ins.start()
-
-
-if __name__ == "__main__":
-    sche = TakungpaoSchedule()
-    sche.start()

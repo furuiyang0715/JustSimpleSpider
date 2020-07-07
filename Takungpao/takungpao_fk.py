@@ -37,13 +37,8 @@ class FK(TakungpaoBase):
                     article = self._parse_detail(detail_page)
                     if article:
                         item['article'] = article
-                        print(item)
+                        # print(item)
                         items.append(item)
 
             fk_save_num = self._batch_save(self.spider_client, items, self.table_name, self.fields)
             logger.info("风口保存的个数是 {}".format(fk_save_num))
-
-
-if __name__ == "__main__":
-    fk = FK()
-    fk.start()

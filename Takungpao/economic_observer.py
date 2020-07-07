@@ -9,7 +9,7 @@ class EconomicObserver(TakungpaoBase):
         self.name = '经济观察家'
         self.first_url = 'http://www.takungpao.com/finance/236134/index.html'
         self.format_url = 'http://www.takungpao.com/finance/236134/{}.html'
-        self.page = 10
+        self.page = 2
 
     def _parse_detail(self, link):
         detail_resp = self.get(link)
@@ -46,7 +46,7 @@ class EconomicObserver(TakungpaoBase):
                 if article:
                     article = self._process_content(article)
                     item['article'] = article
-                    print(item)
+                    # print(item)
                     items.append(item)
         return items
 
@@ -61,8 +61,3 @@ class EconomicObserver(TakungpaoBase):
             items = self._parse_list(list_url)
             page_save_num = self._batch_save(self.spider_client, items, self.table_name, self.fields)
             logger.info("第{}页保存的个数是{}".format(page, page_save_num))
-
-
-if __name__ == "__main__":
-    eob = EconomicObserver()
-    eob.start()
