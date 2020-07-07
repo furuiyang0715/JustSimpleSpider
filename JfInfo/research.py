@@ -1,6 +1,6 @@
 # coding=utf8
 
-from PublicOpinion.jfinfo.reference import Reference
+from JfInfo.reference import Reference
 
 
 class Research(Reference):

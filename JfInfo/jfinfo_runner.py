@@ -1,10 +1,10 @@
 import threadpool
 
 
-from PublicOpinion.jfinfo.hk_info import HKInfo
-from PublicOpinion.jfinfo.reference import Reference
-from PublicOpinion.jfinfo.research import Research
-from PublicOpinion.jfinfo.tzzjy import TZZJY
+from JfInfo.hk_info import HKInfo
+from JfInfo.reference import Reference
+from JfInfo.research import Research
+from JfInfo.tzzjy import TZZJY
 
 
 class JFSchedule(object):
