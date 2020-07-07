@@ -10,7 +10,7 @@ import schedule
 sys.path.append("./../")
 from PublicOpinion.stcn import runner
 from PublicOpinion.qq_stock import qqStock
-from PublicOpinion.netease_money import Money163
+from Money163.netease_money import Money163
 from PublicOpinion.configs import FIRST
 from PublicOpinion.cn_4_hours import CNStock_2
 from PublicOpinion.cn_hongguan import CNStock
