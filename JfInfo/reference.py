@@ -1,203 +1,12 @@
-# coding=utf8
-import datetime
-import random
 import re
-import time
-import traceback
 
-import pymysql
 import requests
 from gne import GeneralNewsExtractor
 from lxml import html
-
-from PublicOpinion.configs import LOCAL, LOCAL_MYSQL_HOST, LOCAL_MYSQL_PORT, LOCAL_MYSQL_USER, LOCAL_MYSQL_PASSWORD, \
-    LOCAL_MYSQL_DB, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB, LOCAL_PROXY_URL, PROXY_URL
-from PublicOpinion.sql_pool import PyMysqlPoolBase
+from base import SpiderBase, logger
 
 
-class Base(object):
-    def __init__(self):
-        self.local = LOCAL
-        self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 (KHTML, '
-                          'like Gecko) Chrome/79.0.3945.117 Safari/537.36'
-        }
-        self.use_proxy = 0
-
-    def _init_pool(self):
-        if self.local:
-            conf = {
-                "host": LOCAL_MYSQL_HOST,
-                "port": LOCAL_MYSQL_PORT,
-                "user": LOCAL_MYSQL_USER,
-                "password": LOCAL_MYSQL_PASSWORD,
-                "db": LOCAL_MYSQL_DB,
-            }
-        else:
-            conf = {
-                "host": MYSQL_HOST,
-                "port": MYSQL_PORT,
-                "user": MYSQL_USER,
-                "password": MYSQL_PASSWORD,
-                "db": MYSQL_DB,
-            }
-        self.sql_pool = PyMysqlPoolBase(**conf)
-
-    def _get_proxy(self):
-        if self.local:
-            return requests.get(LOCAL_PROXY_URL).text.strip()
-        else:
-            random_num = random.randint(0, 10)
-            if random_num % 2:
-                time.sleep(1)
-                return requests.get(PROXY_URL).text.strip()
-            else:
-                return requests.get(LOCAL_PROXY_URL).text.strip()
-
-    def get(self, url):
-        if not self.use_proxy:
-            return requests.get(url, headers=self.headers)
-
-        count = 0
-        while True:
-            count += 1
-            if count > 10:
-                return None
-            try:
-                proxy = {"proxy": self._get_proxy()}
-                print("proxy is >> {}".format(proxy))
-                resp = requests.get(url, headers=self.headers, proxies=proxy)
-            except:
-                traceback.print_exc()
-                time.sleep(0.5)
-            else:
-                if resp.status_code == 200:
-                    return resp
-                elif resp.status_code == 404:
-                    return None
-                else:
-                    print("status_code: >> {}".format(resp.status_code))
-                    time.sleep(1)
-                    pass
-
-    def convert_dt(self, time_stamp):
-        d = str(datetime.datetime.fromtimestamp(time_stamp))
-        return d
-
-    def _contract_sql(self, to_insert):
-        ks = []
-        vs = []
-        for k in to_insert:
-            ks.append(k)
-            vs.append(to_insert.get(k))
-        ks = sorted(ks)
-        fields_str = "(" + ",".join(ks) + ")"
-        values_str = "(" + "%s," * (len(vs) - 1) + "%s" + ")"
-        base_sql = '''INSERT INTO `{}` '''.format(self.table) + fields_str + ''' values ''' + values_str + ''';'''
-        return base_sql
-
-    def _filter_char(self, test_str):
-        # 处理特殊的空白字符
-        # '\u200b' 是 \xe2\x80\x8b
-        for cha in ['\n', '\r', '\t',
-                    '\u200a', '\u200b', '\u200c', '\u200d', '\u200e',
-                    '\u202a', '\u202b', '\u202c', '\u202d', '\u202e',
-                    ]:
-            test_str = test_str.replace(cha, '')
-        test_str = test_str.replace(u'\xa0', u' ')  # 把 \xa0 替换成普通的空格
-        return test_str
-
-    def _process_content(self, vs):
-        # 去除 4 字节的 utf-8 字符，否则插入mysql时会出错
-        try:
-            # python UCS-4 build的处理方式
-            highpoints = re.compile(u'[\U00010000-\U0010ffff]')
-        except re.error:
-            # python UCS-2 build的处理方式
-            highpoints = re.compile(u'[\uD800-\uDBFF][\uDC00-\uDFFF]')
-
-        params = list()
-        for v in vs:
-            # 对插入数据进行一些处理
-            nv = highpoints.sub(u'', v)
-            nv = self._filter_char(nv)
-            params.append(nv)
-        content = "".join(params).strip()
-        return content
-
-    def _get_values(self, item: dict):
-        # self.fields: []  插入所需字段列表 同时与上文的 ks = sorted(ks) 对应
-        value = tuple(item.get(field) for field in sorted(self.fields))
-        return value
-
-    def _save(self, item):
-        insert_sql = self._contract_sql(item)
-        value = self._get_values(item)
-        try:
-            ret = self.sql_pool.insert(insert_sql, value)
-        except pymysql.err.IntegrityError:
-            print("重复数据 ")
-            return 1
-        except:
-            traceback.print_exc()
-        else:
-            return ret
-
-    def _save_many(self, items):
-        values = [self._get_values(item) for item in items]   # list of tuple
-        insert_many_sql = self._contract_sql(items[0])
-        try:
-            ret = self.sql_pool.insert_many(insert_many_sql, values)
-        except pymysql.err.IntegrityError:
-            print("批量中有重复数据")
-        except:
-            traceback.print_exc()
-        else:
-            return ret
-        finally:
-            self.sql_pool.end()
-
-    def save_one(self, item):
-        self._save(item)
-        self.sql_pool.end()
-
-    def save(self, items):
-        if not items:
-            print("批量数据为空 ")
-            return
-        ret = self._save_many(items)
-        if not ret:
-            print("批量保存失败 开始单独保存 .. ")
-            count = 0
-            for item in items:
-                print(item)
-                self._save(item)
-                count += 1
-                if count > 9:
-                    self.sql_pool.end()
-                    count = 0
-            # self.sql_pool.dispose()
-            self.sql_pool.end()
-        else:
-            print("批量成功..")
-            print(items)
-            print(len(items))
-
-    def __del__(self):
-        try:
-            self.sql_pool.dispose()
-        except:
-            pass
-
-    def start(self):
-        try:
-            self._init_pool()
-            self._start()
-        except:
-            traceback.print_exc()
-
-
-class Reference(Base):
+class Reference(SpiderBase):
     def __init__(self):
         super(Reference, self).__init__()
         self.index_url = 'http://www.jfinfo.com/reference'
@@ -217,39 +26,32 @@ class Reference(Base):
             'X-Requested-With': 'XMLHttpRequest',
         }
         self.extractor = GeneralNewsExtractor()
-        self.table = 'jfinfo'    # 巨丰资讯
+        self.table_name = 'jfinfo'    # 巨丰资讯
         self.fields = ['link', 'title', 'pub_date', 'article']
-        self.max_page = 639
+        self.max_page = 2
         self.name = '巨丰内参'
 
-    @staticmethod
-    def _process_pub_dt(pub_date: str, year: None):
-        # 对 pub_date 的各类时间格式进行统一
-        current_dt = datetime.datetime.now()
-        today_dt_str = current_dt.strftime("%Y-%m-%d")
-        yesterday_dt_str = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-        after_yesterday_dt_str = (datetime.datetime.now() - datetime.timedelta(days=2)).strftime("%Y-%m-%d")
-        if '分钟前' in pub_date:  # eg. 43分钟前
-            minutes = int(pub_date.replace('分钟前', ''))
-            pub_date = (current_dt - datetime.timedelta(minutes=minutes)).strftime("%Y-%m-%d %H:%M:%S")
-        elif "小时前" in pub_date:  # eg. 20小时前
-            hours = int(pub_date.replace('小时前', ''))
-            pub_date = (current_dt - datetime.timedelta(hours=hours)).strftime("%Y-%m-%d %H:%M:%S")
-        elif "今天" in pub_date:  # eg.今天09:33
-            pub_date = pub_date.replace('今天', '')
-            pub_date = " ".join([today_dt_str, pub_date])
-        elif "昨天" in pub_date:  # eg. 昨天04:24
-            pub_date = pub_date.replace('昨天', '')
-            pub_date = " ".join([yesterday_dt_str, pub_date])
-        elif '前天' in pub_date:  # eg. 前天11:33
-            pub_date = pub_date.replace("前天", '')
-            pub_date = " ".join([after_yesterday_dt_str, pub_date])
-        else:  # eg. 02-29 04:24
-            if year:   # 从 link 中获取的之前某一年的新闻
-                pub_date = "{}-{}".format(year, pub_date)
-            else:   # 默认是今年的新闻
-                pub_date = "{}-{}".format(current_dt.year, pub_date)
-        return pub_date
+    def get(self, url):
+        return requests.get(url, headers=self.headers)
+
+    def _create_table(self):
+        self._spider_init()
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `{}`(
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `pub_date` datetime NOT NULL COMMENT '发布时间',
+          `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章标题',
+          `link` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章详情页链接',
+          `article` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '详情页内容',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `link` (`link`),
+          KEY `pub_date` (`pub_date`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='巨丰财经';
+        '''.format(self.table_name)
+        self.spider_client.insert(sql)
+        self.spider_client.end()
 
     def _parse_detail(self, body):
         result = self.extractor.extract(body)
@@ -259,15 +61,12 @@ class Reference(Base):
     def _parse_index(self, index_page):
         doc = html.fromstring(index_page)
         news_list = doc.xpath("//div[@class='m-contentl left']//dl")
-        # print(len(news_list))
         items = []
         for news in news_list:
             item = {}
             title = news.xpath(".//a[@class='f20']/text()")[0]
-            # print(title)
             item['title'] = title
             link = news.xpath(".//a[@class='f20']/@href")[0]
-            # print(link)
             item['link'] = link
 
             _year = None
@@ -277,22 +76,18 @@ class Reference(Base):
                 pass
 
             pub_date = news.xpath(".//dd/span/text()")[0]
-            # print(pub_date)
             pub_date = self._process_pub_dt(pub_date, _year)
-            # print(">>> ", pub_date)
             item['pub_date'] = pub_date
-            # print()
             detail_resp = self.get(link)
             if detail_resp:
                 detail_page = detail_resp.text
                 article = self._parse_detail(detail_page)
                 item['article'] = article
                 items.append(item)
-                print(item)
+                # print(item)
         return items
 
     def _parse_more(self, more_page):
-        # print(more_page)
         '''
         if(!$("#bottom_load_error").data("block")){
             $("#page_num").val("2");
@@ -307,10 +102,8 @@ class Reference(Base):
         for news in news_list:
             item = {}
             title = news.xpath(".//a[@class='f20']/text()")[0].strip()
-            # print(title)
             item['title'] = title
             link = news.xpath(".//a[@class='f20']/@href")[0]
-            # print(link)
             item['link'] = link
             # 根据规律从 link 中获取当前的年份
             _year = None
@@ -320,37 +113,34 @@ class Reference(Base):
                 pass
             pub_date = news.xpath(".//span/text()")[0].strip()
             pub_date = self._process_pub_dt(pub_date, _year)
-            # print(">>> ", pub_date)
             item['pub_date'] = pub_date
-            # print()
             detail_resp = self.get(link)
             if detail_resp:
                 detail_page = detail_resp.text
                 article = self._parse_detail(detail_page)
                 item['article'] = article
                 items.append(item)
-                print(item)
+                # print(item)
         return items
 
-    def _start(self):
+    def start(self):
+        self._spider_init()
+        self._create_table()
         index_resp = self.get(self.index_url)
-        if index_resp:
+        if index_resp and index_resp.status_code == 200:
             index_page = index_resp.text
             index_items = self._parse_index(index_page)
-            print(len(index_items))   # 20
-            self.save(index_items)
+            page_save_num = self._batch_save(self.spider_client, index_items, self.table_name, self.fields)
+            logger.info(f"首页入库的个数是 {page_save_num}")
 
-        for num in range(1, self.max_page + 1):   # 目测目前有 639 页
-            print(">>> ", num)
+        for num in range(1, self.max_page + 1):
             more_url = self.more_url.format(num)
-            print(more_url)
             more_resp = self.get(more_url)
-            if more_resp:
+            if more_resp and more_resp.status_code == 200:
                 more_page = more_resp.text
                 items = self._parse_more(more_page)
-                print(len(items))   # 19
-                print()
-                self.save(items)
+                page_save_num = self._batch_save(self.spider_client, items, self.table_name, self.fields)
+                logger.info(f"当前页 {num} 入库的个数是 {page_save_num}")
 
 
 if __name__ == "__main__":
