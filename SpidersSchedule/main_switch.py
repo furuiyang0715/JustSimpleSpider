@@ -1,4 +1,5 @@
 import functools
+import pprint
 import time
 import traceback
 
@@ -7,6 +8,7 @@ import schedule
 from JfInfo.jfinfo_main import JFSchedule
 from JuchaoInfo.juchao import JuChaoInfo
 from Money163.netease_money import NetEaseMoney
+from ShangHaiSecuritiesNews.cn_main import CNSchedule
 from Takungpao.takungpao_main import TakungpaoSchedule
 from base import SpiderBase, logger
 from configs import LOCAL
@@ -65,13 +67,15 @@ class MainSwith(SpiderBase):
 
         self.start_task(JuChaoInfo, '02:00', 0)
 
-        self.start_task(NetEaseMoney, '03:00', 1)
+        self.start_task(NetEaseMoney, '03:00', 0)
+
+        self.start_task(CNSchedule, '04:00', 1)
 
         self.ding_crawl_information()
         schedule.every().day.at("17:00").do(self.ding_crawl_information)
 
         while True:
-            # print("当前调度系统中的任务列表是:\n{}".format(schedule.jobs))
+            logger.info("当前调度系统中的任务列表是:\n{}".format(pprint.pformat(schedule.jobs)))
             schedule.run_pending()
             time.sleep(10)
 
