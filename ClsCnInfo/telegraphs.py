@@ -1,30 +1,34 @@
 import datetime
 import json
-import random
 import time
+
 import requests
 requests.packages.urllib3.disable_warnings()
 
-import sys
-sys.path.append('./../../')
-from PublicOpinion.cls_cn.cls_base import ClsBase
-
-now = lambda: int(time.time())
+from ClsCnInfo.cls_base import ClsBase
 
 
 class Telegraphs(ClsBase):
     def __init__(self):
         super(Telegraphs, self).__init__()
-        self.this_last_dt = None
         self.name = '财新社-电报'
-        self.url_format = 'https://www.cls.cn/nodeapi/telegraphs?refresh_type=1&rn=20&last_time={}&sign=56918b10789cb8a977c518409e7f0ced'
-        self.table = 'cls_telegraphs'
+        self.url_format = '''https://www.cls.cn/nodeapi/telegraphList?\
+app=CailianpressWeb\
+&category=\
+&lastTime={}\
+&last_time={}\
+&os=web\
+&refresh_type=1\
+&rn=20\
+&sv=7.2.2\
+&sign=831bc324f5ad2f1119379cfc5b7ca0f0'''
+        # self.url_format = 'https://www.cls.cn/nodeapi/telegraphs?refresh_type=1&rn=20&last_time={}&sign=56918b10789cb8a977c518409e7f0ced'
+        self.table_name = 'cls_telegraphs'
         self.fields = ['title', 'pub_date', 'article']
         self.desc = self.name
 
     def refresh(self, url):
-        # 只显示最近 24 小时的数据
-        resp = requests.get(url, headers=self.headers, verify=False, timeout=1)
+        resp = requests.get(url, headers=self.headers, verify=False, timeout=10)
         if resp.status_code == 200:
             py_data = json.loads(resp.text)
             infos = py_data.get("data").get('roll_data')
@@ -41,38 +45,37 @@ class Telegraphs(ClsBase):
                 content = info.get("content")
                 item['pub_date'] = self.convert_dt(pub_date)
                 item['article'] = content
+                print(item)
                 items.append(item)
-            self.save(items)
+            # 拿到本次最后一条新闻的时间
             dt = infos[-1].get('ctime')
-            if dt == self.this_last_dt:
-                print("增量完毕")
-                return
-            self.this_last_dt = dt
-            # dt - 1 是为了防止临界点重复值 尽量 insert_many 成功
-            next_url = self.url_format.format(dt-1)
-            time.sleep(random.randint(1, 3))
-            # TODO 递归的性能问题 解决超时问题
-            self.refresh(next_url)
+            return items, dt
 
-    def _start(self):
-        now_dt = lambda: datetime.datetime.now()
-        print('{} {} 开始运行'.format(now_dt(), self.desc))
-        self._init_pool()
+    def start(self):
         self._create_table()
-        first_url = self.url_format.format(now())
-        for i in range(3):
-            try:
-                self.refresh(first_url)
-            except:
-                print("超时重试")
+        self._spider_init()
+        _ts = int(time.time())
+        first_url = self.url_format.format(_ts, _ts)
+        items, last_dt = self.refresh(first_url)
+        ret = self._batch_save(self.spider_client, items, self.table_name, self.fields)
+        print(f"first 抓取数量{len(items)};入库数量{ret}")
+
+        # 根据需要多久之前的数据,确定刷新的截止时间 cutoff_dt
+        cutoff_dt = int((datetime.datetime.now() - datetime.timedelta(days=1)).timestamp())
+        while last_dt > cutoff_dt:
+            next_url = self.url_format.format(last_dt, last_dt)
+            res = self.refresh(next_url)
+            if res:
+                items, last_dt = res
             else:
-                print("成功 ")
-                break
-        print('{} {} 运行结束'.format(now_dt(), self.desc))
+                return
+            ret = self._batch_save(self.spider_client, items, self.table_name, self.fields)
+            print(f"next 抓取数量{len(items)};入库数量{ret}")
 
     def _create_table(self):
+        self._spider_init()
         create_sql = '''
-        CREATE TABLE IF NOT EXISTS `cls_telegraphs`(
+        CREATE TABLE IF NOT EXISTS `{}`(
           `id` int(11) NOT NULL AUTO_INCREMENT,
           `pub_date` datetime NOT NULL COMMENT '发布时间',
           `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章标题',
@@ -83,12 +86,11 @@ class Telegraphs(ClsBase):
           UNIQUE KEY `title` (`title`,`pub_date`),
           KEY `pub_date` (`pub_date`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='财联社-电报' ; 
-        '''
-        ret = self.sql_pool.insert(create_sql)
-        self.sql_pool.end()
-        return ret
+        '''.format(self.table_name)
+        self.spider_client.insert(create_sql)
+        self.spider_client.end()
 
 
 if __name__ == "__main__":
     tele = Telegraphs()
-    tele._start()
+    tele.start()

@@ -5,7 +5,7 @@ import re
 
 import requests as req
 from lxml import html
-from PublicOpinion.cls_cn.cls_base import ClsBase
+from ClsCnInfo.cls_base import ClsBase
 
 
 class Reference(ClsBase):

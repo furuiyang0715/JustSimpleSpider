@@ -3,14 +3,13 @@ import json
 import random
 import sys
 import time
-import traceback
 
 import requests
 requests.packages.urllib3.disable_warnings()
 from gne import GeneralNewsExtractor
 
 sys.path.append("./../../")
-from PublicOpinion.cls_cn.cls_base import ClsBase
+from ClsCnInfo.cls_base import ClsBase
 now = lambda: int(time.time())
 
 
