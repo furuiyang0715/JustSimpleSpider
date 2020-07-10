@@ -1,9 +1,15 @@
 import functools
+import os
 import pprint
+import sys
 import time
 import traceback
 
 import schedule
+
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
 
 from ClsCnInfo.telegraphs import Telegraphs
 from JfInfo.jfinfo_main import JFSchedule
@@ -62,15 +68,15 @@ class MainSwith(SpiderBase):
         schedule.every().day.at(dt_str).do(task)
 
     def run(self):
-        self.start_task(TakungpaoSchedule, "00:00", 0)
+        self.start_task(TakungpaoSchedule, "00:00", 1)
 
-        self.start_task(JFSchedule, '01:00', 0)
+        self.start_task(JFSchedule, '01:00', 1)
 
-        self.start_task(JuChaoInfo, '02:00', 0)
+        self.start_task(JuChaoInfo, '02:00', 1)
 
-        self.start_task(NetEaseMoney, '03:00', 0)
+        self.start_task(NetEaseMoney, '03:00', 1)
 
-        self.start_task(CNSchedule, '04:00', 0)
+        self.start_task(CNSchedule, '04:00', 1)
 
         self.start_task(Telegraphs, '04:00', 1)
 
@@ -86,3 +92,18 @@ class MainSwith(SpiderBase):
 if __name__ == "__main__":
     ms = MainSwith()
     ms.run()
+
+
+
+'''
+docker build -f Dockerfile -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/spi:v1 . 
+docker push registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/spi:v1
+sudo docker pull registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/spi:v1 
+
+sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
+--env LOCAL=0 \
+--name spi_all \
+registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/spi:v1 \
+python SpidersSchedule/main_switch.py
+
+'''
