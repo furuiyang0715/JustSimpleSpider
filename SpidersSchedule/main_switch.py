@@ -5,6 +5,7 @@ import traceback
 
 import schedule
 
+from ClsCnInfo.telegraphs import Telegraphs
 from JfInfo.jfinfo_main import JFSchedule
 from JuchaoInfo.juchao import JuChaoInfo
 from Money163.netease_money import NetEaseMoney
@@ -69,7 +70,9 @@ class MainSwith(SpiderBase):
 
         self.start_task(NetEaseMoney, '03:00', 0)
 
-        self.start_task(CNSchedule, '04:00', 1)
+        self.start_task(CNSchedule, '04:00', 0)
+
+        self.start_task(Telegraphs, '04:00', 1)
 
         self.ding_crawl_information()
         schedule.every().day.at("17:00").do(self.ding_crawl_information)

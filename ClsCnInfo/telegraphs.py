@@ -3,12 +3,16 @@ import json
 import time
 
 import requests
+
+from base import SpiderBase
+
 requests.packages.urllib3.disable_warnings()
 
-from ClsCnInfo.cls_base import ClsBase
 
+class Telegraphs(SpiderBase):
+    dt_benchmark = 'pub_date'
+    table_name = 'cls_telegraphs'
 
-class Telegraphs(ClsBase):
     def __init__(self):
         super(Telegraphs, self).__init__()
         self.name = '财新社-电报'
@@ -23,9 +27,12 @@ app=CailianpressWeb\
 &sv=7.2.2\
 &sign=831bc324f5ad2f1119379cfc5b7ca0f0'''
         # self.url_format = 'https://www.cls.cn/nodeapi/telegraphs?refresh_type=1&rn=20&last_time={}&sign=56918b10789cb8a977c518409e7f0ced'
-        self.table_name = 'cls_telegraphs'
         self.fields = ['title', 'pub_date', 'article']
         self.desc = self.name
+
+    def convert_dt(self, time_stamp):
+        d = str(datetime.datetime.fromtimestamp(time_stamp))
+        return d
 
     def refresh(self, url):
         resp = requests.get(url, headers=self.headers, verify=False, timeout=10)
