@@ -7,10 +7,10 @@ import traceback
 from urllib.parse import urlencode
 import requests
 from lxml import html
+from retrying import retry
 
-from CArticle.configs import LOCAL_PROXY_URL, PROXY_URL
+from CArticle.ca_configs import LOCAL_PROXY_URL, PROXY_URL, LOCAL
 from base import SpiderBase, logger
-from configs import LOCAL
 
 
 class CArticleSpiser(SpiderBase):
@@ -26,12 +26,7 @@ class CArticleSpiser(SpiderBase):
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36",
         }
         self.table_name = "eastmoney_carticle"
-
-        # self.error_detail = []
-        # self.error_list = []
-        # self.dt_format = '%Y-%m-%d %H:%M:%S'
-        # self.limit_time = datetime.datetime(2020, 2, 1)
-        # self.use_proxy = 1
+        self.fields = ['pub_date', 'code', 'title', 'link', 'article']
 
     def make_query_params(self, msg, page):
         query_params = {
@@ -48,6 +43,27 @@ class CArticleSpiser(SpiderBase):
         }
         return query_params
 
+    def _create_table(self):
+        self._spider_init()
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `{}` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `pub_date` datetime NOT NULL COMMENT '发布时间',
+          `code` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '股票代码',
+          `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章标题',
+          `link` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章详情页链接',
+          `article` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '详情页内容',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `link` (`link`),
+          KEY `pub_date` (`pub_date`),
+          KEY `update_time` (`UPDATETIMEJZ`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='东财-财富号文章'; 
+        '''.format(self.table_name)
+        self.spider_client.insert(sql)
+        self.spider_client.end()
+
     def _get_proxy(self):
         if LOCAL:
             return requests.get(LOCAL_PROXY_URL).text.strip()
@@ -59,20 +75,18 @@ class CArticleSpiser(SpiderBase):
             else:
                 return requests.get(LOCAL_PROXY_URL).text.strip()
 
+    @retry(stop_max_attempt_number=10)
     def _get(self, url):
-        if LOCAL:
-            r = requests.get(url, headers=self.headers, timeout=3)
-        else:
-            proxies = {'http': self._get_proxy()}
-            logger.info("当前获取到的代理是{}".format(proxies))
-            r = requests.get(url, proxies=proxies, headers=self.headers, timeout=3)
-        return r
+        proxies = {'http': self._get_proxy()}
+        logger.info("当前获取到的代理是{}".format(proxies))
+        resp = requests.get(url, proxies=proxies, headers=self.headers, timeout=3)
+        print(resp)
+        return resp
 
     def get(self, url):
         try:
             resp = self._get(url)
         except:
-            traceback.print_exc()
             resp = None
         return resp
 
@@ -127,6 +141,9 @@ class CArticleSpiser(SpiderBase):
             return None
 
     def start(self):
+        self._create_table()
+        self._spider_init()
+
         items = []
         # 每个关键词只前推 1 页
         for page in range(1, 2):
@@ -156,9 +173,9 @@ class CArticleSpiser(SpiderBase):
                 item['article'] = article
                 print(item)
                 items.append(item)
-                time.sleep(10)
+                time.sleep(3)
         print(f'数据个数{len(items)}')
-        ret = self._batch_save(self.product_client, items, self.table_name, self.fields)
+        ret = self._batch_save(self.spider_client, items, self.table_name, self.fields)
         print(f'入库个数{ret}')
 
 
