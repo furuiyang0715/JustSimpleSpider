@@ -1,61 +1,37 @@
-import datetime
 import json
-import logging
 import random
 import re
 import string
 import time
 import traceback
 from urllib.parse import urlencode
-
 import requests
 from lxml import html
 
-from configs import (LOCAL_PROXY_URL, PROXY_URL, LOCAL)
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
-
-
-class BaseSpider(object):
-    def _filter_char(self, test_str):
-        for cha in ['\n', '\r', '\t',
-                    '\u200a', '\u200b', '\u200c', '\u200d', '\u200e',
-                    '\u202a', '\u202b', '\u202c', '\u202d', '\u202e',
-                    ]:
-            test_str = test_str.replace(cha, '')
-        test_str = test_str.replace(u'\xa0', u' ')  # 把 \xa0 替换成普通的空格
-        return test_str
-
-    def _process_content(self, vs):
-        try:
-            highpoints = re.compile(u'[\U00010000-\U0010ffff]')
-        except re.error:
-            highpoints = re.compile(u'[\uD800-\uDBFF][\uDC00-\uDFFF]')
-
-        params = list()
-        for v in vs:
-            nv = highpoints.sub(u'', v)
-            nv = self._filter_char(nv)
-            params.append(nv)
-        return "".join(params)
+from CArticle.configs import LOCAL_PROXY_URL, PROXY_URL
+from base import SpiderBase, logger
+from configs import LOCAL
 
 
-class CArticleSpiser(BaseSpider):
+class CArticleSpiser(SpiderBase):
     def __init__(self, key):
+        super(CArticleSpiser, self).__init__()
         self.key = key
+        # 以查询格力电力为例
+        self.web_url = 'http://so.eastmoney.com/CArticle/s?keyword=%E6%A0%BC%E5%8A%9B%E7%94%B5%E5%99%A8&pageindex=1'
         self.start_url = 'http://api.so.eastmoney.com/bussiness/Web/GetSearchList?'
         self.page_size = 10
         self.headers = {
             "Referer": "http://so.eastmoney.com/CArticle/s?keyword={}".format(self.key.encode()),
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36",
         }
-        self.table = "eastmoney_carticle"
-        self.error_detail = []
-        self.error_list = []
-        self.dt_format = '%Y-%m-%d %H:%M:%S'
-        self.limit_time = datetime.datetime(2020, 2, 1)
-        self.use_proxy = 1
+        self.table_name = "eastmoney_carticle"
+
+        # self.error_detail = []
+        # self.error_list = []
+        # self.dt_format = '%Y-%m-%d %H:%M:%S'
+        # self.limit_time = datetime.datetime(2020, 2, 1)
+        # self.use_proxy = 1
 
     def make_query_params(self, msg, page):
         query_params = {
@@ -96,6 +72,7 @@ class CArticleSpiser(BaseSpider):
         try:
             resp = self._get(url)
         except:
+            traceback.print_exc()
             resp = None
         return resp
 
@@ -140,30 +117,30 @@ class CArticleSpiser(BaseSpider):
             else:
                 return []
 
-    def start(self):
-        try:
-            self._start()
-        except:
-            traceback.print_exc()
-
-    def get_list(self, list_url):
+    def get_list_page(self, list_url):
         resp = self.get(list_url)
         logger.info("List resp: {}".format(resp))
         if resp and resp.status_code == 200:
             return resp.text
         else:
+            logger.warning(resp)
             return None
 
-    def _start(self):
+    def start(self):
+        items = []
+        # 每个关键词只前推 1 页
         for page in range(1, 2):
             list_url = self.start_url + urlencode(self.make_query_params(self.key, page))
             logger.info(list_url)
-            list_page = self.get_list(list_url)
+            list_page = self.get_list_page(list_url)
             if not list_page:
+                logger.warning("列表页请求失败")
                 return
             list_infos = self.parse_list(list_page)
             if not list_infos:
+                logger.warning("列表页面数据解析失败")
                 return
+
             for data in list_infos:
                 item = dict()
                 item['code'] = self.key
@@ -173,13 +150,18 @@ class CArticleSpiser(BaseSpider):
                 item['pub_date'] = data.get("ShowTime")
                 detail_page = self.get_detail(link)
                 if not detail_page:
+                    logger.warning(f"详情页解析失败{link}")
                     continue
                 article = self.parse_detail(detail_page)
                 item['article'] = article
                 print(item)
+                items.append(item)
                 time.sleep(10)
+        print(f'数据个数{len(items)}')
+        ret = self._batch_save(self.product_client, items, self.table_name, self.fields)
+        print(f'入库个数{ret}')
 
 
 if __name__ == "__main__":
-    d = CArticleSpiser(key='视源股份')
-    d._start()
+    ca = CArticleSpiser(key='视源股份')
+    ca.start()
