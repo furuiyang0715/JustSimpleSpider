@@ -5,6 +5,7 @@ import hmac
 import json
 import logging
 import os
+import random
 import re
 import sys
 import time
@@ -13,10 +14,13 @@ import traceback
 import requests
 import urllib.parse
 
+from retrying import retry
+
 from configs import (SPIDER_MYSQL_HOST, SPIDER_MYSQL_PORT, SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD,
                      SPIDER_MYSQL_DB, PRODUCT_MYSQL_HOST, PRODUCT_MYSQL_PORT, PRODUCT_MYSQL_USER,
                      PRODUCT_MYSQL_PASSWORD, PRODUCT_MYSQL_DB, JUY_HOST, JUY_PORT, JUY_USER, JUY_PASSWD,
-                     JUY_DB, DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB, SECRET, TOKEN)
+                     JUY_DB, DC_HOST, DC_PORT, DC_USER, DC_PASSWD, DC_DB, SECRET, TOKEN, LOCAL, LOCAL_PROXY_URL,
+                     PROXY_URL)
 from sql_pool import PyMysqlPoolBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -326,3 +330,29 @@ class SpiderBase(object):
             else:
                 pub_date = str(current_dt.year) + '-' + pub_date
         return pub_date
+
+    def _get_proxy(self):
+        if LOCAL:
+            return requests.get(LOCAL_PROXY_URL).text.strip()
+        else:
+            random_num = random.randint(0, 10)
+            if random_num % 2:
+                time.sleep(1)
+                return requests.get(PROXY_URL).text.strip()
+            else:
+                return requests.get(LOCAL_PROXY_URL).text.strip()
+
+    @retry(stop_max_attempt_number=10)
+    def _get(self, url):
+        proxies = {'http': self._get_proxy()}
+        logger.info("当前获取到的代理是{}".format(proxies))
+        resp = requests.get(url, proxies=proxies, headers=self.headers, timeout=3)
+        print(resp)
+        return resp
+
+    def get(self, url):
+        try:
+            resp = self._get(url)
+        except:
+            resp = None
+        return resp
