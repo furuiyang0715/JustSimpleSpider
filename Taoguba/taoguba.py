@@ -41,6 +41,7 @@ class Taoguba(SpiderBase):
             'link',
             'article',
         ]
+        self.items = []
 
     def get(self, url):
         resp = requests.get(url, headers=self.headers, timeout=3)
@@ -120,10 +121,8 @@ class Taoguba(SpiderBase):
 
     def process_list(self, datas):
         records = datas.get("dto", {}).get("record")
-        print(records)
         if records:
             for record in records:
-                print(record)
                 # 不需要转评的内容
                 if record.get("tops") and record.get("rtype") == "R":
 
@@ -151,7 +150,7 @@ class Taoguba(SpiderBase):
 
                 article_url = "https://www.taoguba.com.cn/Article/" + str(record.get("rID")) + "/1"
                 rid = record.get("rID")
-                print(article_url)
+                # print(article_url)
                 item['link'] = article_url
                 detail_resp = self.get(article_url)
                 if detail_resp:
@@ -161,23 +160,24 @@ class Taoguba(SpiderBase):
                         article = self._process_content(article)
                         item['article'] = article
                         print(item)
+                        self.items.append(item)
+                        if len(self.items) > 100:
+                            self._batch_save(self.spider_client, self.items, self.table_name, self.fields)
+                            return
                         time.sleep(random.randint(1, 3))
 
-            # # 生成下一次爬取的 url 相当于翻页
-            # more_timestamp = records[-1].get("actionDate")
-            # more_url = self.refresh_url + urlencode(self.make_query_params(more_timestamp))
-            # print("more: >>", more_url)
-            # self.refresh(more_url)
+            # 生成下一次爬取的 url 相当于翻页
+            more_timestamp = records[-1].get("actionDate")
+            more_url = self.refresh_url + urlencode(self.make_query_params(more_timestamp))
+            self.refresh(more_url)
 
     def refresh(self, start_url):
         # 该函数与process_list互相调用
         resp = self.get(start_url)
-        print(resp)
         if resp:
             datas = json.loads(resp.text)
-            print(datas)
             if not datas.get("status"):
-                print(datas.get("errorMessage"))
+                print("接口异常信息: ", datas.get("errorMessage"))
                 return
             else:
                 self.process_list(datas)
@@ -185,9 +185,7 @@ class Taoguba(SpiderBase):
     def start(self):
         tstamp = int(time.time()) * 1000  # js 中的时间戳 第一次这个值选用当前时间
         query_params = self.make_query_params(tstamp)
-        print(query_params)
         start_url = self.refresh_url + urlencode(query_params)
-        print(start_url)
         self.refresh(start_url)
 
 
