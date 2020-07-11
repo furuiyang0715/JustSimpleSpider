@@ -3,13 +3,8 @@ import random
 import re
 import string
 import time
-import traceback
 from urllib.parse import urlencode
-import requests
 from lxml import html
-from retrying import retry
-
-from CArticle.ca_configs import LOCAL_PROXY_URL, PROXY_URL, LOCAL
 from base import SpiderBase, logger
 
 
@@ -42,32 +37,6 @@ class CArticleSpiser(SpiderBase):
             '_': str(int(time.time() * 1000)),
         }
         return query_params
-
-    def _get_proxy(self):
-        if LOCAL:
-            return requests.get(LOCAL_PROXY_URL).text.strip()
-        else:
-            random_num = random.randint(0, 10)
-            if random_num % 2:
-                time.sleep(1)
-                return requests.get(PROXY_URL).text.strip()
-            else:
-                return requests.get(LOCAL_PROXY_URL).text.strip()
-
-    @retry(stop_max_attempt_number=10)
-    def _get(self, url):
-        proxies = {'http': self._get_proxy()}
-        logger.info("当前获取到的代理是{}".format(proxies))
-        resp = requests.get(url, proxies=proxies, headers=self.headers, timeout=3)
-        print(resp)
-        return resp
-
-    def get(self, url):
-        try:
-            resp = self._get(url)
-        except:
-            resp = None
-        return resp
 
     def parse_detail(self, detail_page):
         try:

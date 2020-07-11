@@ -20,6 +20,9 @@ headers = {
 }
 
 
-url = 'https://www.taoguba.com.cn/quotes/getStockHeat?stockCode=sz300150&pageNo=1&perPageNum=20&isOpen=false'
+# url = 'https://www.taoguba.com.cn/quotes/getStockHeat?stockCode=sz300150&pageNo=1&perPageNum=20&isOpen=false'
+# url = 'https://dps.kdlapi.com/api/getdps/?orderid=934751511166930&num=20&pt=1&sep=1'
+url = 'http://ent.kdlapi.com/api/getproxy/?orderid=924829619838717&num=20&protocol=1&method=2&an_an=1&an_ha=1&sep=1'
 resp = requests.get(url, headers=headers)
-print(resp)
+lst = resp.text.split('\r\n')
+print(lst)

@@ -66,10 +66,6 @@ class Taoguba(SpiderBase):
         self.spider_client.insert(sql)
         self.spider_client.end()
 
-    # def get(self, url):
-    #     resp = requests.get(url, headers=self.headers, timeout=3)
-    #     return resp
-
     @staticmethod
     def convert_dt(time_stamp):
         d = str(datetime.datetime.fromtimestamp(time_stamp))

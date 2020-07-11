@@ -66,6 +66,9 @@ class SpiderBase(object):
         self.product_client = None
         self.juyuan_client = None
         self.spider_client = None
+
+        self.proxy_pool = []
+        self.cur_proxy = None
         # 请求头
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 (KHTML, '
@@ -331,25 +334,44 @@ class SpiderBase(object):
                 pub_date = str(current_dt.year) + '-' + pub_date
         return pub_date
 
-    def _get_proxy(self):
+    def proxy_init(self):
         if LOCAL:
-            return requests.get(LOCAL_PROXY_URL).text.strip()
+            if not self.proxy_pool:
+                print(">>> 扩充")
+                self.proxy_pool.extend(requests.get(LOCAL_PROXY_URL).text.split("\r\n"))
         else:
-            random_num = random.randint(0, 10)
-            if random_num % 2:
-                time.sleep(1)
-                return requests.get(PROXY_URL).text.strip()
-            else:
-                return requests.get(LOCAL_PROXY_URL).text.strip()
+            if not self.proxy_pool:
+                self.proxy_pool.extend(requests.get(PROXY_URL).text.split('\r\n'))
+                # self.proxy_pool.extend(requests.get(LOCAL_PROXY_URL).text.split("\r\n"))
+
+    def _get_proxy(self):
+        self.proxy_init()
+        if self.cur_proxy and self.cur_proxy[1]:
+            return self.cur_proxy
+        self.cur_proxy = random.choice(self.proxy_pool), True
+        return self.cur_proxy
 
     @retry(stop_max_attempt_number=30)
     def _get(self, url):
-        proxies = {'http': self._get_proxy()}
+        time.sleep(2)
+        self.cur_proxy = self._get_proxy()
+        proxies = {'http': self.cur_proxy[0]}
         logger.info("当前获取到的代理是{}".format(proxies))
-        resp = requests.get(url, proxies=proxies, headers=self.headers, timeout=3)
-        print(resp)
-        if resp.status_code != 200:
+
+        try:
+            resp = requests.get(url, proxies=proxies, headers=self.headers, timeout=3)
+        except:
+            self.cur_proxy = self.cur_proxy[0], False
+            print(f"1 移除{self.cur_proxy[0]}")
+            self.proxy_pool.remove(self.cur_proxy[0])
             raise
+
+        if resp.status_code != 200:
+            self.cur_proxy = self.cur_proxy[0], False
+            print(f"2 移除{self.cur_proxy[0]}")
+            self.proxy_pool.remove(self.cur_proxy[0])
+            raise
+
         return resp
 
     def get(self, url):

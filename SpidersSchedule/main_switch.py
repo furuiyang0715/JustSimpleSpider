@@ -82,9 +82,9 @@ class MainSwith(SpiderBase):
 
         self.start_task(Telegraphs, '04:00', 0)
 
-        self.start_task(CaSchedule, '05:00', 0)
+        self.start_task(CaSchedule, '05:00', 1)    # 需要代理
 
-        self.start_task(TgbSchedule, '06:00', 1)
+        self.start_task(TgbSchedule, '06:00', 1)  # 代理
 
         self.ding_crawl_information()
         schedule.every().day.at("17:00").do(self.ding_crawl_information)
