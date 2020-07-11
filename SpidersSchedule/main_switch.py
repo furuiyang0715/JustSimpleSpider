@@ -7,6 +7,8 @@ import traceback
 
 import schedule
 
+from CArticle.ca_main import CaSchedule
+
 cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
@@ -68,17 +70,19 @@ class MainSwith(SpiderBase):
         schedule.every().day.at(dt_str).do(task)
 
     def run(self):
-        self.start_task(TakungpaoSchedule, "00:00", 1)
+        self.start_task(TakungpaoSchedule, "00:00", 0)
 
-        self.start_task(JFSchedule, '01:00', 1)
+        self.start_task(JFSchedule, '01:00', 0)
 
-        self.start_task(JuChaoInfo, '02:00', 1)
+        self.start_task(JuChaoInfo, '02:00', 0)
 
-        self.start_task(NetEaseMoney, '03:00', 1)
+        self.start_task(NetEaseMoney, '03:00', 0)
 
-        self.start_task(CNSchedule, '04:00', 1)
+        self.start_task(CNSchedule, '04:00', 0)
 
-        self.start_task(Telegraphs, '04:00', 1)
+        self.start_task(Telegraphs, '04:00', 0)
+
+        self.start_task(CaSchedule, '05:00', 1)
 
         self.ding_crawl_information()
         schedule.every().day.at("17:00").do(self.ding_crawl_information)

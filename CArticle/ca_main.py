@@ -21,7 +21,7 @@ class CaSchedule(SpiderBase):
         dc_info = {r['SecuCode']: r['ChiNameAbbr'] for r in datas}
         return dc_info
 
-    def start(self, key):
+    def run(self, key):
         CArticleSpiser(key=key).start()
 
     def _create_table(self):
@@ -45,16 +45,15 @@ class CaSchedule(SpiderBase):
         self.spider_client.insert(sql)
         self.spider_client.end()
 
-    def run(self):
+    def start(self):
         self._create_table()
         for key in self.keys:
             logger.info("当前的主题是: {}".format(key))
-            self.start(key)
+            self.run(key)
 
 
 def task():
-    sche = CaSchedule()
-    sche.run()
+    CaSchedule().run()
 
 
 if __name__ == '__main__':
