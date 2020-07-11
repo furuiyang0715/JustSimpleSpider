@@ -22,7 +22,7 @@ class Taoguba(SpiderBase):
             'referer': 'https://www.taoguba.com.cn/quotes/sz000651',
             'cookie': '''JSESSIONID=f45d82d9-8811-46e2-ad9d-b51966a460cc; Hm_lvt_cc6a63a887a7d811c92b7cc41c441837=1594448378; UM_distinctid=1733c8778dd26a-07b2c169f81009-31617402-1fa400-1733c8778dea53; CNZZDATA1574657=cnzz_eid%3D512829114-1594445650-%26ntime%3D1594445650; __gads=ID=35d9e7fe87d53615:T=1594448473:S=ALNI_MYwpLq-g-JJX1Wc5jpH6fLV_w04wg; Hm_lpvt_cc6a63a887a7d811c92b7cc41c441837=1594448701'''
         })
-        print(pprint.pformat(self.headers))
+        # print(pprint.pformat(self.headers))
         self.name = name
         # 最新接口
         self.refresh_url = 'https://www.taoguba.com.cn/quotes/getStockUpToDate?'    # 旧版接口
@@ -42,6 +42,29 @@ class Taoguba(SpiderBase):
             'article',
         ]
         self.items = []
+
+    def _create_table(self):
+        self._spider_init()
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `{}` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `pub_date` datetime NOT NULL COMMENT '发布时间',
+          `code` varchar(16) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '股票代码',
+          `chinameabbr` varchar(24) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '股票中文名',
+          `stockattr` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章谈及股票',
+          `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章标题',
+          `link` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章详情页链接',
+          `article` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '详情页内容',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `link` (`link`),
+          KEY `pub_date` (`pub_date`),
+          KEY `update_time` (`UPDATETIMEJZ`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='淘股吧' ; 
+        '''.format(self.table_name)
+        self.spider_client.insert(sql)
+        self.spider_client.end()
 
     def get(self, url):
         resp = requests.get(url, headers=self.headers, timeout=3)
@@ -183,6 +206,7 @@ class Taoguba(SpiderBase):
                 self.process_list(datas)
 
     def start(self):
+        self._create_table()
         tstamp = int(time.time()) * 1000  # js 中的时间戳 第一次这个值选用当前时间
         query_params = self.make_query_params(tstamp)
         start_url = self.refresh_url + urlencode(query_params)
