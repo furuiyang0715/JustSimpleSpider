@@ -66,9 +66,9 @@ class Taoguba(SpiderBase):
         self.spider_client.insert(sql)
         self.spider_client.end()
 
-    def get(self, url):
-        resp = requests.get(url, headers=self.headers, timeout=3)
-        return resp
+    # def get(self, url):
+    #     resp = requests.get(url, headers=self.headers, timeout=3)
+    #     return resp
 
     @staticmethod
     def convert_dt(time_stamp):
@@ -148,7 +148,6 @@ class Taoguba(SpiderBase):
             for record in records:
                 # 不需要转评的内容
                 if record.get("tops") and record.get("rtype") == "R":
-
                     continue
 
                 item = dict()
@@ -184,7 +183,7 @@ class Taoguba(SpiderBase):
                         item['article'] = article
                         print(item)
                         self.items.append(item)
-                        if len(self.items) > 100:
+                        if len(self.items) > 20:
                             self._batch_save(self.spider_client, self.items, self.table_name, self.fields)
                             return
                         time.sleep(random.randint(1, 3))

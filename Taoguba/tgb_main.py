@@ -1,11 +1,11 @@
-import datetime
-import sys
-
 from Taoguba.taoguba import Taoguba
 from base import SpiderBase
 
 
 class TgbSchedule(SpiderBase):
+    table_name = 'taoguba'
+    dt_benchmark = 'pub_date'
+
     @property
     def keys(self):
         self._dc_init()
@@ -42,38 +42,11 @@ class TgbSchedule(SpiderBase):
             lkeys[self.convert_lower(key)] = value
         return lkeys
 
-    # def ins_start(self, code):
-    #     name = self.lower_keys.get(code)
-    #     if not name:
-    #         print(">> ", code)
-    #         return
-    #     instance = Taoguba(name=name, code=code)
-    #     print(">>>{} {}".format(code, name))
-    #     instance.start()
-
-    # def start(self):
-    #     code_list = list(self.lower_keys.keys())
-    #     random.shuffle(code_list)
-    #
-    #     for code in code_list:
-    #         name = lower_keys.get(code)
-    #         if not name:
-    #             print(">> ", code)
-    #             continue
-    #         instance = Taoguba(name=name, code=code)
-    #         print(">>>{} {}".format(code, name))
-    #         instance.start()
-    #
-    #     pool = threadpool.ThreadPool(4)
-    #     reqs = threadpool.makeRequests(self.ins_start, code_list)
-    #     [pool.putRequest(req) for req in reqs]
-    #     pool.wait()
+    def start(self):
+        for code, name in self.lower_keys.items():
+            print(code, name)
+            Taoguba(name, code).start()
 
 
 if __name__ == "__main__":
-    tgbs = TgbSchedule()
-    for k, v in tgbs.lower_keys.items():
-        print(k, v)
-        tt = Taoguba(v, k)
-        tt.start()
-        sys.exit(0)
+    TgbSchedule().start()

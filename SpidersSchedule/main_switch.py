@@ -7,12 +7,12 @@ import traceback
 
 import schedule
 
-from CArticle.ca_main import CaSchedule
-
 cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
 
+from CArticle.ca_main import CaSchedule
+from Taoguba.tgb_main import TgbSchedule
 from ClsCnInfo.telegraphs import Telegraphs
 from JfInfo.jfinfo_main import JFSchedule
 from JuchaoInfo.juchao import JuChaoInfo
@@ -82,7 +82,9 @@ class MainSwith(SpiderBase):
 
         self.start_task(Telegraphs, '04:00', 0)
 
-        self.start_task(CaSchedule, '05:00', 1)
+        self.start_task(CaSchedule, '05:00', 0)
+
+        self.start_task(TgbSchedule, '06:00', 1)
 
         self.ding_crawl_information()
         schedule.every().day.at("17:00").do(self.ding_crawl_information)
