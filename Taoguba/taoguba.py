@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 import datetime
 import json
+import pprint
 import random
 import re
 import time
 
 from urllib.parse import urlencode
 
+import requests
 from bs4 import BeautifulSoup
 from lxml import html
 
@@ -16,11 +18,20 @@ from base import SpiderBase
 class Taoguba(SpiderBase):
     def __init__(self, name, code):
         super(Taoguba, self).__init__()
-        self.refresh_url = 'https://www.taoguba.com.cn/quotes/getStockUpToDate?'
-        self.page_num = 100
+        self.headers.update({
+            'referer': 'https://www.taoguba.com.cn/quotes/sz000651',
+            'cookie': '''JSESSIONID=f45d82d9-8811-46e2-ad9d-b51966a460cc; Hm_lvt_cc6a63a887a7d811c92b7cc41c441837=1594448378; UM_distinctid=1733c8778dd26a-07b2c169f81009-31617402-1fa400-1733c8778dea53; CNZZDATA1574657=cnzz_eid%3D512829114-1594445650-%26ntime%3D1594445650; __gads=ID=35d9e7fe87d53615:T=1594448473:S=ALNI_MYwpLq-g-JJX1Wc5jpH6fLV_w04wg; Hm_lpvt_cc6a63a887a7d811c92b7cc41c441837=1594448701'''
+        })
+        print(pprint.pformat(self.headers))
         self.name = name
+        # 最新接口
+        self.refresh_url = 'https://www.taoguba.com.cn/quotes/getStockUpToDate?'    # 旧版接口
+        # 最热接口
+        # self.refresh_url = 'https://www.taoguba.com.cn/quotes/getStockHeat?'        # 新版接口
+
+        self.page_num = 20
         self.code = code
-        self.table = 'taoguba'
+        self.table_name = 'taoguba'
         self.fields = [
             'pub_date',
             'code',
@@ -31,18 +42,16 @@ class Taoguba(SpiderBase):
             'article',
         ]
 
+    def get(self, url):
+        resp = requests.get(url, headers=self.headers, timeout=3)
+        return resp
+
     @staticmethod
     def convert_dt(time_stamp):
         d = str(datetime.datetime.fromtimestamp(time_stamp))
         return d
 
     def make_query_params(self, timestamp):
-        """
-        拼接请求参数
-        :param code:
-        :param timestamp:
-        :return:
-        """
         query_params = {
             'stockCode': self.code,  # 查询股票代码
             'actionDate': timestamp,  # 只会按照数量返回这个时间戳之前(即更早)的数据
@@ -111,11 +120,13 @@ class Taoguba(SpiderBase):
 
     def process_list(self, datas):
         records = datas.get("dto", {}).get("record")
-        # print(records)
+        print(records)
         if records:
             for record in records:
+                print(record)
                 # 不需要转评的内容
                 if record.get("tops") and record.get("rtype") == "R":
+
                     continue
 
                 item = dict()
@@ -152,11 +163,11 @@ class Taoguba(SpiderBase):
                         print(item)
                         time.sleep(random.randint(1, 3))
 
-            # 生成下一次爬取的 url 相当于翻页
-            more_timestamp = records[-1].get("actionDate")
-            more_url = self.refresh_url + urlencode(self.make_query_params(more_timestamp))
-            print("more: >>", more_url)
-            self.refresh(more_url)
+            # # 生成下一次爬取的 url 相当于翻页
+            # more_timestamp = records[-1].get("actionDate")
+            # more_url = self.refresh_url + urlencode(self.make_query_params(more_timestamp))
+            # print("more: >>", more_url)
+            # self.refresh(more_url)
 
     def refresh(self, start_url):
         # 该函数与process_list互相调用
@@ -179,3 +190,6 @@ class Taoguba(SpiderBase):
         print(start_url)
         self.refresh(start_url)
 
+
+if __name__ == "__main__":
+    Taoguba("格力电器", "sz000651").start()

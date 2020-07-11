@@ -342,12 +342,14 @@ class SpiderBase(object):
             else:
                 return requests.get(LOCAL_PROXY_URL).text.strip()
 
-    @retry(stop_max_attempt_number=10)
+    @retry(stop_max_attempt_number=30)
     def _get(self, url):
         proxies = {'http': self._get_proxy()}
         logger.info("当前获取到的代理是{}".format(proxies))
         resp = requests.get(url, proxies=proxies, headers=self.headers, timeout=3)
         print(resp)
+        if resp.status_code != 200:
+            raise
         return resp
 
     def get(self, url):

@@ -1,4 +1,5 @@
 import datetime
+import sys
 
 from Taoguba.taoguba import Taoguba
 from base import SpiderBase
@@ -73,5 +74,6 @@ if __name__ == "__main__":
     tgbs = TgbSchedule()
     for k, v in tgbs.lower_keys.items():
         print(k, v)
-        tt = Taoguba(k, v)
+        tt = Taoguba(v, k)
         tt.start()
+        sys.exit(0)
