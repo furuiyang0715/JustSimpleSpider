@@ -23,7 +23,7 @@ def main():
     while True:
         print("当前调度系统中的任务列表是:\n{}".format(pprint.pformat(schedule.jobs)))
         schedule.run_pending()
-        time.sleep(10)
+        time.sleep(1)
 
 
 if __name__ == "__main__":
