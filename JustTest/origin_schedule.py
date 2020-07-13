@@ -353,6 +353,9 @@ class Job(object):
         return self.weeks
 
     def tag(self, *tags):
+
+        # 使用一个或多个唯一标识符标记作业。标签必须是hashable。重复的标签被丢弃。
+
         """
         Tags the job with one or more unique indentifiers.
 
