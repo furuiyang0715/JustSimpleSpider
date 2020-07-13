@@ -4,10 +4,8 @@ import os
 import csv
 import datetime
 import sys
-import time
 
 import requests as req
-import schedule
 from lxml import html
 
 cur_path = os.path.split(os.path.realpath(__file__))[0]
@@ -75,20 +73,17 @@ class CalendarNews(SpiderBase):
         '劳动节',
     ]
 
-    def __init__(self, save_type='csv'):
+    table_name = 'calendar_news'
+    dt_benchmark = 'PubDate'
+
+    def __init__(self, save_type='sql'):
         super(CalendarNews, self).__init__()
         self.url = 'https://sc.hkex.com.hk/TuniS/www.hkex.com.hk/News/News-Release?sc_lang=zh-HK&Year=ALL&NewsCategory=&currentCount={}'.format(2000)
-        self.table_name = 'calendar_news'
         self.fields = ['PubDate', 'NewsTag', 'NewsUrl', 'NewsTitle']
         self.save_type = save_type
-        self.client = None
-
-    def __del__(self):
-        if self.client:
-            self.client.dispose()
 
     def _create_table(self):
-        self.client = self._init_pool(self.spider_cfg)
+        self._spider_init()
         sql = '''
         CREATE TABLE IF NOT EXISTS `{}` (
           `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
@@ -102,8 +97,8 @@ class CalendarNews(SpiderBase):
           UNIQUE KEY `un2` (`PubDate`, `NewsUrl`) USING BTREE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='交易所日历新闻';
         '''.format(self.table_name)
-        self.client.insert(sql)
-        self.client.end()
+        self.spider_client.insert(sql)
+        self.spider_client.end()
 
     def get_items(self):
         resp = req.get(self.url)
@@ -138,8 +133,8 @@ class CalendarNews(SpiderBase):
                     item['NewsTag'] = news_tag
                     item['NewsUrl'] = news_url
                     item['NewsTitle'] = news_title.strip()
+                    print(item)
                     items.append(item)
-
             return items
         else:
             print(resp.status_code)
@@ -165,25 +160,15 @@ class CalendarNews(SpiderBase):
         elif self.save_type == "sql":
             self._create_table()
             print(len(items))
-            self._batch_save(self.client, items, self.table_name, self.fields)
+            self._spider_init()
+            self._batch_save(self.spider_client, items, self.table_name, self.fields)
         else:
             print("未知的存储方式")
 
 
 def task():
-    CalendarNews(save_type="sql").start()
-
-
-def main():
-    task()
-
-    schedule.every(2).days.do(task)
-
-    while True:
-        schedule.run_pending()
-        time.sleep(1800)
+    CalendarNews().start()
 
 
 if __name__ == "__main__":
-
-    main()
+    task()

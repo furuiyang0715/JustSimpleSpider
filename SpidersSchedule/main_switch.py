@@ -20,6 +20,7 @@ from JuchaoInfo.juchao import JuChaoInfo
 from Money163.netease_money import NetEaseMoney
 from ShangHaiSecuritiesNews.cn_main import CNSchedule
 from Takungpao.takungpao_main import TakungpaoSchedule
+from CalendarNewsRelease.news_release import CalendarNews
 from base import SpiderBase, logger
 from configs import LOCAL
 
@@ -86,22 +87,21 @@ class MainSwith(SpiderBase):
         schedule.every().day.at(dt_str).do(task)
 
     def run(self):
-        self.start_task(TakungpaoSchedule, "00:00", 0)
+        self.thread_task(TakungpaoSchedule, "00:00", 1)
 
-        self.start_task(JFSchedule, '01:00', 0)
+        self.thread_task(JFSchedule, '01:00', 1)
 
-        self.start_task(JuChaoInfo, '02:00', 0)
+        self.thread_task(JuChaoInfo, '02:00', 1)
 
-        self.start_task(NetEaseMoney, '03:00', 0)
+        self.thread_task(NetEaseMoney, '03:00', 1)
 
-        self.start_task(CNSchedule, '04:00', 0)
+        self.thread_task(CNSchedule, '04:00', 1)
 
-        self.start_task(Telegraphs, '04:00', 0)
+        self.thread_task(Telegraphs, '04:00', 1)
 
-        # self.start_task(CaSchedule, '05:00', 1)
+        self.thread_task(CalendarNews, '06:00', 1)
+
         self.thread_task(CaSchedule, '05:00', 1)    # 东财财富号：运行时间较长，新开线程去执行；需要代理
-
-        # self.start_task(TgbSchedule, '06:00', 1)
         self.thread_task(TgbSchedule, '16:00', 1)  # 淘股吧：运行时间较长，新开线程去处理; 需要代理
 
         self.ding_crawl_information()
