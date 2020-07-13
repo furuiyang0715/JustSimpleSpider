@@ -40,7 +40,7 @@ def timer(func):
     return wrapper  # 返回内层函数的引用
 
 
-if __name__ == "__main__":
+def main():
 
     # my_add(1, 2)
     #
@@ -66,3 +66,7 @@ if __name__ == "__main__":
     ->>继续执行完wrapper函数
     '''
     pass
+
+
+if __name__ == "__main__":
+    main()
