@@ -16,13 +16,28 @@ def my_add_1(l1, l2):
     print(t2 - t1)
 
 
-def timer(func, *args):
-    """将函数作为参数传入去计算执行时间"""
-    start = time.time()
-    func(*args)
-    time.sleep(2)  # 模拟耗时操作
-    long = time.time() - start
-    print(f'共耗时{long}秒。')
+# def timer(func, *args):
+#     """将函数作为参数传入去计算执行时间
+#     【高阶函数】
+#     """
+#     start = time.time()
+#     func(*args)
+#     time.sleep(2)  # 模拟耗时操作
+#     long = time.time() - start
+#     print(f'共耗时{long}秒。')
+
+
+def timer(func):
+
+    def wrapper(*args, **kwargs):
+        """被装饰的过程"""
+        start = time.time()
+        func(*args, **kwargs)  # 此处拿到了被装饰的函数func
+        time.sleep(2)  # 模拟耗时操作
+        long = time.time() - start
+        print(f'共耗时{long}秒。')
+
+    return wrapper  # 返回内层函数的引用
 
 
 if __name__ == "__main__":
@@ -30,5 +45,16 @@ if __name__ == "__main__":
     # my_add(1, 2)
     #
     # my_add_1(1000, 1000)
+    #
+    # timer(my_add, 1000, 2000)
 
-    timer(my_add, 1000, 2000)
+    @timer
+    def add(a, b):
+        print(a + b)
+
+    # add = timer(add)  # 此处返回的是timer.<locals>.wrapper函数引用
+
+    add(1, 2)  # 正常调用add
+
+
+    pass
