@@ -56,5 +56,13 @@ if __name__ == "__main__":
 
     add(1, 2)  # 正常调用add
 
-
+    '''
+    ->> 模块加载 
+    ->> 遇到@，执行timer函数，传入add函数 
+    ->> 生成timer.<locals>.wrapper函数并命名为add，其实是覆盖了原同名函数 
+    ->> 调用add(1, 2) 
+    ->> 去执行timer.<locals>.wrapper(1, 2) 
+    ->> wrapper内部持有原add函数引用(func)，调用func(1, 2) 
+    ->>继续执行完wrapper函数
+    '''
     pass
