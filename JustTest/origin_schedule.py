@@ -646,6 +646,7 @@ if __name__ == "__main__":
 
     while True:
         print("当前调度系统中的任务列表是:\n{}".format(pprint.pformat(jobs)))
+        # 开始循环任务调度
         run_pending()
         time.sleep(1)
 
