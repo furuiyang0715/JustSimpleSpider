@@ -141,6 +141,7 @@ class Scheduler(object):
         :param interval: A quantity of a certain time unit
         :return: An unconfigured :class:`Job <Job>`
         """
+        # 创建一个间隔类型的任务
         job = Job(interval, self)
         return job
 
@@ -187,6 +188,7 @@ class Job(object):
     method, which also defines its `interval`.
     """
     def __init__(self, interval, scheduler=None):
+        # 任务的运行时间间隔
         self.interval = interval  # pause interval * unit between runs
         self.latest = None  # upper limit to the interval
         self.job_func = None  # the job job_func to run
@@ -200,6 +202,8 @@ class Job(object):
         self.scheduler = scheduler  # scheduler to register with
 
     def __lt__(self, other):
+        # 任务之间按照它们下一次运行到来的时间进行排序
+        # 在 sorted 进行排序时使用
         """
         PeriodicJobs are sortable based on the scheduled time they
         run next.
@@ -207,6 +211,7 @@ class Job(object):
         return self.next_run < other.next_run
 
     def __repr__(self):
+        # 确认任务对象的打印规范
         def format_time(t):
             return t.strftime('%Y-%m-%d %H:%M:%S') if t else '[never]'
 
@@ -250,6 +255,7 @@ class Job(object):
 
     @property
     def seconds(self):
+        # 赋值属性
         self.unit = 'seconds'
         return self
 
@@ -428,6 +434,8 @@ class Job(object):
         return self
 
     def do(self, job_func, *args, **kwargs):
+        # 指定每次运行作业时应该调用的job_func。
+        # 当作业运行时，所有其他参数都传递给job_func。
         """
         Specifies the job_func that should be called every time the
         job runs.
@@ -463,19 +471,27 @@ class Job(object):
 
         :return: The return value returned by the `job_func`
         """
+        # 在循环中运行起来其中的任务列表
         logger.info('Running job %s', self)
+        # 执行注册的任务函数
         ret = self.job_func()
+        # 赋值上一次运行的时间
         self.last_run = datetime.datetime.now()
+        # 重新计算下一次运行的时间
         self._schedule_next_run()
         return ret
 
     def _schedule_next_run(self):
+        # 计算下一步该作业应该运行的时间。
+        # 比较核心的函数 ！！
         """
         Compute the instant when this job should run next.
         """
+        # 校验运行的时间单位
         if self.unit not in ('seconds', 'minutes', 'hours', 'days', 'weeks'):
             raise ScheduleValueError('Invalid unit')
 
+        #
         if self.latest is not None:
             if not (self.latest >= self.interval):
                 raise ScheduleError('`latest` is greater than `interval`')
@@ -483,8 +499,10 @@ class Job(object):
         else:
             interval = self.interval
 
+        # 确定下一次要运行的时间 （根据不同的情况确定）
         self.period = datetime.timedelta(**{self.unit: interval})
         self.next_run = datetime.datetime.now() + self.period
+
         if self.start_day is not None:
             if self.unit != 'weeks':
                 raise ScheduleValueError('`unit` should be \'weeks\'')
@@ -504,6 +522,7 @@ class Job(object):
             if days_ahead <= 0:  # Target day already happened this week
                 days_ahead += 7
             self.next_run += datetime.timedelta(days_ahead) - self.period
+
         if self.at_time is not None:
             if (self.unit not in ('days', 'hours', 'minutes')
                     and self.start_day is None):
@@ -534,59 +553,11 @@ class Job(object):
                         and self.at_time.second > now.second:
                     self.next_run = self.next_run - \
                                     datetime.timedelta(minutes=1)
+
         if self.start_day is not None and self.at_time is not None:
             # Let's see if we will still make that time we specified today
             if (self.next_run - datetime.datetime.now()).days >= 7:
                 self.next_run -= self.period
-
-
-def every(interval=1):
-    """Calls :meth:`every <Scheduler.every>` on the
-    :data:`default scheduler instance <default_scheduler>`.
-    """
-    return default_scheduler.every(interval)
-
-
-def run_pending():
-    """Calls :meth:`run_pending <Scheduler.run_pending>` on the
-    :data:`default scheduler instance <default_scheduler>`.
-    """
-    default_scheduler.run_pending()
-
-
-def run_all(delay_seconds=0):
-    """Calls :meth:`run_all <Scheduler.run_all>` on the
-    :data:`default scheduler instance <default_scheduler>`.
-    """
-    default_scheduler.run_all(delay_seconds=delay_seconds)
-
-
-def clear(tag=None):
-    """Calls :meth:`clear <Scheduler.clear>` on the
-    :data:`default scheduler instance <default_scheduler>`.
-    """
-    default_scheduler.clear(tag)
-
-
-def cancel_job(job):
-    """Calls :meth:`cancel_job <Scheduler.cancel_job>` on the
-    :data:`default scheduler instance <default_scheduler>`.
-    """
-    default_scheduler.cancel_job(job)
-
-
-def next_run():
-    """Calls :meth:`next_run <Scheduler.next_run>` on the
-    :data:`default scheduler instance <default_scheduler>`.
-    """
-    return default_scheduler.next_run
-
-
-def idle_seconds():
-    """Calls :meth:`idle_seconds <Scheduler.idle_seconds>` on the
-    :data:`default scheduler instance <default_scheduler>`.
-    """
-    return default_scheduler.idle_seconds
 
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -614,7 +585,63 @@ if __name__ == "__main__":
     jobs = default_scheduler.jobs  # todo: should this be a copy, e.g. jobs()?
     print(jobs)
 
-    every(10).seconds.do(task1)
+    # 封装向调度系统中添加任务的操作
+    def every(interval=1):
+        """Calls :meth:`every <Scheduler.every>` on the
+        :data:`default scheduler instance <default_scheduler>`.
+        """
+        return default_scheduler.every(interval)
+
+
+    def run_pending():
+        """Calls :meth:`run_pending <Scheduler.run_pending>` on the
+        :data:`default scheduler instance <default_scheduler>`.
+        """
+        default_scheduler.run_pending()
+
+
+    def run_all(delay_seconds=0):
+        """Calls :meth:`run_all <Scheduler.run_all>` on the
+        :data:`default scheduler instance <default_scheduler>`.
+        """
+        default_scheduler.run_all(delay_seconds=delay_seconds)
+
+
+    def clear(tag=None):
+        """Calls :meth:`clear <Scheduler.clear>` on the
+        :data:`default scheduler instance <default_scheduler>`.
+        """
+        default_scheduler.clear(tag)
+
+
+    def cancel_job(job):
+        """Calls :meth:`cancel_job <Scheduler.cancel_job>` on the
+        :data:`default scheduler instance <default_scheduler>`.
+        """
+        default_scheduler.cancel_job(job)
+
+
+    def next_run():
+        """Calls :meth:`next_run <Scheduler.next_run>` on the
+        :data:`default scheduler instance <default_scheduler>`.
+        """
+        return default_scheduler.next_run
+
+
+    def idle_seconds():
+        """Calls :meth:`idle_seconds <Scheduler.idle_seconds>` on the
+        :data:`default scheduler instance <default_scheduler>`.
+        """
+        return default_scheduler.idle_seconds
+
+    # 创建一个 Job 对象 job1, 确认时间间隔是 10
+    job1 = every(10)
+    # 赋值 job1 对象的属性 unit = 'seconds' , 此时明确时间是 10s 运行一次
+    job1 = job1.seconds
+    # 赋值属性 job1 下一次运行需要的时间
+    job1.do(task1)
+
+    # every(10).seconds.do(task1)
     every(10).seconds.do(task2)
 
     while True:
