@@ -2,6 +2,7 @@ import functools
 import os
 import pprint
 import sys
+import threading
 import time
 import traceback
 
@@ -23,21 +24,21 @@ from base import SpiderBase, logger
 from configs import LOCAL
 
 
-# def catch_exceptions(cancel_on_failure=False):
-#     def catch_exceptions_decorator(job_func):
-#         @functools.wraps(job_func)
-#         def wrapper(*args, **kwargs):
-#             try:
-#                 return job_func(*args, **kwargs)
-#             except:
-#                 logger.warning(traceback.format_exc())
-#                 # sentry.captureException(exc_info=True)
-#                 if cancel_on_failure:
-#                     logger.warning("异常 任务结束: {}".format(schedule.CancelJob))
-#                     schedule.cancel_job(job_func)
-#                     return schedule.CancelJob
-#         return wrapper
-#     return catch_exceptions_decorator
+def catch_exceptions(cancel_on_failure=False):
+    def catch_exceptions_decorator(job_func):
+        @functools.wraps(job_func)
+        def wrapper(*args, **kwargs):
+            try:
+                return job_func(*args, **kwargs)
+            except:
+                logger.warning(traceback.format_exc())
+                # sentry.captureException(exc_info=True)
+                if cancel_on_failure:
+                    logger.warning("异常 任务结束: {}".format(schedule.CancelJob))
+                    schedule.cancel_job(job_func)
+                    return schedule.CancelJob
+        return wrapper
+    return catch_exceptions_decorator
 
 
 class MainSwith(SpiderBase):
@@ -58,6 +59,21 @@ class MainSwith(SpiderBase):
             self.ding(msg)
         else:
             print(msg)
+
+    @staticmethod
+    def run_threaded(job_func):
+        job_thread = threading.Thread(target=job_func)
+        job_thread.start()
+
+    def thread_task(self, cls, dt_str, at_once=1):
+        @catch_exceptions(cancel_on_failure=True)
+        def task():
+            self.run_threaded(cls().start)
+
+        self.tables.append((cls.table_name, cls.dt_benchmark))
+        if at_once:
+            task()
+        schedule.every().day.at(dt_str).do(task)
 
     def start_task(self, cls, dt_str, at_once=1):
         # @catch_exceptions(cancel_on_failure=True)
@@ -82,9 +98,11 @@ class MainSwith(SpiderBase):
 
         self.start_task(Telegraphs, '04:00', 0)
 
-        self.start_task(CaSchedule, '05:00', 1)    # 需要代理
+        # self.start_task(CaSchedule, '05:00', 1)
+        self.thread_task(CaSchedule, '05:00', 1)    # 东财财富号：运行时间较长，新开线程去执行；需要代理
 
-        self.start_task(TgbSchedule, '06:00', 1)  # 代理
+        # self.start_task(TgbSchedule, '06:00', 1)
+        self.thread_task(TgbSchedule, '16:00', 1)  # 淘股吧：运行时间较长，新开线程去处理; 需要代理
 
         self.ding_crawl_information()
         schedule.every().day.at("17:00").do(self.ding_crawl_information)
