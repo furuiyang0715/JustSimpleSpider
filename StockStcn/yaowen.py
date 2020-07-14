@@ -1,5 +1,6 @@
 from lxml import html
 
+
 from StockStcn import stcn_utils as utils
 from StockStcn.base_stcn import STCN_Base
 
