@@ -79,7 +79,10 @@ class STCNBase(SpiderBase):
     def add_article(self, item: dict):
         link = item.get("link")
         if link:
-            link = self.base_url + item['link'][2:]
+            if self.base_url:
+                link = self.base_url + item['link'][2:]
+            else:
+                link = item['link']
             item['link'] = link
             detail_page = self.get(link)
             if detail_page:

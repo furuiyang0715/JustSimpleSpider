@@ -113,6 +113,34 @@ class STCNYanBao(STCNBase):
         self.list_parse_func = utils.parse_list_items_3
 
 
+class STCNRoll(STCNBase):
+    def __init__(self):
+        super(STCNRoll, self).__init__()
+        self.base_url = None
+        self.first_url = 'https://www.stcn.com/gd/index.html'
+        self.format_url = "https://www.stcn.com/gd/index_{}.html"
+        self.name = '滚动'
+
+    def parse_list_body(self, body):
+        items = []
+        doc = html.fromstring(body)
+        columns = doc.xpath("//ul[@id='news_list2']/li")
+        num = 0
+        for column in columns:
+            num += 1
+            title = column.xpath("./a")[-1].xpath("./@title")[0]
+            link = column.xpath("./a")[-1].xpath("./@href")[0]
+            pub_date = column.xpath("./span")[0].text_content().strip()
+            pub_date = '{} {}'.format(pub_date[:10], pub_date[-5:])
+            item = dict()
+            item['title'] = title
+            item['link'] = link
+            item['pub_date'] = pub_date
+            items.append(item)
+        items = [item for item in items if self.add_article(item)]
+        return items
+
+
 if __name__ == "__main__":
     # STCNKuaixun().start()
 
@@ -124,5 +152,7 @@ if __name__ == "__main__":
 
     # STCNMarket().start()
 
-    STCNYanBao().start()
+    # STCNYanBao().start()
+
+    STCNRoll().start()
 
