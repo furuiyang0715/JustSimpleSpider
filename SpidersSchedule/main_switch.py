@@ -21,6 +21,7 @@ from Money163.netease_money import NetEaseMoney
 from ShangHaiSecuritiesNews.cn_main import CNSchedule
 from Takungpao.takungpao_main import TakungpaoSchedule
 from CalendarNewsRelease.news_release import CalendarNews
+from GovSpiders.gov_main import ChinaBankSchedule, GovStatsSchedule
 from base import SpiderBase, logger
 from configs import LOCAL
 
@@ -100,6 +101,10 @@ class MainSwith(SpiderBase):
         self.thread_task(Telegraphs, '04:00', 1)
 
         self.thread_task(CalendarNews, '06:00', 1)
+
+        self.thread_task(ChinaBankSchedule, '07:00', 1)
+
+        self.thread_task(GovStatsSchedule, '08:00', 1)
 
         self.thread_task(CaSchedule, '05:00', 1)    # 东财财富号：运行时间较长，新开线程去执行；需要代理
         self.thread_task(TgbSchedule, '16:00', 1)  # 淘股吧：运行时间较长，新开线程去处理; 需要代理

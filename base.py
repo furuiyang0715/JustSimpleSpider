@@ -150,6 +150,9 @@ class SpiderBase(object):
 
     def _batch_save(self, sql_pool, to_inserts, table, update_fields):
         """批量插入"""
+        if len(to_inserts) == 0:
+            logger.warning("批量插入数据量为 0")
+            return 0
         try:
             sql, values = self.contract_sql(to_inserts, table, update_fields)
             count = sql_pool.insert_many(sql, values)

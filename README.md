@@ -28,3 +28,9 @@
 | 交易所日历新闻 | | news_release.py | https://sc.hkex.com.hk/TuniS/www.hkex.com.hk/News/News-Release?sc_lang=zh-HK&Year=ALL&NewsCategory=&currentCount=10 | 
 | 东财财富号 | | ca_spider.py | http://so.eastmoney.com/CArticle/s?keyword=%E6%A0%BC%E5%8A%9B%E7%94%B5%E5%99%A8&pageindex=1 | 
 | 淘股吧 |  | taoguba.py | https://www.taoguba.com.cn/quotes/sz000651 | 
+| 官媒 | 中国银行-数据解读 | china_bank.py | http://www.pbc.gov.cn/diaochatongjisi/116219/116225/11871/index1.html |
+| 官媒 | 中国银行-新闻发布 | china_bank.py | http://www.pbc.gov.cn/goutongjiaoliu/113456/113469/11040/index1.html | 
+| 官媒 | 国家统计局-数据解读 | gov_stats_sjjd.py | http://www.stats.gov.cn/tjsj/sjjd/index.html | 
+| 官媒 | 国家统计局-统计动态 | gov_stats_tjdt.py | http://www.stats.gov.cn/tjgz/tjdt/index.html | 
+| 官媒 | 国家统计局-新闻发布会 | gov_stats_xwfbh.py | http://www.stats.gov.cn/tjsj/xwfbh/fbhwd/index.html | 
+| 官媒 | 国家统计局-最新发布 | gov_stats_zxfb.py | http://www.stats.gov.cn/tjsj/zxfb/index.html | 
