@@ -16,6 +16,7 @@ class Telegraphs(SpiderBase):
     def __init__(self):
         super(Telegraphs, self).__init__()
         self.name = '财新社-电报'
+        self.web_url = 'https://www.cls.cn/telegraph'
         self.url_format = '''https://www.cls.cn/nodeapi/telegraphList?\
 app=CailianpressWeb\
 &category=\

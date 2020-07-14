@@ -22,4 +22,9 @@
 | 大公财经 | 商业 | zhongguojingji.py |http://www.takungpao.com/finance/236137/index.html |
 | 巨潮资讯 | 最新/股票/基金/数据 | juchao.py | http://webapi.cninfo.com.cn/|
 | 网易财经 | | netease_money.py | https://money.163.com/|
-| 证券时报网 | |  | |
+| 上海证券报| 上证 4 小时 | cn_4_hours.py | http://www.cnstock.com/ | 
+| 上海证券报| 宏观、金融等 | cn_hongguan.py | http://www.cnstock.com/ | 
+| 财新社 | 电报 | telegraphs.py | https://www.cls.cn/telegraph | 
+| 交易所日历新闻 | | news_release.py | https://sc.hkex.com.hk/TuniS/www.hkex.com.hk/News/News-Release?sc_lang=zh-HK&Year=ALL&NewsCategory=&currentCount=10 | 
+| 东财财富号 | | ca_spider.py | http://so.eastmoney.com/CArticle/s?keyword=%E6%A0%BC%E5%8A%9B%E7%94%B5%E5%99%A8&pageindex=1 | 
+| 淘股吧 |  | taoguba.py | https://www.taoguba.com.cn/quotes/sz000651 | 
