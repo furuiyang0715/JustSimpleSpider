@@ -1,6 +1,0 @@
-requests==2.22.0
-PyMySQL==0.9.3
-gne==0.1.5
-schedule==0.6.0
-lxml==4.4.2
-selenium==3.141.0

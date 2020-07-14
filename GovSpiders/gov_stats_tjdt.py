@@ -12,8 +12,6 @@ class GovStatsTongJiDongTai(GovStatsShuJuJieDu):
     def __init__(self):
         super(GovStatsTongJiDongTai, self).__init__()
         self.name = '统计动态'
-        # self.table = 'gov_stats_tjdt'
-        self.table = 'gov_stats'
         self.first_url = "http://www.stats.gov.cn/tjgz/tjdt/index.html"
         self.format_url = "http://www.stats.gov.cn/tjgz/tjdt/index_{}.html"
         self.detail_base_url = "http://www.stats.gov.cn/tjgz/tjdt/"
@@ -52,14 +50,4 @@ class GovStatsTongJiDongTai(GovStatsShuJuJieDu):
 
 if __name__ == "__main__":
     runner = GovStatsTongJiDongTai()
-    # demo_list_url = "http://www.stats.gov.cn/tjgz/tjdt/index_1.html"
-    # list_page = runner.fetch_page(demo_list_url)
-    # ret = runner._parse_list_page(list_page)
-    # print(pprint.pformat(ret))
-
-    # demo_detail_url = "http://www.stats.gov.cn/tjgz/tjdt/201912/t20191210_1716854.html"
-    # detail_page = runner.fetch_page(demo_detail_url)
-    # ret = runner._parse_detail_page(detail_page)
-    # print(ret)
-
-    runner.start(1)
+    runner.start()

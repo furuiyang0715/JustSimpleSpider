@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from urllib.parse import urljoin
-
 from lxml import html
-
 from GovSpiders.gov_stats_sjjd import GovStatsShuJuJieDu
 
 
@@ -11,8 +9,6 @@ class GovStatsZuiXinFaBu(GovStatsShuJuJieDu):
     def __init__(self):
         super(GovStatsZuiXinFaBu, self).__init__()
         self.name = '最新发布'
-        # self.table = 'gov_stats_zxfb'
-        self.table = 'gov_stats'
         self.first_url = 'http://www.stats.gov.cn/tjsj/zxfb/index.html'
         self.format_url = 'http://www.stats.gov.cn/tjsj/zxfb/index_{}.html'
         self.detail_base_url = "http://www.stats.gov.cn/"
@@ -43,11 +39,4 @@ class GovStatsZuiXinFaBu(GovStatsShuJuJieDu):
 
 if __name__ == "__main__":
     runner = GovStatsZuiXinFaBu()
-    # list_url = "http://www.stats.gov.cn/tjsj/zxfb/index.html"
-    # list_page = runner.fetch_page(list_url)
-    # items = runner._parse_list_page(list_page)
-    # print(items)
-
-    runner.start(1)
-    print(runner.error_detail)
-    print(runner.error_list)
+    runner.start()

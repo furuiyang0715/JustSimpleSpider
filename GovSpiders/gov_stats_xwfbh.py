@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-import pprint
 import re
-from urllib.parse import urljoin
-
 from lxml import html
 
 from GovSpiders.gov_stats_sjjd import GovStatsShuJuJieDu
@@ -13,8 +10,6 @@ class GovStatsXinWenFaBuHui(GovStatsShuJuJieDu):
     def __init__(self):
         super(GovStatsXinWenFaBuHui, self).__init__()
         self.name = '新闻发布会'
-        # self.table = 'gov_stats_xwfbh'
-        self.table = 'gov_stats'
         self.first_url = "http://www.stats.gov.cn/tjsj/xwfbh/fbhwd/index.html"
         self.format_url = "http://www.stats.gov.cn/tjsj/xwfbh/fbhwd/index_{}.html"
         self.detail_base_url = "http://www.stats.gov.cn/tjsj"
@@ -44,18 +39,4 @@ class GovStatsXinWenFaBuHui(GovStatsShuJuJieDu):
 
 if __name__ == "__main__":
     runner = GovStatsXinWenFaBuHui()
-    runner.start(1)
-
-    # list_page = runner.fetch_page("http://www.stats.gov.cn/tjsj/xwfbh/fbhwd/index.html")
-    # print(list_page)
-    # items = runner._parse_list_page(list_page)
-    # print(pprint.pformat(items))
-
-    # detail_url = "http://www.stats.gov.cn/tjsj/zxfb/202001/t20200117_1723383.html"
-    # detail_page = runner.fetch_page(detail_url)
-    # print(detail_page)
-    # article = runner._parse_detail_page(detail_page)
-    # print(article)
-
-    # pub_date = runner._parse_detail_pub_date(detail_page)
-    # print(pub_date)
+    runner.start()
