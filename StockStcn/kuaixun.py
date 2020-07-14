@@ -1,3 +1,5 @@
+import datetime
+
 from lxml import html
 from StockStcn import stcn_utils as utils
 from StockStcn.base_stcn import STCNBase
@@ -54,10 +56,50 @@ class STCNCompany(STCNBase):
         return columns
 
 
+class STCNColumn(STCNBase):
+    def __init__(self):
+        super(STCNColumn, self).__init__()
+        self.base_url = "http://space.stcn.com/tg"
+        self.first_url = 'http://space.stcn.com/tg/index.html'
+        self.format_url = 'http://space.stcn.com/tg/index_{}.html'
+        self.name = '专栏'
+
+    def parse_list_body(self, body):
+        doc = html.fromstring(body)
+        items = []
+        columns = doc.xpath('//div[@id="news_list2"]/dl')
+        for column in columns:
+            print(column)
+            title = column.xpath('./dd[@class="mtit"]/a/@title')[0]
+            link = column.xpath('./dd[@class="mtit"]/a/@href')[0]
+            pub_date = column.xpath('./dd[@class="mexp"]/span')[0].text_content()
+            my_today = datetime.datetime.today()
+            yesterday = datetime.datetime.today()-datetime.timedelta(days=1)
+            before_yesterday = datetime.datetime.today()-datetime.timedelta(days=2)
+            pub_date = pub_date.replace("今天", my_today.strftime("%Y-%m-%d"))
+            pub_date = pub_date.replace("昨天", yesterday.strftime("%Y-%m-%d"))
+            pub_date = pub_date.replace("前天", before_yesterday.strftime("%Y-%m-%d"))
+
+            item = dict()
+            item['title'] = title
+            item['link'] = link
+            item['pub_date'] = pub_date
+            detail_body = self.get(link)
+            if detail_body:
+                article = self.parse_detail(detail_body)
+                if article:
+                    item['article'] = self._process_content(article)
+                    print(item)
+                    items.append(item)
+        return items
+
+
 if __name__ == "__main__":
     # STCNKuaixun().start()
 
     # STCNYaoWen().start()
 
-    STCNCompany().start()
+    # STCNCompany().start()
+
+    STCNColumn().start()
 
