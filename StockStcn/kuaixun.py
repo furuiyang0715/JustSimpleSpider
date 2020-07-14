@@ -34,8 +34,30 @@ class STCNYaoWen(STCNBase):
         return columns
 
 
+class STCNCompany(STCNBase):
+    def __init__(self):
+        super(STCNCompany, self).__init__()
+        self.base_url = "http://company.stcn.com/"
+        self.first_url = 'https://company.stcn.com/index.html'
+        self.format_url = 'https://company.stcn.com/index_{}.html'
+        self.name = '公司'
+        self.list_parse_func = utils.parse_list_items_1
+
+    def parse_list_body(self, body):
+        doc = html.fromstring(body)
+        first = utils.parse_list_first(doc)
+        logger.info(first)
+        columns = self.list_parse_func(doc)
+        columns = [column for column in columns if self.add_article(column)]
+        if self.add_article(first):
+            columns.append(first)
+        return columns
+
+
 if __name__ == "__main__":
     # STCNKuaixun().start()
 
-    STCNYaoWen().start()
+    # STCNYaoWen().start()
+
+    STCNCompany().start()
 
