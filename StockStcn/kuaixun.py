@@ -141,6 +141,16 @@ class STCNRoll(STCNBase):
         return items
 
 
+class STCNSDBD(STCNBase):
+    def __init__(self):
+        super(STCNSDBD, self).__init__()
+        self.base_url = 'https://news.stcn.com/sd/'
+        self.first_url = 'https://news.stcn.com/sd/index.html'
+        self.format_url = "https://news.stcn.com/sd/index_{}.html"
+        self.name = '深度'
+        self.list_parse_func = utils.parse_list_items_1
+
+
 if __name__ == "__main__":
     # STCNKuaixun().start()
 
@@ -154,5 +164,7 @@ if __name__ == "__main__":
 
     # STCNYanBao().start()
 
-    STCNRoll().start()
+    # STCNRoll().start()
+
+    STCNSDBD().start()
 
