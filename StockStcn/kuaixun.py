@@ -1,5 +1,3 @@
-import datetime
-
 from lxml import html
 from StockStcn import stcn_utils as utils
 from StockStcn.base_stcn import STCNBase
@@ -67,18 +65,19 @@ class STCNColumn(STCNBase):
     def parse_list_body(self, body):
         doc = html.fromstring(body)
         items = []
-        columns = doc.xpath('//div[@id="news_list2"]/dl')
+        columns = doc.xpath('//div[@id="news_list2"]/dl[@class="wapdl"]')
         for column in columns:
-            print(column)
-            title = column.xpath('./dd[@class="mtit"]/a/@title')[0]
-            link = column.xpath('./dd[@class="mtit"]/a/@href')[0]
-            pub_date = column.xpath('./dd[@class="mexp"]/span')[0].text_content()
-            my_today = datetime.datetime.today()
-            yesterday = datetime.datetime.today()-datetime.timedelta(days=1)
-            before_yesterday = datetime.datetime.today()-datetime.timedelta(days=2)
-            pub_date = pub_date.replace("今天", my_today.strftime("%Y-%m-%d"))
-            pub_date = pub_date.replace("昨天", yesterday.strftime("%Y-%m-%d"))
-            pub_date = pub_date.replace("前天", before_yesterday.strftime("%Y-%m-%d"))
+            '''
+<dl class="wapdl">
+    <dt><img src="https://space.stcn.com/tg/202007/W020200713322340541875.png"></dt>
+    <dd class="tit"><a href="https://space.stcn.com/tg/202007/t20200713_2126950.html">球鞋垂直电商兴起折射我国消费升级趋势</a></dd>
+    <dd class="exp">盘和林<span>07-13 08:57</span></dd>
+</dl>
+            '''
+            title = column.xpath('./dd[@class="tit"]/a')[0].text_content()
+            link = column.xpath('./dd[@class="tit"]/a/@href')[0]
+            pub_date = column.xpath('./dd[@class="exp"]/span')[0].text_content()
+            pub_date = self._process_pub_dt(pub_date)
 
             item = dict()
             item['title'] = title
