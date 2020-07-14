@@ -1,8 +1,11 @@
 from lxml import html
-from GovSpiders.base_spider import BaseSpider
+from retrying import retry
+
+from GovSpiders.base_spider import GovBaseSpider
 
 
 class ChinaBankMixin(object):
+    """适用于中国银行的数据解析混入类"""
     def _parse_table(self, zoom):
         my_table = zoom.xpath("./table")[0]
         trs = my_table.xpath("./tbody/tr")
@@ -35,6 +38,15 @@ class ChinaBankMixin(object):
             detail_content = zoom.text_content()
             return detail_content
 
+    def parse_detail_page(self, detail_page):
+        try:
+            article = self._parse_detail_page(detail_page)
+        except:
+            return None
+        else:
+            return article
+
+    @retry(stop_max_attempt_number=10)
     def _parse_list_page(self, list_page):
         doc = html.fromstring(list_page)
         news_area = doc.xpath("//div[@opentype='page']")[0]
@@ -55,17 +67,27 @@ class ChinaBankMixin(object):
             items.append(item)
         return items
 
+    def parse_list_page(self, list_page):
+        try:
+            items = self._parse_list_page(list_page)
+        except:
+            return []
+        else:
+            return items
 
-class ChinaBankShuJuJieDu(BaseSpider, ChinaBankMixin):
+
+class ChinaBankShuJuJieDu(GovBaseSpider, ChinaBankMixin):
     def __init__(self):
         super(ChinaBankShuJuJieDu, self).__init__()
         self.name = '中国银行-数据解读'
-        self.table = 'chinabank'
+        self.table_name = 'chinabank'
         self.start_url = 'http://www.pbc.gov.cn/diaochatongjisi/116219/116225/11871/index{}.html'
+        self.fields = ['pub_date', 'title', 'link', 'article']
 
     def _create_table(self):
+        self._spider_init()
         sql = '''
-        CREATE TABLE IF NOT EXISTS `chinabank` (
+        CREATE TABLE IF NOT EXISTS `{}` (
           `id` int(11) NOT NULL AUTO_INCREMENT,
           `pub_date` datetime NOT NULL COMMENT '发布时间',
           `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章标题',
@@ -78,44 +100,44 @@ class ChinaBankShuJuJieDu(BaseSpider, ChinaBankMixin):
           KEY `pub_date` (`pub_date`),
           KEY `update_time` (`UPDATETIMEJZ`)
         ) ENGINE=InnoDB AUTO_INCREMENT=15688 DEFAULT CHARSET=utf8mb4 COMMENT='中国银行'; 
-        '''
-        self.sql_client.insert(sql)
+        '''.format(self.table_name)
+        self.spider_client.insert(sql)
+        self.spider_client.end()
+
+    def start(self):
+        self._create_table()
+        for page in range(1, 3):
+            ditems = []
+            list_url = self.start_url.format(page)
+            list_page = self.fetch_page(list_url)
+            if list_page:
+                items = self.parse_list_page(list_page)
+                for item in items:
+                    # print(item)
+                    detail_page = self.fetch_page(item['link'])
+                    if detail_page:
+                        article = self.parse_detail_page(detail_page)
+                        if article:
+                            item['article'] = article
+                            print(item)
+                            ditems.append(item)
+            print("爬取数量: ", len(ditems))
+            self._spider_init()
+            ret = self._batch_save(self.spider_client, ditems, self.table_name, self.fields)
+            print("入库数量: ", ret)
 
 
-class ChinaBankXinWenFaBu(BaseSpider, ChinaBankMixin):
+class ChinaBankXinWenFaBu(ChinaBankShuJuJieDu):
     def __init__(self):
         super(ChinaBankXinWenFaBu, self).__init__()
         self.name = '中国银行-新闻发布'
-        self.table = "chinabank"
+        self.table_name = "chinabank"
         self.start_url = "http://www.pbc.gov.cn/goutongjiaoliu/113456/113469/11040/index{}.html"
-
-    def _create_table(self):
-        sql = '''
-        CREATE TABLE IF NOT EXISTS `chinabank` (
-          `id` int(11) NOT NULL AUTO_INCREMENT,
-          `pub_date` datetime NOT NULL COMMENT '发布时间',
-          `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章标题',
-          `link` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章详情页链接',
-          `article` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '详情页内容',
-          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
-          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (`id`),
-          UNIQUE KEY `link` (`link`),
-          KEY `pub_date` (`pub_date`),
-          KEY `update_time` (`UPDATETIMEJZ`)
-        ) ENGINE=InnoDB AUTO_INCREMENT=15688 DEFAULT CHARSET=utf8mb4 COMMENT='中国银行'; 
-        '''
-        self.sql_client.insert(sql)
 
 
 if __name__ == "__main__":
-    demo = ChinaBankShuJuJieDu()
-    demo.start(1)
-    print(demo.error_list)
-    print(demo.error_detail)
+    # ChinaBankShuJuJieDu().start()
 
-    demo = ChinaBankXinWenFaBu()
-    demo.start(1)
-    print(demo.error_list)
-    print(demo.error_detail)
+    ChinaBankXinWenFaBu().start()
 
+    pass
