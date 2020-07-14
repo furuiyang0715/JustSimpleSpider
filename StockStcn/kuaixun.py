@@ -93,6 +93,16 @@ class STCNColumn(STCNBase):
         return items
 
 
+class STCNMarket(STCNBase):
+    def __init__(self):
+        super(STCNMarket, self).__init__()
+        self.base_url = "http://stock.stcn.com/"
+        self.first_url = 'http://stock.stcn.com/index.html'
+        self.format_url = 'http://stock.stcn.com/index_{}.html'
+        self.name = '股市'
+        self.list_parse_func = utils.parse_list_items_1
+
+
 if __name__ == "__main__":
     # STCNKuaixun().start()
 
@@ -100,5 +110,7 @@ if __name__ == "__main__":
 
     # STCNCompany().start()
 
-    STCNColumn().start()
+    # STCNColumn().start()
+
+    STCNMarket().start()
 
