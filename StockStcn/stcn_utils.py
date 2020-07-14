@@ -89,11 +89,18 @@ def parse_list_items_3(doc):
     num = 0
     for column in columns:
         num += 1
-        # print(column.tag)
         title = column.xpath("./a/@title")[0]
         link = column.xpath("./a/@href")[0]
         pub_date = column.xpath("./span")[0].text_content()
-        pub_date = '{} {}'.format(pub_date[:10], pub_date[10:])
+        '''
+        <span>
+				2020-07-14
+				<i>16:19</i>
+		</span>
+        '''
+        pub_date = pub_date.strip()
+        pub_date = '{} {}'.format(pub_date[:10], pub_date[-5:])
+        # print("*** ", pub_date)
         item = dict()
         item['title'] = title
         item['link'] = link

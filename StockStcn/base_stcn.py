@@ -111,6 +111,10 @@ class STCNBase(SpiderBase):
                 items = self.parse_list_body(list_page)
 
                 logger.info("爬取数量: {}".format(len(items)))
+
+                for item in items:
+                    print(item)
+
                 self._spider_init()
                 ret = self._batch_save(self.spider_client, items, self.table_name, self.fields)
                 logger.info("入库数量: {}".format(ret))

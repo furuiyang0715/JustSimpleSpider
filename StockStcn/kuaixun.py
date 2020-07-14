@@ -103,6 +103,16 @@ class STCNMarket(STCNBase):
         self.list_parse_func = utils.parse_list_items_1
 
 
+class STCNYanBao(STCNBase):
+    def __init__(self):
+        super(STCNYanBao, self).__init__()
+        self.base_url = 'https://kuaixun.stcn.com/yb/'
+        self.first_url = 'https://kuaixun.stcn.com/yb/index.html'
+        self.format_url = "https://kuaixun.stcn.com/yb/index_{}.html"
+        self.name = '研报'
+        self.list_parse_func = utils.parse_list_items_3
+
+
 if __name__ == "__main__":
     # STCNKuaixun().start()
 
@@ -112,5 +122,7 @@ if __name__ == "__main__":
 
     # STCNColumn().start()
 
-    STCNMarket().start()
+    # STCNMarket().start()
+
+    STCNYanBao().start()
 
