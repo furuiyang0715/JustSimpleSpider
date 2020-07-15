@@ -269,6 +269,29 @@ class STCNSDBD(STCNBase):
         self.list_parse_func = utils.parse_list_items_1
 
 
+class STCNXWPL(STCNBase):
+    def __init__(self):
+        super(STCNXWPL, self).__init__()
+        self.base_url = 'https://news.stcn.com/pl/'
+        self.first_url = 'https://news.stcn.com/pl/index.html'
+        self.format_url = "https://news.stcn.com/pl/index_{}.html"
+        self.name = '评论'
+        self.list_parse_func = utils.parse_list_items_1
+
+
+if __name__ == "__main__":
+
+    # STCNYaoWen().start()
+
+    # STCNRoll().start()
+
+    # STCNSDBD().start()
+
+    # STCNXWPL().start()
+
+    pass
+
+
 class STCNFinance(STCNBase):
     def __init__(self):
         super(STCNFinance, self).__init__()
@@ -306,29 +329,6 @@ class STCNFinance(STCNBase):
         return items
 
 
-class STCNXWPL(STCNBase):
-    def __init__(self):
-        super(STCNXWPL, self).__init__()
-        self.base_url = 'https://news.stcn.com/pl/'
-        self.first_url = 'https://news.stcn.com/pl/index.html'
-        self.format_url = "https://news.stcn.com/pl/index_{}.html"
-        self.name = '评论'
-        self.list_parse_func = utils.parse_list_items_1
-
-
 if __name__ == "__main__":
-    # STCNKuaixun().start()
-
-    # STCNYaoWen().start()
-
-    # STCNCompany().start()
-
-    # STCNRoll().start()
-
-    # STCNSDBD().start()
-
     # STCNFinance().start()
-
-    # STCNXWPL().start()
-
     pass
