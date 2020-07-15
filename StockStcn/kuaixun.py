@@ -151,6 +151,43 @@ class STCNSDBD(STCNBase):
         self.list_parse_func = utils.parse_list_items_1
 
 
+class STCNFinance(STCNBase):
+    def __init__(self):
+        super(STCNFinance, self).__init__()
+        self.base_url = None
+        self.first_url = 'http://finance.stcn.com/index.html'
+        self.format_url = "http://finance.stcn.com/index_{}.html"
+        self.name = '机构'
+        self.list_parse_func = self.parse_list_items
+
+    @staticmethod
+    def parse_list_items(doc):
+        '''
+            <li>
+            <a href="https://news.stcn.com/news/202007/t20200715_2135183.html" class="a1"></a>
+            <a href="https://news.stcn.com/news/202007/t20200715_2135183.html" title="可转债新券持续受捧 7月以来打新户数增百万" target="_blank">可转债新券持续受捧 7月以来打新户数增百万</a>
+            <span>
+            2020-07-15
+            <i>09:06</i>
+            </span>
+            </li>
+        '''
+        items = []
+        columns = doc.xpath("//ul[@id='news_list2']/li")
+        for column in columns:
+            title = column.xpath("./a/@title")[0]
+            link = column.xpath("./a/@href")[0]
+            pub_date = column.xpath("./span")[0].text_content().strip()[:10]
+            pub_time = column.xpath(".//i")[0].text_content()
+            pub_date = '{} {}'.format(pub_date, pub_time)
+            item = dict()
+            item['title'] = title
+            item['link'] = link
+            item['pub_date'] = pub_date
+            items.append(item)
+        return items
+
+
 if __name__ == "__main__":
     # STCNKuaixun().start()
 
@@ -166,5 +203,7 @@ if __name__ == "__main__":
 
     # STCNRoll().start()
 
-    STCNSDBD().start()
+    # STCNSDBD().start()
+
+    STCNFinance().start()
 
