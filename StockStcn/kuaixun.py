@@ -122,8 +122,52 @@ if __name__ == "__main__":
 
     # STCNSS().start()
 
-    CJCNSS().start()
+    # CJCNSS().start()
 
+    pass
+
+
+class STCNColumn(STCNBase):
+    def __init__(self):
+        super(STCNColumn, self).__init__()
+        self.base_url = "http://space.stcn.com/tg"
+        self.first_url = 'http://space.stcn.com/tg/index.html'
+        self.format_url = 'http://space.stcn.com/tg/index_{}.html'
+        self.name = '专栏'
+
+    def parse_list_body(self, body):
+        doc = html.fromstring(body)
+        items = []
+        columns = doc.xpath('//div[@id="news_list2"]/dl[@class="wapdl"]')
+        for column in columns:
+            '''
+<dl class="wapdl">
+    <dt><img src="https://space.stcn.com/tg/202007/W020200713322340541875.png"></dt>
+    <dd class="tit"><a href="https://space.stcn.com/tg/202007/t20200713_2126950.html">球鞋垂直电商兴起折射我国消费升级趋势</a></dd>
+    <dd class="exp">盘和林<span>07-13 08:57</span></dd>
+</dl>
+            '''
+            title = column.xpath('./dd[@class="tit"]/a')[0].text_content()
+            link = column.xpath('./dd[@class="tit"]/a/@href')[0]
+            pub_date = column.xpath('./dd[@class="exp"]/span')[0].text_content()
+            pub_date = self._process_pub_dt(pub_date)
+
+            item = dict()
+            item['title'] = title
+            item['link'] = link
+            item['pub_date'] = pub_date
+            detail_body = self.get(link)
+            if detail_body:
+                article = self.parse_detail(detail_body)
+                if article:
+                    item['article'] = self._process_content(article)
+                    print(item)
+                    items.append(item)
+        return items
+
+
+if __name__ == "__main__":
+    STCNColumn().start()
     pass
 
 
@@ -165,45 +209,6 @@ class STCNCompany(STCNBase):
         if self.add_article(first):
             columns.append(first)
         return columns
-
-
-class STCNColumn(STCNBase):
-    def __init__(self):
-        super(STCNColumn, self).__init__()
-        self.base_url = "http://space.stcn.com/tg"
-        self.first_url = 'http://space.stcn.com/tg/index.html'
-        self.format_url = 'http://space.stcn.com/tg/index_{}.html'
-        self.name = '专栏'
-
-    def parse_list_body(self, body):
-        doc = html.fromstring(body)
-        items = []
-        columns = doc.xpath('//div[@id="news_list2"]/dl[@class="wapdl"]')
-        for column in columns:
-            '''
-<dl class="wapdl">
-    <dt><img src="https://space.stcn.com/tg/202007/W020200713322340541875.png"></dt>
-    <dd class="tit"><a href="https://space.stcn.com/tg/202007/t20200713_2126950.html">球鞋垂直电商兴起折射我国消费升级趋势</a></dd>
-    <dd class="exp">盘和林<span>07-13 08:57</span></dd>
-</dl>
-            '''
-            title = column.xpath('./dd[@class="tit"]/a')[0].text_content()
-            link = column.xpath('./dd[@class="tit"]/a/@href')[0]
-            pub_date = column.xpath('./dd[@class="exp"]/span')[0].text_content()
-            pub_date = self._process_pub_dt(pub_date)
-
-            item = dict()
-            item['title'] = title
-            item['link'] = link
-            item['pub_date'] = pub_date
-            detail_body = self.get(link)
-            if detail_body:
-                article = self.parse_detail(detail_body)
-                if article:
-                    item['article'] = self._process_content(article)
-                    print(item)
-                    items.append(item)
-        return items
 
 
 class STCNMarket(STCNBase):
@@ -307,8 +312,6 @@ if __name__ == "__main__":
     # STCNYaoWen().start()
 
     # STCNCompany().start()
-
-    # STCNColumn().start()
 
     # STCNMarket().start()
 
