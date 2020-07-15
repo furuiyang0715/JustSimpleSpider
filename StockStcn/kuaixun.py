@@ -88,12 +88,41 @@ class STCNSS(STCNBase):
         return items
 
 
+class CJCNSS(STCNBase):
+    def __init__(self):
+        super(CJCNSS, self).__init__()
+        self.base_url = 'https://kuaixun.stcn.com/cj/'
+        self.first_url = 'https://kuaixun.stcn.com/cj/index.html'
+        self.format_url = 'https://kuaixun.stcn.com/cj/index_{}.html'
+        self.name = '财经'
+        self.list_parse_func = self.parse_list_items
+
+    @staticmethod
+    def parse_list_items(doc):
+        items = []
+        columns = doc.xpath("//ul[@id='news_list2']/li")
+        for column in columns:
+            title = column.xpath("./a/@title")[0]
+            link = column.xpath("./a/@href")[0]
+            pub_date = column.xpath("./span")[0].text_content().strip()[:10]
+            pub_time = column.xpath(".//i")[0].text_content()
+            pub_date = '{} {}'.format(pub_date, pub_time)
+            item = dict()
+            item['title'] = title
+            item['link'] = link
+            item['pub_date'] = pub_date
+            items.append(item)
+        return items
+
+
 if __name__ == "__main__":
     # STCNEgs().start()
 
     # STCNYanBao().start()
 
-    STCNSS().start()
+    # STCNSS().start()
+
+    CJCNSS().start()
 
     pass
 
