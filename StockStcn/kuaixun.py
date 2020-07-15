@@ -14,6 +14,37 @@ class STCNKuaixun(STCNBase):
         self.list_parse_func = utils.parse_list_items_2
 
 
+class STCNEgs(STCNBase):
+    def __init__(self):
+        super(STCNEgs, self).__init__()
+        self.base_url = 'https://kuaixun.stcn.com/egs/'
+        self.first_url = 'https://kuaixun.stcn.com/egs/index.html'
+        self.format_url = 'https://kuaixun.stcn.com/egs/index_{}.html'
+        self.name = 'e公司'
+        self.list_parse_func = self.parse_list_items
+
+    @staticmethod
+    def parse_list_items(doc):
+        items = []
+        columns = doc.xpath("//ul[@id='news_list2']/li")
+        for column in columns:
+            title = column.xpath("./a/@title")[0]
+            link = column.xpath("./a/@href")[0]
+            pub_date = column.xpath("./span")[0].text_content().strip()[:10]
+            pub_time = column.xpath(".//i")[0].text_content()
+            pub_date = '{} {}'.format(pub_date, pub_time)
+            item = dict()
+            item['title'] = title
+            item['link'] = link
+            item['pub_date'] = pub_date
+            items.append(item)
+        return items
+
+
+if __name__ == "__main__":
+    STCNEgs().start()
+
+
 class STCNYaoWen(STCNBase):
     def __init__(self):
         super(STCNYaoWen, self).__init__()
@@ -217,4 +248,6 @@ if __name__ == "__main__":
 
     # STCNFinance().start()
 
-    STCNXWPL().start()
+    # STCNXWPL().start()
+
+    pass
