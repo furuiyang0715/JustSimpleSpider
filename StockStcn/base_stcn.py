@@ -109,6 +109,7 @@ class STCNBase(SpiderBase):
             else:
                 list_url = self.format_url.format(page)
 
+            print(list_url)
             list_page = self.get(list_url)
             if list_page:
                 items = self.parse_list_body(list_page)

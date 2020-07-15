@@ -41,8 +41,61 @@ class STCNEgs(STCNBase):
         return items
 
 
+class STCNYanBao(STCNBase):
+    def __init__(self):
+        super(STCNYanBao, self).__init__()
+        self.base_url = 'https://kuaixun.stcn.com/yb/'
+        self.first_url = 'https://kuaixun.stcn.com/yb/index.html'
+        self.format_url = "https://kuaixun.stcn.com/yb/index_{}.html"
+        self.name = '研报'
+        self.list_parse_func = utils.parse_list_items_3
+
+
+class STCNSS(STCNBase):
+    def __init__(self):
+        super(STCNSS, self).__init__()
+        self.base_url = 'https://kuaixun.stcn.com/ss/'
+        self.first_url = 'https://kuaixun.stcn.com/ss/index.html'
+        self.format_url = 'https://kuaixun.stcn.com/ss/index_{}.html'
+        self.name = '时事'
+        self.list_parse_func = self.parse_list_items
+
+    @staticmethod
+    def parse_list_items(doc):
+        '''
+<li>
+        <a href="./202007/t20200715_2135227.html" class="a1"></a>
+        <a href="./202007/t20200715_2135227.html" title="美国政府同意撤销留学生签证新规" target="_blank">美国政府同意撤销留学生签证新规</a>
+        <span>
+        2020-07-15
+        <i>09:26</i>
+        </span>
+</li>
+        '''
+        items = []
+        columns = doc.xpath("//ul[@id='news_list2']/li")
+        for column in columns:
+            title = column.xpath("./a/@title")[0]
+            link = column.xpath("./a/@href")[0]
+            pub_date = column.xpath("./span")[0].text_content().strip()[:10]
+            pub_time = column.xpath(".//i")[0].text_content()
+            pub_date = '{} {}'.format(pub_date, pub_time)
+            item = dict()
+            item['title'] = title
+            item['link'] = link
+            item['pub_date'] = pub_date
+            items.append(item)
+        return items
+
+
 if __name__ == "__main__":
-    STCNEgs().start()
+    # STCNEgs().start()
+
+    # STCNYanBao().start()
+
+    STCNSS().start()
+
+    pass
 
 
 class STCNYaoWen(STCNBase):
@@ -132,16 +185,6 @@ class STCNMarket(STCNBase):
         self.format_url = 'http://stock.stcn.com/index_{}.html'
         self.name = '股市'
         self.list_parse_func = utils.parse_list_items_1
-
-
-class STCNYanBao(STCNBase):
-    def __init__(self):
-        super(STCNYanBao, self).__init__()
-        self.base_url = 'https://kuaixun.stcn.com/yb/'
-        self.first_url = 'https://kuaixun.stcn.com/yb/index.html'
-        self.format_url = "https://kuaixun.stcn.com/yb/index_{}.html"
-        self.name = '研报'
-        self.list_parse_func = utils.parse_list_items_3
 
 
 class STCNRoll(STCNBase):
@@ -239,8 +282,6 @@ if __name__ == "__main__":
     # STCNColumn().start()
 
     # STCNMarket().start()
-
-    # STCNYanBao().start()
 
     # STCNRoll().start()
 
