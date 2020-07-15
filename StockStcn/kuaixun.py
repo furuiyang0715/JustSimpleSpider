@@ -116,6 +116,8 @@ class CJCNSS(STCNBase):
 
 
 if __name__ == "__main__":
+    # STCNKuaixun().start()
+
     # STCNEgs().start()
 
     # STCNYanBao().start()
@@ -362,6 +364,41 @@ class STCNDJData(STCNBase):
 
 
 if __name__ == "__main__":
-    STCNDJData().start()
+    # STCNDJData().start()
 
     pass
+
+
+class STCNSchedule(object):
+    class_lst = [
+        STCNKuaixun,
+        STCNEgs,
+        STCNYanBao,
+        STCNSS,
+        CJCNSS,
+        STCNColumn,
+        STCNMarket,
+        STCNCompany,
+        STCNYaoWen,
+        STCNRoll,
+        STCNSDBD,
+        STCNXWPL,
+        STCNFinance,
+        STCNDJData,
+    ]
+
+    table_name = "stcn_info"
+    dt_benchmark = 'pub_date'
+
+    def ins_start(self, instance):
+        instance.start()
+
+    def start(self):
+        for cls in self.class_lst:
+            ins = cls()
+            logger.info(f"{ins.name}")
+            ins.start()
+
+
+if __name__ == "__main__":
+    STCNSchedule().start()
