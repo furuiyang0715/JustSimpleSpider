@@ -207,7 +207,7 @@ class STCNCompany(STCNBase):
 
 
 if __name__ == "__main__":
-    STCNCompany().start()
+    # STCNCompany().start()
     pass
 
 
@@ -331,4 +331,37 @@ class STCNFinance(STCNBase):
 
 if __name__ == "__main__":
     # STCNFinance().start()
+    pass
+
+
+class STCNDJData(STCNBase):
+    def __init__(self):
+        super(STCNDJData, self).__init__()
+        self.base_url = 'https://data.stcn.com/djsj/'
+        self.first_url = 'https://data.stcn.com/djsj/index.html'
+        self.format_url = 'https://data.stcn.com/djsj/index_{}.html'
+        self.name = '独家数据'
+        self.list_parse_func = self.parse_list_items
+
+    @staticmethod
+    def parse_list_items(doc):
+        items = []
+        columns = doc.xpath("//ul[@id='news_list2']/li")
+        for column in columns:
+            title = column.xpath("./a/@title")[0]
+            link = column.xpath("./a/@href")[0]
+            pub_date = column.xpath("./span")[0].text_content().strip()[:10]
+            pub_time = column.xpath(".//i")[0].text_content()
+            pub_date = '{} {}'.format(pub_date, pub_time)
+            item = dict()
+            item['title'] = title
+            item['link'] = link
+            item['pub_date'] = pub_date
+            items.append(item)
+        return items
+
+
+if __name__ == "__main__":
+    STCNDJData().start()
+
     pass
