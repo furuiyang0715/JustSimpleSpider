@@ -129,6 +129,7 @@ class ClsDetail(SpiderBase):
 
             if "发布广告和不和谐的评论都将会被删除" in content:
                 content = self.parse_detail(page)
+            content = self._process_content(content)
 
             if link and title and _pub_date and content:
                 item['link'] = link
