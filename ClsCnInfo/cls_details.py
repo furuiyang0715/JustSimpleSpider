@@ -1,8 +1,10 @@
 import datetime
+import sys
 import time
 
 import requests
 from gne import GeneralNewsExtractor
+from lxml import html
 from retrying import retry
 
 from base import SpiderBase, logger
@@ -82,16 +84,43 @@ class ClsDetail(SpiderBase):
         self.spider_client.insert(create_sql)
         self.spider_client.end()
 
+    def make_start_num(self):
+        # '''
+        # <div class="o-h f-s-15 b-c-e6e7ea home-telegraph-item">
+        #     <a class=" c-222 line2" target="_blank" href="/detail/537049">
+        #         <span class="m-r-5">09:52</span>【丰原药业：参股公司有NMN相关产品的研发 目前对本公司业绩没有影响】
+        #     </a>
+        # </div>
+        #
+        # '''
+        # page = self.get("https://www.cls.cn/")
+        # if page:
+        #     doc = html.fromstring(page)
+        #     print(page)
+        #     first = doc.xpath(".//div[contains(@class, 'home-telegraph-item')]")
+        #     print(first)
+
+        sql = 'select link from cls_depth_theme where CREATETIMEJZ = (select max(CREATETIMEJZ) from cls_depth_theme) limit 1;'
+        self._spider_init()
+        link = self.spider_client.select_one(sql).get("link")
+        start_num = int(link.split("/")[-1])
+        return start_num
+
     def start(self):
+        start_num = self.make_start_num()
+        print(start_num)
+
         self._create_table()
 
         items = list()
-        for num in range(536332-20, 536332):
+        for num in range(start_num + 1, start_num + 1000):
             item = dict()
             link = self.base_url.format(num)
             page = self.get(link)
-            res = self.extract_content(page)
+            if not page:
+                continue
 
+            res = self.extract_content(page)
             pub_date = res.get("publish_time")
             _pub_date = None
             try:
