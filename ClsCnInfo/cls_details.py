@@ -45,25 +45,28 @@ class ClsDetail(SpiderBase):
         else:
             return result
 
-    # def parse_detail(self, body):
-    #     doc = html.fromstring(body)
-    #     try:
-    #         title = doc.xpath(".//div[contains(@class, 'detail-header') or contains(@class, 'detail-banner-title')]")[0].text_content()
-    #     except:
-    #         title = None
-    #
-    #     try:
-    #         content = doc.xpath(".//div[contains(@class, 'detail-telegraph-content') or contains(@class, 'detail-content')]")[0].text_content()
-    #     except:
-    #         content = None
-    #
-    #     try:
-    #         pub_date = doc.xpath(".//div[contains(@class, 'detail-time')]/span")[0].text_content()
-    #     except:
-    #         pub_date = None
-    #     print(title)
-    #     print(content)
-    #     print(pub_date)
+    def parse_detail(self, body):
+        doc = html.fromstring(body)
+        # try:
+        #     title = doc.xpath(".//div[contains(@class, 'detail-header') or contains(@class, 'detail-banner-title')]")[0].text_content()
+        # except:
+        #     title = None
+
+        try:
+            content = doc.xpath(".//div[contains(@class, 'detail-telegraph-content') or contains(@class, 'detail-content')]")[0].text_content()
+        except:
+            content = None
+
+        # try:
+        #     pub_date = doc.xpath(".//div[contains(@class, 'detail-time')]/span")[0].text_content()
+        # except:
+        #     pub_date = None
+
+        return {
+            # "title": title,
+            'article': content,
+            # 'pub_date': pub_date,
+                }
 
     def _create_table(self):
         create_sql = '''
@@ -85,21 +88,6 @@ class ClsDetail(SpiderBase):
         self.spider_client.end()
 
     def make_start_num(self):
-        # '''
-        # <div class="o-h f-s-15 b-c-e6e7ea home-telegraph-item">
-        #     <a class=" c-222 line2" target="_blank" href="/detail/537049">
-        #         <span class="m-r-5">09:52</span>【丰原药业：参股公司有NMN相关产品的研发 目前对本公司业绩没有影响】
-        #     </a>
-        # </div>
-        #
-        # '''
-        # page = self.get("https://www.cls.cn/")
-        # if page:
-        #     doc = html.fromstring(page)
-        #     print(page)
-        #     first = doc.xpath(".//div[contains(@class, 'home-telegraph-item')]")
-        #     print(first)
-
         sql = 'select link from cls_depth_theme where CREATETIMEJZ = (select max(CREATETIMEJZ) from cls_depth_theme) limit 1;'
         self._spider_init()
         link = self.spider_client.select_one(sql).get("link")
@@ -135,13 +123,21 @@ class ClsDetail(SpiderBase):
 
             title = res.get("title")
             content = res.get("content")
-            item['link'] = link
-            item['title'] = title
-            item['pub_date'] = _pub_date
-            item['article'] = content
-            print(item)
-            items.append(item)
-            time.sleep(1)
+
+            if len(title) > 50:
+                title = title[:50]
+
+            if "发布广告和不和谐的评论都将会被删除" in content:
+                content = self.parse_detail(page)
+
+            if link and title and _pub_date and content:
+                item['link'] = link
+                item['title'] = title
+                item['pub_date'] = _pub_date
+                item['article'] = content
+                print(item)
+                items.append(item)
+                time.sleep(1)
 
         logger.info(f"爬取数据{len(items)}")
         self._spider_init()
