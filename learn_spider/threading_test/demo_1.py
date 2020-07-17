@@ -1,57 +1,34 @@
-# import threading
-# import time
-#
-#
-# def task():
-#     print("我是需要使用多线程去完成的任务")
-#     time.sleep(30)
-#     print("线程任务结束")
-#
-#
-# def main():
-#     th1 = threading.Thread(target=task)
-#     th1.setDaemon(True)
-#     th1.start()
-#     print("Main over")
-# main()
+from queue import Queue
+import threading
 
 
-import queue
-import traceback
-
-q = queue.Queue(maxsize=100)
-
-
-def queue_test1():
-    for i in range(100):
+def add_to_queue():
+    for i in range(0, 100):
+        print("存入队列: {}".format(i))
         q.put(i)
 
-    item = {}
-    try:
-        q.put_nowait(item)  # 不等待直接放，队列满的时候会报错
-    except Exception:
-        print(traceback.print_exc())
+
+def get_from_queue():
+    # 但是在我们获取队列元素的时候, 我们并不知道队列中放了几个元素,
+    # 这个时候我们就会使用while的死循环来获取,知道取完为止
+    # for i in range(0, 100):
+    while True:
+        print("从队列中取出: {}".format(q.get()))
+        q.task_done()
 
 
-def queue_test2():
-    for i in range(100):
-        q.put(i)
+q = Queue()
+# 创建线程
+t1 = threading.Thread(target=add_to_queue)
+# 设置为守护线程
+t1.setDaemon(True)
 
-    item = "ruiyang"
-    q.put(item)  # 放入数据，队列满的时候阻塞等待
+t2 = threading.Thread(target=get_from_queue)
+t2.setDaemon(True)
 
+# 启动线程
+t2.start()
+t1.start()
 
-def queue_test3():
-    for i in range(100):
-        q.put(i)
-
-    for j in range(100):
-        print(q.get())
-        # q.task_done()
-
-    q.join()  # 队列中维持了一个计数，计数不为0时候让主线程阻塞等待，队列计数为0的时候才会继续往后执行
-    # put的时候计数+1，get不会-1，get需要和task_done 一起使用才会-1
-    print("*********** ")
-
-
-queue_test3()
+# 队列加入主线线程, 等待队列中任务完成为止
+q.join()
