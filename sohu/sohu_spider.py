@@ -10,6 +10,7 @@ from base import SpiderBase
 
 class SuhuFinance(SpiderBase):
     table_name = 'SohuFinance'
+    dt_benchmark = 'pub_date'
 
     def __init__(self):
         super(SuhuFinance, self).__init__()
@@ -90,6 +91,10 @@ secureScore=50\
             if ret:
                 content = self._process_content(ret[0].text_content())
                 item["article"] = content
+
+                if len(item['title']) > 60:
+                    item['title'] = item['title'][:60]
+
                 self.save_queue.put(item)
             self.detail_page_queue.task_done()
 

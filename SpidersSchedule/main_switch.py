@@ -12,6 +12,7 @@ cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
 
+from sohu.sohu_spider import SuhuFinance
 from QQStock.qq_stock import qqStock
 from StockStcn.kuaixun import STCNSchedule
 from CArticle.ca_main import CaSchedule
@@ -80,7 +81,7 @@ class MainSwith(SpiderBase):
         schedule.every().day.at(dt_str).do(task)
 
     def start_task(self, cls, dt_str, at_once=1):
-        # @catch_exceptions(cancel_on_failure=True)
+        @catch_exceptions(cancel_on_failure=True)
         def task():
             cls().start()
 
@@ -88,6 +89,19 @@ class MainSwith(SpiderBase):
         if at_once:    # 是否立即执行一遍
             task()
         schedule.every().day.at(dt_str).do(task)
+
+    def interval_start_task(self, cls, interval: tuple, at_once=1):
+        @catch_exceptions(cancel_on_failure=True)
+        def task():
+            cls().start()
+
+        self.tables.append((cls.table_name, cls.dt_benchmark))
+        if at_once:
+            task()
+        sche = schedule.every(interval[0])
+        assert interval[1] in ('seconds', 'minutes', 'seconds', 'days', 'weeks')
+        sche.unit = interval[1]
+        sche.do(task)
 
     def run(self):
         self.thread_task(TakungpaoSchedule, "00:00", 1)
@@ -112,8 +126,10 @@ class MainSwith(SpiderBase):
 
         self.thread_task(qqStock, '10:00', 1)
 
-        # self.thread_task(CaSchedule, '05:00', 1)    # 东财财富号：运行时间较长，新开线程去执行；需要代理
-        # self.thread_task(TgbSchedule, '16:00', 1)  # 淘股吧：运行时间较长，新开线程去处理; 需要代理
+        self.interval_start_task(SuhuFinance, (10, "minutes"), 1)
+
+        self.thread_task(CaSchedule, '05:00', 1)    # 东财财富号：运行时间较长，新开线程去执行；需要代理
+        self.thread_task(TgbSchedule, '16:00', 1)  # 淘股吧：运行时间较长，新开线程去处理; 需要代理
 
         self.ding_crawl_information()
         schedule.every().day.at("17:00").do(self.ding_crawl_information)
