@@ -103,6 +103,12 @@ secureScore=50\
                 self.save_num += 1
             self.save_queue.task_done()
 
+    def run_use_more_task(self, func, count=1):
+        for i in range(0, count):
+            t = threading.Thread(target=func)
+            t.setDaemon(True)
+            t.start()
+
     def start(self):
         self._spider_init()
 
@@ -114,20 +120,11 @@ secureScore=50\
             th = threading.Thread(target=self.get_list_items, args=(list_url, ))
             th.start()
 
-        for i in range(3):
-            th = threading.Thread(target=self.get_detail_page)
-            th.setDaemon(True)
-            th.start()
+        self.run_use_more_task(self.get_detail_page, 3)
 
-        for i in range(3):
-            th = threading.Thread(target=self.parse_detail_page)
-            th.setDaemon(True)
-            th.start()
+        self.run_use_more_task(self.parse_detail_page, 3)
 
-        for i in range(1):
-            th = threading.Thread(target=self.save_items)
-            th.setDaemon(True)
-            th.start()
+        self.run_use_more_task(self.save_items, 1)
 
         self.list_item_queue.join()
         self.detail_page_queue.join()
