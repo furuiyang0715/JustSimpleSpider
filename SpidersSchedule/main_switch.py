@@ -12,6 +12,7 @@ cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
 
+from QQStock.qq_stock import qqStock
 from StockStcn.kuaixun import STCNSchedule
 from CArticle.ca_main import CaSchedule
 from Taoguba.tgb_main import TgbSchedule
@@ -109,8 +110,10 @@ class MainSwith(SpiderBase):
 
         self.thread_task(STCNSchedule, '09:00', 1)
 
-        self.thread_task(CaSchedule, '05:00', 1)    # 东财财富号：运行时间较长，新开线程去执行；需要代理
-        self.thread_task(TgbSchedule, '16:00', 1)  # 淘股吧：运行时间较长，新开线程去处理; 需要代理
+        self.thread_task(qqStock, '10:00', 1)
+
+        # self.thread_task(CaSchedule, '05:00', 1)    # 东财财富号：运行时间较长，新开线程去执行；需要代理
+        # self.thread_task(TgbSchedule, '16:00', 1)  # 淘股吧：运行时间较长，新开线程去处理; 需要代理
 
         self.ding_crawl_information()
         schedule.every().day.at("17:00").do(self.ding_crawl_information)

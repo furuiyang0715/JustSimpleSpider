@@ -2,17 +2,40 @@ import json
 
 from gne import GeneralNewsExtractor
 
-from base import SpiderBase
+from base import SpiderBase, logger
 
 
 class qqStock(SpiderBase):
+    table_name = "qq_Astock_news"
+    dt_benchmark = 'pub_date'
+
     def __init__(self):
         super(qqStock, self).__init__()
         self.extractor = GeneralNewsExtractor()
-        self.table_name = "qq_Astock_news"
         self.token = "8f6b50e1667f130c10f981309e1d8200"
         self.list_url = "https://pacaio.match.qq.com/irs/rcd?cid=52&token={}" \
                         "&ext=3911,3922,3923,3914,3913,3930,3915,3918,3908&callback=__jp1".format(self.token)
+        self.fields = []
+
+    def _create_table(self):
+        sql = '''
+         CREATE TABLE IF NOT EXISTS `{}` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `pub_date` datetime NOT NULL COMMENT '发布时间',
+          `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章标题',
+          `link` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章详情页链接',
+          `article` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '详情页内容',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `link` (`link`),
+          KEY `pub_date` (`pub_date`),
+          KEY `update_time` (`UPDATETIMEJZ`)
+        ) ENGINE=InnoDB AUTO_INCREMENT=64896 DEFAULT CHARSET=utf8mb4 COMMENT='腾讯财经[A股]'; 
+        '''.format(self.table_name)
+        self._spider_init()
+        self.spider_client.insert(sql)
+        self.spider_client.end()
 
     def _parse_article(self, vurl):
         detail_page = self._get(vurl)
@@ -44,7 +67,10 @@ class qqStock(SpiderBase):
             return specials, articles
 
     def start(self):
+        self._create_table()
+
         specials, articles = self._parse_list()
+        items = []
         for article in articles:
             item = {}
             vurl = article.get("vurl")
@@ -55,9 +81,16 @@ class qqStock(SpiderBase):
             if article:
                 item['article'] = article
                 print(item)
+                items.append(item)
 
-        print("开始处理专题页")
+        logger.info(f"网站爬取个数 {len(items)}")
+        self._spider_init()
+        ret = self._batch_save(self.spider_client, items, self.table_name, self.fields)
+        logger.info(f"入库个数 {ret}")
 
+        # print("开始处理专题页")
+        # print(specials)
+        #
         # for special in specials:
         #     special_id = special.get("app_id")
         #     special_url = "https://pacaio.match.qq.com/openapi/getQQNewsSpecialListItems?id={}&callback=getSpecialNews".format(special_id)
@@ -90,13 +123,7 @@ class qqStock(SpiderBase):
         #                     item['pub_date'] = pub_date
         #                     item['title'] = title
         #                     item['article'] = article
-        #                     # print(item)
-        #                     ret = self._save(item)
-        #                     if not ret:
-        #                         print("保存失败")
-        #                         self.error_detail.append(link)
-        #                 else:
-        #                     self.error_detail.append(link)
+        #                     print(">>>>>", item)
 
 
 if __name__ == "__main__":
