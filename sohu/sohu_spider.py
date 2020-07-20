@@ -5,9 +5,14 @@ from queue import Queue
 import requests
 from lxml import html
 
+from base import SpiderBase
 
-class SuhuFinance(object):
+
+class SuhuFinance(SpiderBase):
+    table_name = 'SohuFinance'
+
     def __init__(self):
+        super(SuhuFinance, self).__init__()
         self.format_url = 'https://v2.sohu.com/integration-api/mix/region/94?\
 secureScore=50\
 &page=%s\
@@ -22,9 +27,33 @@ secureScore=50\
             'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1',
             'cookie': 'SUV=2006120915066717; gidinf=x099980107ee11ac7185448570007cf53d61c5dff4ba; __gads=ID=9bb1261cd25d5ccb:T=1593754903:S=ALNI_MZtjTDJngTMkxi5M1Wu9GisGWKLMw; t=1594459538752; IPLOC=CN4400; _muid_=1595214233823230; MTV_SRC=10010001',
         }
+        self.name = '搜狐财经'
+        self.web_url = 'https://m.sohu.com/ch/15'
         self.list_item_queue = Queue()
         self.detail_page_queue = Queue()
         self.save_queue = Queue()
+        self.save_num = 0
+        self.fields = ['pub_date', 'title', 'link', 'article']
+
+    def _create_table(self):
+        sql = '''
+       CREATE TABLE  IF NOT EXISTS `{}` (
+         `id` int(11) NOT NULL AUTO_INCREMENT,
+         `pub_date` datetime NOT NULL COMMENT '发布时间',
+         `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章标题',
+         `link` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章详情页链接',
+         `article` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '详情页内容',
+         `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+         `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+         PRIMARY KEY (`id`),
+         UNIQUE KEY `link` (`link`),
+         KEY `pub_date` (`pub_date`),
+         KEY `update_time` (`UPDATETIMEJZ`)
+       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='{}'; 
+       '''.format(self.table_name, self.name)
+        self._spider_init()
+        self.spider_client.insert(sql)
+        self.spider_client.end()
 
     def get_list_items(self, url):
         resp = requests.get(url, headers=self.headers)
@@ -59,7 +88,7 @@ secureScore=50\
             doc = html.fromstring(detail_page)
             ret = doc.xpath(".//section[@id='articleContent']")
             if ret:
-                content = ret[0].text_content()
+                content = self._process_content(ret[0].text_content())
                 item["article"] = content
                 self.save_queue.put(item)
             self.detail_page_queue.task_done()
@@ -68,10 +97,17 @@ secureScore=50\
         while True:
             item = self.save_queue.get()
             item.pop("detail_page")
-            print(item)
+            ret = self._save(self.spider_client, item, self.table_name, self.fields)
+            print(ret, ">>> ", item)
+            if ret:
+                self.save_num += 1
             self.save_queue.task_done()
 
     def start(self):
+        self._spider_init()
+
+        self._create_table()
+
         for page in range(1, 4):
             list_url = self.format_url % page
             self.get_list_items(list_url)
@@ -88,7 +124,7 @@ secureScore=50\
             th.setDaemon(True)
             th.start()
 
-        for i in range(2):
+        for i in range(1):
             th = threading.Thread(target=self.save_items)
             th.setDaemon(True)
             th.start()
@@ -97,8 +133,9 @@ secureScore=50\
         self.detail_page_queue.join()
         self.save_queue.join()
 
+        print(f"入库数量: {self.save_num}")
+
 
 if __name__ == "__main__":
     suhu = SuhuFinance()
     suhu.start()
-
