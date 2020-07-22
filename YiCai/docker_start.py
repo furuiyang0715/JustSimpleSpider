@@ -58,7 +58,7 @@ def monite_docker_events():
     docker_events.close()
 
 
-def containers_test():
+def docker_containers_test():
     docker_client = docker.from_env()
     # 创建一个容器管理器对象
     docker_containers_col = docker_client.containers
@@ -78,43 +78,40 @@ def containers_test():
         registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/spi:v1 \
         python SpidersSchedule/main_switch.py 
     '''
-    docker_containers_col.run("registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/spi:v1",
-                              environment={"LOCAL": 1},
-                              name='spi_test',
-                              command='python SpidersSchedule/main_switch.py',
-                              detach=True,
-                              )
+    # ret = docker_containers_col.run(
+    #     "registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/spi:v1",
+    #     environment={"LOCAL": 1},
+    #     name='spi_test',
+    #     command='python SpidersSchedule/main_switch.py',
+    #     detach=True,
+    # )
+    # # 只能启动一次 无法重复启动
+    # print(ret)
+
+    one_container = docker_containers_col.get("e1a0c764a8")
+    # print(one_container)
+    # 针对单个容器的操作
+    one_container_attrs = one_container.attrs
+    # print(pprint.pformat(one_container_attrs))
+    its_image = one_container_attrs['Config']['Image']
+    # print(its_image)
+    # 查看容器的日志
+    one_container_logs = one_container.logs()
+    print(one_container_logs.decode())
+
+
+def docker_images_test():
+    docker_client = docker.from_env()
+    docker_images_col = docker_client.images
+    # print(docker_images_col)
+    # docker_images = docker_images_col.list(all=True)
+    docker_images = docker_images_col.list()
+    # print(len(docker_images))
+
+    pass
 
 
 # monite_docker_events()
 # create_docker_client()
-containers_test()
-sys.exit(0)
-
-docker_containers_col = docker_client.containers
-# print(docker_containers_col)
-
-docker_containers = docker_containers_col.list(all=True)
-# print(docker_containers)
-
-one_container = docker_containers_col.get("e1a0c764a8")
-# print(one_container)
-
-one_container_attrs = one_container.attrs
-# print(pprint.pformat(one_container_attrs))
-its_image = one_container_attrs['Config']['Image']
-# print(its_image)
-
-one_container_logs = one_container.logs()
-# print(one_container_logs.decode())
-
-# one_container.start()
-#
-# time.sleep(10)
-# one_container.stop()
-
-docker_images_col = docker_client.images
-# print(docker_images_col)
-# docker_images = docker_images_col.list(all=True)
-docker_images = docker_images_col.list()
-# print(len(docker_images))
+docker_containers_test()
+docker_images_test()
