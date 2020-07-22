@@ -19,10 +19,28 @@ def create_docker_client():
     docker_client = docker.DockerClient(base_url='unix://var/run/docker.sock')
     docker_version_info = docker_client.version()
     # 查看 docker 的版本信息
-    print(pprint.pformat(docker_version_info))
+    # print(pprint.pformat(docker_version_info))
     # 查看 docker 的内存占用信息
     docker_df_info = docker_client.df()
     # print(pprint.pformat(docker_df_info))
+    docker_info = docker_client.info()
+    # print(pprint.pformat(docker_info))
+    # 登录
+    '''
+    username (str) – The registry username
+    password (str) – The plaintext password
+    email (str) – The email for the registry account
+    registry (str) – URL to the registry. E.g. https://index.docker.io/v1/
+    reauth (bool) – Whether or not to refresh existing authentication on the Docker server.
+    dockercfg_path (str) – Use a custom path for the Docker config file (default $HOME/.docker/config.json if present, otherwise``$HOME/.dockercfg``)
+    '''
+    # login_info = {
+    #     "username": "",
+    #     "password": '',
+    #     "registry": 'registry.cn-shenzhen.aliyuncs.com',
+    # }
+    # login_resp = docker_client.login(**login_info)
+    # print(login_resp)   # {'IdentityToken': '', 'Status': 'Login Succeeded'}
 
 
 def monite_docker_events():
@@ -40,7 +58,8 @@ def monite_docker_events():
     docker_events.close()
 
 
-monite_docker_events()
+# monite_docker_events()
+create_docker_client()
 sys.exit(0)
 
 docker_containers_col = docker_client.containers
