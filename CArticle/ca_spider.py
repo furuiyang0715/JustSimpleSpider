@@ -124,8 +124,3 @@ class CArticleSpiser(SpiderBase):
         print(f'数据个数{len(items)}')
         ret = self._batch_save(self.spider_client, items, self.table_name, self.fields)
         print(f'入库个数{ret}')
-
-
-if __name__ == "__main__":
-    ca = CArticleSpiser(key='视源股份')
-    ca.start()

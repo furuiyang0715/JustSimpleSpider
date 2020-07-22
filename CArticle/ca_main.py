@@ -1,4 +1,10 @@
+import os
 import random
+import sys
+
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
 
 from CArticle.ca_spider import CArticleSpiser
 from base import SpiderBase, logger
@@ -52,9 +58,7 @@ class CaSchedule(SpiderBase):
             self.run(key)
 
 
-def task():
-    CaSchedule().run()
+if __name__ == "__main__":
+    CaSchedule().start()
 
-
-if __name__ == '__main__':
-    task()
+    pass
