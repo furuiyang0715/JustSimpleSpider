@@ -5,6 +5,7 @@
 
 
 '''
+import json
 import pprint
 import sys
 import threading
@@ -30,15 +31,16 @@ def monite_docker_events():
 
     def monitor():
         for event in docker_events:
-            print(event)
+            event_info = json.loads(event.decode())
+            print(pprint.pformat(event_info))
 
+    # 在其他线程中进行关闭
     threading.Thread(target=monitor).start()
     time.sleep(50)
     docker_events.close()
 
 
 monite_docker_events()
-
 sys.exit(0)
 
 docker_containers_col = docker_client.containers
