@@ -58,8 +58,25 @@ def monite_docker_events():
     docker_events.close()
 
 
+def containers_test():
+    docker_client = docker.from_env()
+    # 创建一个容器管理器对象
+    docker_containers_col = docker_client.containers
+    # 查看当前运行容器的列表
+    containers = docker_containers_col.list()
+    # 查看全部的容器列表
+    all_containers = docker_containers_col.list(all=True)
+    # print(all_containers)
+    # 使用容器管理器运行起一个容器
+    ret = docker_containers_col.run("c39ad7322e", 'python SpidersSchedule/main_switch.py')
+    print(ret)
+
+    pass
+
+
 # monite_docker_events()
-create_docker_client()
+# create_docker_client()
+containers_test()
 sys.exit(0)
 
 docker_containers_col = docker_client.containers
