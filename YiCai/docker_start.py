@@ -67,11 +67,23 @@ def containers_test():
     # 查看全部的容器列表
     all_containers = docker_containers_col.list(all=True)
     # print(all_containers)
-    # 使用容器管理器运行起一个容器
-    ret = docker_containers_col.run("c39ad7322e", 'python SpidersSchedule/main_switch.py')
-    print(ret)
-
-    pass
+    # 使用容器管理器运行起一个镜像 最简单的阻塞模式的
+    # docker_containers_col.run("c39ad7322e", 'python SpidersSchedule/main_switch.py')
+    # 对于运行起一个镜像添加更多的参数
+    # 以守护进程的方式执行
+    '''
+    sudo docker run --log-opt max-size=10m --log-opt max-file=3 -itd \
+        --env LOCAL=0 \
+        --name spi_all \
+        registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/spi:v1 \
+        python SpidersSchedule/main_switch.py 
+    '''
+    docker_containers_col.run("registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/spi:v1",
+                              environment={"LOCAL": 1},
+                              name='spi_test',
+                              command='python SpidersSchedule/main_switch.py',
+                              detach=True,
+                              )
 
 
 # monite_docker_events()
