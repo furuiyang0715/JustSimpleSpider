@@ -104,27 +104,27 @@ class MainSwith(SpiderBase):
         sche.do(task)
 
     def run(self):
-        self.thread_task(TakungpaoSchedule, "00:00", 1)
+        self.start_task(TakungpaoSchedule, "00:00", 1)
 
-        self.thread_task(JFSchedule, '01:00', 1)
+        self.start_task(JFSchedule, '01:00', 1)
 
-        self.thread_task(JuChaoInfo, '02:00', 1)
+        self.start_task(JuChaoInfo, '02:00', 1)
 
-        self.thread_task(NetEaseMoney, '03:00', 1)
+        self.start_task(NetEaseMoney, '03:00', 1)
 
-        self.thread_task(CNSchedule, '04:00', 1)
+        self.start_task(CNSchedule, '04:00', 1)
 
-        self.thread_task(Telegraphs, '04:00', 1)
+        self.start_task(Telegraphs, '04:00', 1)
 
-        self.thread_task(CalendarNews, '06:00', 1)
+        self.start_task(CalendarNews, '06:00', 1)
 
-        self.thread_task(ChinaBankSchedule, '07:00', 1)
+        self.start_task(ChinaBankSchedule, '07:00', 1)
 
-        self.thread_task(GovStatsSchedule, '08:00', 1)
+        self.start_task(GovStatsSchedule, '08:00', 1)
 
-        self.thread_task(STCNSchedule, '09:00', 1)
+        self.start_task(STCNSchedule, '09:00', 1)
 
-        self.thread_task(qqStock, '10:00', 1)
+        self.start_task(qqStock, '10:00', 1)
 
         self.interval_start_task(SuhuFinance, (10, "minutes"), 1)
 
