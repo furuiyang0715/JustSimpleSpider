@@ -89,7 +89,7 @@ def docker_containers_test():
     # # 只能启动一次 无法重复启动
     # print(ret)
 
-    one_container = docker_containers_col.get("e1a0c764a8")
+    one_container = docker_containers_col.get("test_spi")
     # print(one_container)
     # 针对单个容器的操作
     one_container_attrs = one_container.attrs
@@ -97,8 +97,24 @@ def docker_containers_test():
     its_image = one_container_attrs['Config']['Image']
     # print(its_image)
     # 查看容器的日志
-    one_container_logs = one_container.logs()
-    print(one_container_logs.decode())
+    # one_container_logs = one_container.logs()
+    # print(one_container_logs.decode())
+    # 查看容器的 id
+    print(one_container.id)
+    # 容器的镜像
+    print(one_container.image)
+    print(one_container.labels)
+    # 容器的名称
+    print(one_container.name)
+    print(one_container.short_id)
+    print(one_container.status)
+
+    print(one_container.start())
+    print(one_container.top())
+    print(one_container.stop())
+    print(one_container.restart())
+
+    # print(one_container.rename("test_spi"))
 
 
 def docker_prune_test():
@@ -121,6 +137,6 @@ def docker_images_test():
 
 # monite_docker_events()
 # create_docker_client()
-# docker_containers_test()
-docker_images_test()
+docker_containers_test()
+# docker_images_test()
 # docker_prune_test()
