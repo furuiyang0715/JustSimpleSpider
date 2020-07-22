@@ -67,6 +67,7 @@ def docker_containers_test():
     # 查看全部的容器列表
     all_containers = docker_containers_col.list(all=True)
     # print(all_containers)
+
     # 使用容器管理器运行起一个镜像 最简单的阻塞模式的
     # docker_containers_col.run("c39ad7322e", 'python SpidersSchedule/main_switch.py')
     # 对于运行起一个镜像添加更多的参数
@@ -100,6 +101,13 @@ def docker_containers_test():
     print(one_container_logs.decode())
 
 
+def docker_prune_test():
+    # 删除不再运行的容器
+    docker_client = docker.from_env()
+    coll = docker_client.containers
+    coll.prune()
+
+
 def docker_images_test():
     docker_client = docker.from_env()
     docker_images_col = docker_client.images
@@ -113,5 +121,6 @@ def docker_images_test():
 
 # monite_docker_events()
 # create_docker_client()
-docker_containers_test()
+# docker_containers_test()
 docker_images_test()
+# docker_prune_test()
