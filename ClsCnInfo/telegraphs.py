@@ -1,8 +1,14 @@
 import datetime
 import json
+import os
+import sys
 import time
 
 import requests
+
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
 
 from base import SpiderBase
 
@@ -69,7 +75,7 @@ app=CailianpressWeb\
         print(f"first 抓取数量{len(items)};入库数量{ret}")
 
         # 根据需要多久之前的数据,确定刷新的截止时间 cutoff_dt
-        cutoff_dt = int((datetime.datetime.now() - datetime.timedelta(days=1)).timestamp())
+        cutoff_dt = int((datetime.datetime.now() - datetime.timedelta(days=10)).timestamp())
         while last_dt > cutoff_dt:
             next_url = self.url_format.format(last_dt, last_dt)
             res = self.refresh(next_url)
