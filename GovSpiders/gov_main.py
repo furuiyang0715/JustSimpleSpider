@@ -1,3 +1,10 @@
+import os
+import sys
+
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
+
 from GovSpiders.china_bank import ChinaBankShuJuJieDu, ChinaBankXinWenFaBu
 from GovSpiders.gov_stats_sjjd import GovStatsShuJuJieDu
 from GovSpiders.gov_stats_tjdt import GovStatsTongJiDongTai

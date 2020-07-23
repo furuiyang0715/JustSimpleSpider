@@ -50,8 +50,8 @@ def main():
     # docker_run_spider("calander_news", 'CalendarNewsRelease/news_release.py')
     # docker_run_spider("dongc", 'CArticle/ca_main.py')
     # docker_run_spider("cls", 'ClsCnInfo/telegraphs.py')
-    docker_run_spider("cls2", 'ClsCnInfo/cls_details.py')
-
+    # docker_run_spider("cls2", 'ClsCnInfo/cls_details.py')
+    docker_run_spider("gov", 'GovSpiders/gov_main.py')
 
     pass
 
