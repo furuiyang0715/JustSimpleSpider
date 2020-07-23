@@ -7,11 +7,13 @@ from base import SpiderBase
 
 
 class YiCai(SpiderBase):
+    table_name = 'NewsYicai'
+    dt_benchmark = 'pub_date'
+
     def __init__(self):
         super(YiCai, self).__init__()
         self.index_url = 'https://www.yicai.com/'
         self.url = 'https://www.yicai.com/api/ajax/getlatest?page={}&pagesize=25'
-        self.table_name = 'NewsYicai'
         self.name = '第一财经新闻'
         self.fields = ['pub_date', 'author', 'source', 'title', 'link', 'article']
 

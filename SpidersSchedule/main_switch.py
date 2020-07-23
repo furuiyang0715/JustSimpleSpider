@@ -12,6 +12,7 @@ cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
 
+from YiCai.yicai_spider import YiCai
 from sohu.sohu_spider import SuhuFinance
 from QQStock.qq_stock import qqStock
 from StockStcn.kuaixun import STCNSchedule
@@ -104,35 +105,40 @@ class MainSwith(SpiderBase):
         sche.do(task)
 
     def run(self):
-        self.start_task(TakungpaoSchedule, "00:00", 1)
+        self.start_task(TakungpaoSchedule, "00:00", 0)
 
-        self.start_task(JFSchedule, '01:00', 1)
+        self.start_task(JFSchedule, '01:00', 0)
 
-        self.start_task(JuChaoInfo, '02:00', 1)
+        self.start_task(JuChaoInfo, '02:00', 0)
 
-        self.start_task(NetEaseMoney, '03:00', 1)
+        self.start_task(NetEaseMoney, '03:00', 0)
 
-        self.start_task(CNSchedule, '04:00', 1)
+        self.start_task(CNSchedule, '04:00', 0)
 
-        self.start_task(Telegraphs, '04:00', 1)
+        self.start_task(Telegraphs, '04:00', 0)
 
-        self.start_task(CalendarNews, '06:00', 1)
+        self.start_task(CalendarNews, '06:00', 0)
 
-        self.start_task(ChinaBankSchedule, '07:00', 1)
+        self.start_task(ChinaBankSchedule, '07:00', 0)
 
-        self.start_task(GovStatsSchedule, '08:00', 1)
+        self.start_task(GovStatsSchedule, '08:00', 0)
 
-        self.start_task(STCNSchedule, '09:00', 1)
+        self.start_task(STCNSchedule, '09:00', 0)
 
-        self.start_task(qqStock, '10:00', 1)
+        self.start_task(qqStock, '10:00', 0)
 
-        self.interval_start_task(SuhuFinance, (10, "minutes"), 1)
+        self.interval_start_task(SuhuFinance, (10, "minutes"), 0)
 
-        self.thread_task(CaSchedule, '05:00', 1)    # 东财财富号：运行时间较长，新开线程去执行；需要代理
-        self.thread_task(TgbSchedule, '16:00', 1)  # 淘股吧：运行时间较长，新开线程去处理; 需要代理
+        self.interval_start_task(YiCai, (10, "minutes"), 1)
+
+        # self.thread_task(CaSchedule, '05:00', 1)    # 东财财富号：运行时间较长，新开线程去执行；需要代理
+        # self.thread_task(TgbSchedule, '16:00', 1)  # 淘股吧：运行时间较长，新开线程去处理; 需要代理
 
         self.ding_crawl_information()
+
         schedule.every().day.at("17:00").do(self.ding_crawl_information)
+
+        print("* " * 100)
 
         while True:
             logger.info("当前调度系统中的任务列表是:\n{}".format(pprint.pformat(schedule.jobs)))
