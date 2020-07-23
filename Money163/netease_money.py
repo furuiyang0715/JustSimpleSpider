@@ -92,3 +92,7 @@ class NetEaseMoney(SpiderBase):
 
         if items:
             self._batch_save(self.spider_client, items, self.table_name, self.fields)
+
+
+if __name__ == "__main__":
+    NetEaseMoney().start()

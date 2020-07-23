@@ -150,3 +150,7 @@ class JuChaoInfo(SpiderBase):
             print(len(items))
             save_num = self._batch_save(self.spider_client, items, self.table_name, self.fields)
             print(save_num)
+
+
+if __name__ == "__main__":
+    JuChaoInfo().start()
