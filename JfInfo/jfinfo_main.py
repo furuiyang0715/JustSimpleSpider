@@ -1,4 +1,11 @@
+import os
+import sys
+
 import threadpool
+
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
 
 from JfInfo.reference import HKInfo, Reference, Research, TZZJY
 from base import logger
