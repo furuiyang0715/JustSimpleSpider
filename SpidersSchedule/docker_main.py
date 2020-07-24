@@ -59,6 +59,35 @@ class DockerSwith(SpiderBase):
         log_info = spider_container.logs(tail=lines).decode()
         return log_info
 
+    def clear_all(self):
+        # TODO 配置化
+        container_names = [
+            "calendar_news",
+            "dongc",
+            "cls",
+            "cls2",
+            "gov",
+            "juf",
+            "juc",
+            "m163",
+            "qqf",
+            "shcn",
+            "sohu",
+            "stcn",
+            "tkg",
+            "tgb",
+            "yicai",
+
+        ]
+        for name in container_names:
+            try:
+                spider_container = self.docker_containers_col.get(name)
+            except:
+                spider_container = None
+
+            if spider_container:
+                spider_container.remove(force=True)
+
     def docker_run_spider(self, spider_name, spider_file_path, restart=False):
         try:
             spider_container = self.docker_containers_col.get(spider_name)
@@ -124,9 +153,11 @@ class DockerSwith(SpiderBase):
         sche.do(task)
 
     def run(self):   # TODO 改为读取更新配置的 或许可以配合 watch dog 主动构建？
+        self.clear_all()
+
         # 交易所日历公告爬虫 / 每天爬取 1 次
-        self.docker_run_spider("calander_news", 'CalendarNewsRelease/news_release.py')
-        self.start_task("calander_news", 'CalendarNewsRelease/news_release.py', 'calendar_news', 'PubDate', '01:00')
+        self.docker_run_spider("calendar_news", 'CalendarNewsRelease/news_release.py')
+        self.start_task("calendar_news", 'CalendarNewsRelease/news_release.py', 'calendar_news', 'PubDate', '01:00')
 
         # 东财财富号 / 每天爬取 1 次
         # TODO 暂定 运行完一次时间较长 升频时添加一个制动混合启动
