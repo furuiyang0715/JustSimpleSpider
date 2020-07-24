@@ -110,6 +110,7 @@ class CJCNSS(STCNBase):
         items = []
         columns = doc.xpath("//ul[@id='news_list2']/li")
         for column in columns:
+            # TODO 控制标题的长度
             title = column.xpath("./a/@title")[0]
             link = column.xpath("./a/@href")[0]
             pub_date = column.xpath("./span")[0].text_content().strip()[:10]

@@ -57,3 +57,8 @@ class TakungpaoSchedule(object):
             ins = cls()
             logger.info(f"大公报 --> {ins.name}")
             ins.start()
+
+
+if __name__ == "__main__":
+
+    TakungpaoSchedule().start()

@@ -57,10 +57,11 @@ def main():
     # docker_run_spider('m163', 'Money163/netease_money.py')
     # docker_run_spider('qqf', 'QQStock/qq_stock.py')
     # docker_run_spider('shcn', 'ShangHaiSecuritiesNews/cn_main.py')
-    docker_run_spider('sohu', 'sohu/sohu_spider.py')
-
-
-    pass
+    # docker_run_spider('sohu', 'sohu/sohu_spider.py')
+    # docker_run_spider('stcn', 'StockStcn/kuaixun.py')
+    # docker_run_spider('tkg', 'Takungpao/takungpao_main.py')
+    # docker_run_spider('tgb', 'Taoguba/tgb_main.py')
+    docker_run_spider('yicai', 'YiCai/yicai_spider.py')
 
 
 if __name__ == "__main__":
