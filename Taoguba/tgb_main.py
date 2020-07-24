@@ -1,4 +1,5 @@
 import os
+import random
 import sys
 
 cur_path = os.path.split(os.path.realpath(__file__))[0]
@@ -50,7 +51,11 @@ class TgbSchedule(SpiderBase):
         return lkeys
 
     def start(self):
-        for code, name in self.lower_keys.items():
+        _keys = list(self.lower_keys.keys())
+        random.shuffle(_keys)
+        # print(_keys)
+        for code in _keys:
+            name = self.lower_keys.get(code)
             print(code, name)
             Taoguba(name, code).start()
 
