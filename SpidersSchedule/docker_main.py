@@ -56,7 +56,9 @@ def main():
     # docker_run_spider('juc', 'JuchaoInfo/juchao.py')
     # docker_run_spider('m163', 'Money163/netease_money.py')
     # docker_run_spider('qqf', 'QQStock/qq_stock.py')
-    docker_run_spider('shcn', 'ShangHaiSecuritiesNews/cn_main.py')
+    # docker_run_spider('shcn', 'ShangHaiSecuritiesNews/cn_main.py')
+    docker_run_spider('sohu', 'sohu/sohu_spider.py')
+
 
     pass
 

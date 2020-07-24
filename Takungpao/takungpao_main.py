@@ -1,4 +1,13 @@
+import os
+import sys
+
 import threadpool
+
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
+
+
 from Takungpao.economic_observer import EconomicObserver
 from Takungpao.hkstock_cjss import HKStock_CJSS, HKStock_GJJJ, HKStock_GSYW, HKStock_JGSD, HKStock_JJYZ, HKStock_QQGS
 from Takungpao.takungpao_fk import FK
