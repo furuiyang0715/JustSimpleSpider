@@ -44,6 +44,7 @@ class CNStock(SpiderBase):
             "qmt-sjrz_yw",   # 新三板-要闻
         ]
         self.fields = ['pub_date', 'title', 'link', 'article']
+        self.name = '宏观等'
 
     def make_query_params(self, topic, page):
         """

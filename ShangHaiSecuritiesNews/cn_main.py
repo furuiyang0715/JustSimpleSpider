@@ -7,6 +7,7 @@ cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
 
+from base import logger
 from ShangHaiSecuritiesNews.cn_4_hours import CN4Hours
 from ShangHaiSecuritiesNews.cn_hongguan import CNStock
 
@@ -34,6 +35,7 @@ class CNSchedule(object):
     def start(self):
         for cls in self.class_lst:
             ins = cls()
+            logger.info(ins.name)
             ins.start()
 
 

@@ -51,7 +51,12 @@ def main():
     # docker_run_spider("dongc", 'CArticle/ca_main.py')
     # docker_run_spider("cls", 'ClsCnInfo/telegraphs.py')
     # docker_run_spider("cls2", 'ClsCnInfo/cls_details.py')
-    docker_run_spider("gov", 'GovSpiders/gov_main.py')
+    # docker_run_spider("gov", 'GovSpiders/gov_main.py')
+    # docker_run_spider('juf', 'JfInfo/jfinfo_main.py')
+    # docker_run_spider('juc', 'JuchaoInfo/juchao.py')
+    # docker_run_spider('m163', 'Money163/netease_money.py')
+    # docker_run_spider('qqf', 'QQStock/qq_stock.py')
+    docker_run_spider('shcn', 'ShangHaiSecuritiesNews/cn_main.py')
 
     pass
 

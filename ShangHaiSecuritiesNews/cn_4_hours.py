@@ -8,7 +8,7 @@ from urllib.parse import urlencode
 import requests as req
 from gne import GeneralNewsExtractor
 from lxml import html
-from base import SpiderBase
+from base import SpiderBase, logger
 
 
 class CN4Hours(SpiderBase):
@@ -18,6 +18,7 @@ class CN4Hours(SpiderBase):
         self.list_url = "http://app.cnstock.com/api/theme/get_theme_list?"
         self.extractor = GeneralNewsExtractor()
         self.table_name = "cn_stock"
+        self.name = '上证四小时'
         self.fields = ['pub_date', 'title', 'link', 'article']
 
     def _create_table(self):
@@ -91,6 +92,7 @@ class CN4Hours(SpiderBase):
             params = self.make_query_params(latest_id)
             url = self.list_url + urlencode(params)
             ret = req.get(url, headers=self.headers).text
+            logger.info(ret)
             json_data = re.findall(r'jQuery\d{20}_\d{13}\((\{.*?\})\)', ret)[0]
             py_data = json.loads(json_data)
             datas = py_data.get("item")
