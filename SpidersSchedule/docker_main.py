@@ -37,7 +37,8 @@ def catch_exceptions(cancel_on_failure=False):
 
 class DockerSwith(SpiderBase, Daemon):
     def __init__(self, *args, **kwargs):
-        super(DockerSwith, self).__init__(*args, **kwargs)
+        super(DockerSwith, self).__init__()    # init SpiderBase
+        super(SpiderBase, self).__init__(*args, **kwargs)     # init Daemon
         self.tables = list()
         self.docker_client = docker.from_env()
         self.docker_containers_col = self.docker_client.containers
