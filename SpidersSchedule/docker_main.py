@@ -223,7 +223,7 @@ class DockerSwith(SpiderBase, Daemon):
         schedule.every(2).hours.do(self.ding_crawl_information)
 
         while True:
-            logger.info("当前调度系统中的任务列表是:\n{}".format(pprint.pformat(schedule.jobs)))
+            # logger.info("当前调度系统中的任务列表是:\n{}".format(pprint.pformat(schedule.jobs)))
             schedule.run_pending()
             time.sleep(10)
 

@@ -29,6 +29,28 @@ t.close()
 # rsync -e 'ssh -p 9528' -avz  furuiyang@139.9.193.142:/home/furuiyang/bbd/sshpp_csv /Users/furuiyang/gitzip/JustSimpleSpider/bbd/remote_csv
 # rsync -e 'ssh -p 9528' -avz  furuiyang@139.9.193.142:/home/furuiyang/JustSimpleSpider/ /Users/furuiyang/gitzip/JustSimpleSpider
 
-# rsync -e 'ssh -p 9528' -avz  /Users/furuiyang/gitzip/JustSimpleSpider furuiyang@139.9.193.142:/home/furuiyang/
-# sudo /home/furuiyang/spi/bin/python3 docker_main.py
-# sudo /home/furuiyang/spi/bin/python3 d_test.py
+
+'''
+rsync -e 'ssh -p 9528' -avz  /Users/furuiyang/gitzip/JustSimpleSpider furuiyang@139.9.193.142:/home/furuiyang/ 
+
+
+cd JustSimpleSpider 
+
+
+sudo docker build -f Dockerfile -t registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/spi:v1 .  
+
+
+rm /home/furuiyang/JustSimpleSpider/SpidersSchedule/main.log
+echo "" > /home/furuiyang/JustSimpleSpider/SpidersSchedule/main.log
+
+
+sudo /home/furuiyang/spi/bin/python3 /home/furuiyang/JustSimpleSpider/SpidersSchedule/docker_main.py start 
+
+
+tail -f /home/furuiyang/JustSimpleSpider/SpidersSchedule/main.log 
+
+
+
+
+'''
+
