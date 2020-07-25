@@ -13,7 +13,7 @@ file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
 
 from base import SpiderBase, logger
-from Takungpao.configs import (LOCAL, LOCAL_PROXY_URL, PROXY_URL)
+from configs import LOCAL, LOCAL_PROXY_URL, PROXY_URL
 
 
 class TakungpaoBase(SpiderBase):
