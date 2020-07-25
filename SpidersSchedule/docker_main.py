@@ -13,6 +13,7 @@ cur_path = os.path.split(os.path.realpath(__file__))[0]
 file_path = os.path.abspath(os.path.join(cur_path, ".."))
 sys.path.insert(0, file_path)
 
+from SpidersSchedule.daemon import Daemon
 from configs import LOCAL
 from base import logger, SpiderBase
 
@@ -34,9 +35,9 @@ def catch_exceptions(cancel_on_failure=False):
     return catch_exceptions_decorator
 
 
-class DockerSwith(SpiderBase):
-    def __init__(self):
-        super(DockerSwith, self).__init__()
+class DockerSwith(SpiderBase, Daemon):
+    def __init__(self, *args, **kwargs):
+        super(DockerSwith, self).__init__(*args, **kwargs)
         self.tables = list()
         self.docker_client = docker.from_env()
         self.docker_containers_col = self.docker_client.containers
@@ -231,4 +232,31 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    pid_file = os.path.join(cur_path, 'main.pid')
+    log_file = os.path.join(cur_path, 'main.log')
+
+    print(pid_file)
+    print(log_file)
+
+    worker = DockerSwith(
+        pidfile=pid_file,
+        stdout=log_file,
+        stderr=log_file
+    )
+
+    if len(sys.argv) >= 2:
+        if 'start' == sys.argv[1]:
+            worker.start()
+        elif 'stop' == sys.argv[1]:
+            worker.stop()
+        elif 'restart' == sys.argv[1]:
+            worker.restart()
+        elif 'status' == sys.argv[1]:
+            worker.status()
+        else:
+            sys.stderr.write("Unknown command\n")
+            sys.exit(2)
+        sys.exit(0)
+    else:
+        sys.stderr.write("usage: %s start|stop|restart\n" % sys.argv[0])
+        sys.exit(2)

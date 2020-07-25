@@ -30,3 +30,5 @@ t.close()
 # rsync -e 'ssh -p 9528' -avz  furuiyang@139.9.193.142:/home/furuiyang/JustSimpleSpider/ /Users/furuiyang/gitzip/JustSimpleSpider
 
 # rsync -e 'ssh -p 9528' -avz  /Users/furuiyang/gitzip/JustSimpleSpider furuiyang@139.9.193.142:/home/furuiyang/
+# sudo /home/furuiyang/spi/bin/python3 docker_main.py
+# sudo /home/furuiyang/spi/bin/python3 d_test.py
