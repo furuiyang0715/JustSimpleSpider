@@ -1,3 +1,4 @@
+# coding=utf8
 import functools
 import os
 import pprint
@@ -47,7 +48,7 @@ class DockerSwith(SpiderBase):
         for table, dt_benchmark in self.tables:
             sql = '''SELECT count(id) as inc_count FROM {} WHERE {} > date_sub(CURDATE(), interval 1 day);'''.format(table, dt_benchmark)
             inc_count = self.spider_client.select_one(sql).get("inc_count")
-            msg += f'{table} 今日新增 {inc_count}\n'
+            msg += '{} 今日新增 {}\n'.format(table, inc_count)
 
         if not LOCAL:
             self.ding(msg)
@@ -96,21 +97,21 @@ class DockerSwith(SpiderBase):
 
         if spider_container:
             spider_status = spider_container.status
-            logger.info(f"{spider_name} spider status: {spider_status}")
+            logger.info("{} spider status: {}".format(spider_name, spider_status))
             if spider_status in ("exited",):
                 spider_container.start()
             elif spider_status in ("running",):
                 if restart:
                     spider_container.restart()
             else:
-                logger.warning(f"other status: {spider_status}")
+                logger.warning("other status: {}".format(spider_status))
         else:
             self.docker_containers_col.run(
                 "registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/spi:v1",
                 environment={"LOCAL": 1},
-                name=f'{spider_name}',
-                command=f'python {spider_file_path}',
-                detach=True,
+                name='{}'.format(spider_name),
+                command='python {}'.format(spider_file_path),
+                detach=True,    # 守护进程运行
             )
 
     def start_task(self, spider_name, spider_file_path, table_name, dt_benchmark, dt_str, restart=False):
@@ -131,7 +132,7 @@ class DockerSwith(SpiderBase):
         self.tables.append((table_name, dt_benchmark))
         schedule.every().day.at(dt_str).do(task)
 
-    def interval_start_task(self, spider_name, spider_file_path, table_name, dt_benchmark, interval: tuple, restart=False):
+    def interval_start_task(self, spider_name, spider_file_path, table_name, dt_benchmark, interval, restart=False):
         """
         使用定时任务固定间隔启动 docker 进程
         :param spider_name:
