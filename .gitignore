@@ -120,3 +120,4 @@ temp/*
 _temp.py
 *.png
 *.json
+*.pid
