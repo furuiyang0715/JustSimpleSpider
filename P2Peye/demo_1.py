@@ -20,23 +20,23 @@ def get_index_page():
         # print('天眼财经' in page)
         doc = html.fromstring(page)
         # 新闻资讯
-        xwzx = doc.xpath(".//div[@class='news-wrap mod-news']")
-        if xwzx:
-            xwzx = xwzx[0]
-            news_list = xwzx.xpath(".//ul[@class='mod-list clearfix']")
+        topics = doc.xpath(".//div[@class='news-wrap mod-news']")
+        for topic in topics:
+            news_list = topic.xpath(".//ul[@class='mod-list clearfix']")
             if news_list:
                 for news_part in news_list:
-                    img_news = news_part.xpath(".//li[@class='img']")
-                    if img_news:
-                        item = {}
-                        img_news = img_news[0]
-                        info = img_news.xpath("./a")[0]
-                        # https://news.p2peye.com/article-563957-1.html
-                        url = "https:" + info.xpath("./@href")[0]
-                        title = info.xpath("./@title")[0]
-                        item['link'] = url
-                        item['title'] = title
-                        print(item)
+                    # 图片新闻稍晚出现在列表新闻中 不必专门提取
+                    # img_news = news_part.xpath(".//li[@class='img']")
+                    # if img_news:
+                    #     item = {}
+                    #     img_news = img_news[0]
+                    #     info = img_news.xpath("./a")[0]
+                    #     # https://news.p2peye.com/article-563957-1.html
+                    #     url = "https:" + info.xpath("./@href")[0]
+                    #     title = info.xpath("./@title")[0]
+                    #     item['link'] = url
+                    #     item['title'] = title
+                    #     print(item)
                     normal_news = news_part.xpath(".//li[contains(@class, 'list clearfix')]")
                     for one in normal_news:
                         item = {}
@@ -47,8 +47,9 @@ def get_index_page():
                         item['title'] = title
                         item['pub_date'] = pub_date
                         print(item)
-        # 专栏文章
-        zlwz = None
+
+            print()
+            print()
 
 
 
