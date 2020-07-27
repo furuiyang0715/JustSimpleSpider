@@ -7,6 +7,7 @@ headers = {
 
 
 def get_index_page():
+    """从首页获取信息"""
     url = "https://news.p2peye.com/"
     # list_url = 'https://news.p2peye.com/xwzx/{}.html'.format(page)
     resp = requests.get(url, headers=headers)
@@ -52,4 +53,45 @@ def get_index_page():
             print()
 
 
-get_index_page()
+def get_t1_list():
+    """从新闻资讯页获取文章"""
+    url = 'https://news.p2peye.com/xwzx/2.html'
+    resp = requests.get(url, headers=headers)
+    if resp and resp.status_code == 200:
+        body = resp.text
+        doc = html.fromstring(body)
+        news_list = doc.xpath(".//div[@id='listbox92']")
+        if news_list:
+            news_list = news_list[0]
+            news = news_list.xpath("//div[@class='mod-leftfixed mod-news clearfix']")
+            for part in news:
+                item = dict()
+                hd = part.xpath(".//div[@class='hd']/a")[0]
+                link = hd.xpath("./@href")[0].lstrip("//")
+                title = hd.xpath("./@title")[0]
+                pub_date = part.xpath(".//div[@class='fd-left']/span")[-1].text_content()
+                item['link'] = link
+                item['title'] = title
+                item['pub_date'] = pub_date
+                print(item)
+                print()
+
+
+def get_t2_list():
+    url = 'https://news.p2peye.com/wdzl/2.html'
+    resp = requests.get(url, headers=headers)
+    if resp and resp.status_code == 200:
+        body = resp.text
+        doc = html.fromstring(body)
+        news_list = doc.xpath(".//div[@id='listbox26']")
+
+        pass
+
+
+
+    pass
+
+# get_index_page()
+get_t1_list()
+# get_t2_list()
+
