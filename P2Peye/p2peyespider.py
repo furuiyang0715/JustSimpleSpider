@@ -21,6 +21,7 @@ class P2PEye(SpiderBase):
         super(P2PEye, self).__init__()
         self.web_url = 'https://news.p2peye.com/'
         self.list_queue = Queue()
+        self.save_queue = Queue()
         self.table_name = 'p2peye_news'
         self.name = '网贷天眼查'
         self.fields = ['pub_date', 'title', 'link', 'article']
@@ -63,15 +64,23 @@ class P2PEye(SpiderBase):
             traceback.print_exc()
             print("*** ", link)
 
+    def save_items(self):
+        while True:
+            item = self.save_queue.get()
+            try:
+                self._save(self.spider_client, item, self.table_name, self.fields)
+            except:
+                pass
+            self.save_queue.task_done()
+
     def get_detail(self):
         while True:
             item = self.list_queue.get()
-            print(item)
             link = item.get("link")
             article = self.parse_detail(link)
             if article:
                 item['article'] = article
-                self._save(self.spider_client, item, self.table_name, self.fields)
+                self.save_queue.put(item)
             self.list_queue.task_done()
 
     def get_list(self):
@@ -135,10 +144,17 @@ class P2PEye(SpiderBase):
         index_spider = threading.Thread(target=self.get_list)
         index_spider.start()
 
-        datas_saver = threading.Thread(target=self.get_detail)
+        for i in range(4):
+            datas_parser = threading.Thread(target=self.get_detail)
+            # datas_parser.setDaemon(True)
+            datas_parser.start()
+
+        datas_saver = threading.Thread(target=self.save_items)
+        # datas_saver.setDaemon(True)
         datas_saver.start()
 
         self.list_queue.join()
+        self.save_queue.join()
 
 
 if __name__ == "__main__":
