@@ -53,7 +53,7 @@ class P2PEye(SpiderBase):
 
     def parse_detail(self, link: str):
         try:
-            resp = requests.get(link, headers=self.headers)
+            resp = requests.get(link, headers=self.headers, timeout=3)
             if resp and resp.status_code == 200:
                 page = resp.text
                 doc = html.fromstring(page)
@@ -61,7 +61,7 @@ class P2PEye(SpiderBase):
                 txt = self._process_content(txt)
                 return txt
         except:
-            traceback.print_exc()
+            # traceback.print_exc()
             print("*** ", link)
 
     def save_items(self):
@@ -69,13 +69,14 @@ class P2PEye(SpiderBase):
             item = self.save_queue.get()
             try:
                 self._save(self.spider_client, item, self.table_name, self.fields)
-            except:
-                pass
+            except Exception as e:
+                print("Parse detail error: {}".format(e))
             self.save_queue.task_done()
 
     def get_detail(self):
         while True:
             item = self.list_queue.get()
+            print(">>> ", item)
             link = item.get("link")
             article = self.parse_detail(link)
             if article:
@@ -84,7 +85,11 @@ class P2PEye(SpiderBase):
             self.list_queue.task_done()
 
     def get_list(self):
-        resp = requests.get(self.web_url, headers=self.headers)
+        try:
+            resp = requests.get(self.web_url, headers=self.headers, timeout=3)
+        except:
+            resp = None
+
         if resp and resp.status_code == 200:
             page = resp.text
             doc = html.fromstring(page)
@@ -109,9 +114,12 @@ class P2PEye(SpiderBase):
 
     def _get_topic_list(self, format_url, id_mark):
         for page in range(2, 50):
-            print(page)
+            print(id_mark, page)
             url = format_url.format(page)
-            resp = requests.get(url, headers=self.headers)
+            try:
+                resp = requests.get(url, headers=self.headers, timeout=3)
+            except:
+                resp = None
             if resp and resp.status_code == 200:
                 body = resp.text
                 doc = html.fromstring(body)
