@@ -108,7 +108,8 @@ class P2PEye(SpiderBase):
                             self.list_queue.put(item)
 
     def _get_topic_list(self, format_url, id_mark):
-        for page in range(2, 10):
+        for page in range(2, 50):
+            print(page)
             url = format_url.format(page)
             resp = requests.get(url, headers=self.headers)
             if resp and resp.status_code == 200:
@@ -138,6 +139,7 @@ class P2PEye(SpiderBase):
             topic_spider.start()
 
     def start(self):
+        t1 = time.time()
         self._create_table()
         self.get_topic_list()
 
@@ -146,15 +148,14 @@ class P2PEye(SpiderBase):
 
         for i in range(4):
             datas_parser = threading.Thread(target=self.get_detail)
-            # datas_parser.setDaemon(True)
             datas_parser.start()
 
         datas_saver = threading.Thread(target=self.save_items)
-        # datas_saver.setDaemon(True)
         datas_saver.start()
 
         self.list_queue.join()
         self.save_queue.join()
+        print("耗时: {}".format(time.time() - t1))
 
 
 if __name__ == "__main__":

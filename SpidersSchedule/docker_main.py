@@ -134,7 +134,7 @@ class DockerSwith(SpiderBase, Daemon):
         self.tables.append((table_name, dt_benchmark))
         schedule.every().day.at(dt_str).do(task)
 
-    def interval_start_task(self, spider_name, spider_file_path, table_name, dt_benchmark, interval, restart=False):
+    def interval_start_task(self, spider_name, spider_file_path, table_name, dt_benchmark, interval, restart=True):
         """
         使用定时任务固定间隔启动 docker 进程
         :param spider_name:
