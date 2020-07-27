@@ -91,7 +91,9 @@ class NetEaseMoney(SpiderBase):
             raise Exception("请求无响应")
 
         if items:
-            self._batch_save(self.spider_client, items, self.table_name, self.fields)
+            ret = self._batch_save(self.spider_client, items, self.table_name, self.fields)
+            print(len(items))
+            print(ret)
 
 
 if __name__ == "__main__":
