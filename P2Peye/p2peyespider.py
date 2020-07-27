@@ -20,6 +20,11 @@ class P2PEye(SpiderBase):
         self.table_name = 'p2peye_news'
         self.name = '网贷天眼查'
         self.fields = ['pub_date', 'title', 'link', 'article']
+        self.topic_info = {
+            'https://news.p2peye.com/xwzx/2.html': 'listbox92',   # 新闻资讯
+            'https://news.p2peye.com/wdzl/2.html': 'listbox26',   # 专栏文章
+            'https://news.p2peye.com/tycj/2.html': 'listbox75',   # 天眼财经
+        }
 
     def _create_table(self):
         sql = '''
@@ -82,11 +87,39 @@ class P2PEye(SpiderBase):
                             ret = self._save(self.spider_client, item, self.table_name, self.fields)
                             print(ret, ">>> ", item)
 
+    def _get_topic_list(self, url, id_mark):
+        resp = requests.get(url, headers=self.headers)
+        if resp and resp.status_code == 200:
+            body = resp.text
+            doc = html.fromstring(body)
+            news_list = doc.xpath(".//div[@id='{}']".format(id_mark))
+            if news_list:
+                news_list = news_list[0]
+                news = news_list.xpath(".//div[@class='mod-leftfixed mod-news clearfix']")
+                for part in news:
+                    item = dict()
+                    hd = part.xpath(".//div[@class='hd']/a")[0]
+                    link = hd.xpath("./@href")[0].lstrip("//")
+                    title = hd.xpath("./@title")[0]
+                    pub_date = part.xpath(".//div[@class='fd-left']/span")[-1].text_content()
+                    item['link'] = link
+                    item['title'] = title
+                    item['pub_date'] = pub_date
+                    print(item)
+
+    def get_topic_list(self):
+        # 获取专题页文章
+        for url, id_mark in self.topic_info.items():
+            print(url, id_mark)
+            self._get_topic_list(url, id_mark)
+
     def start(self):
-        t1 = time.time()
-        self._create_table()
-        self.get_list()
-        print(time.time() - t1)
+        self.get_topic_list()
+
+        # t1 = time.time()
+        # self._create_table()
+        # self.get_list()
+        # print(time.time() - t1)
 
 
 if __name__ == "__main__":
