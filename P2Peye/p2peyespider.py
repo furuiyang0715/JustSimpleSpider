@@ -1,3 +1,6 @@
+import sys
+import time
+
 import requests
 from lxml import html
 
@@ -9,6 +12,18 @@ class P2PEye(SpiderBase):
     def __init__(self):
         super(P2PEye, self).__init__()
         self.web_url = 'https://news.p2peye.com/'
+
+    def parse_detail(self, link: str):
+        try:
+            resp = requests.get(link, headers=self.headers)
+            if resp and resp.status_code == 200:
+                page = resp.text
+                doc = html.fromstring(page)
+                txt = doc.xpath(".//td[@id='article_content']")[0].text_content()
+                txt = self._process_content(txt)
+                return txt
+        except:
+            print("*** ", link)
 
     def get_list(self):
         resp = requests.get(self.web_url, headers=self.headers)
@@ -26,15 +41,19 @@ class P2PEye(SpiderBase):
                             url = one.xpath(".//a/@href")[0]
                             title = one.xpath(".//a/@title")[0]
                             pub_date = one.xpath(".//span[@class='time']")[0].text_content()
-                            item['link'] = "https:" + url
+                            link = "https:" + url if not url.startswith("https") else url
+                            item['link'] = link
+                            article = self.parse_detail(link)
                             item['title'] = title
                             item['pub_date'] = pub_date
+                            item['article'] = article
                             print(item)
 
     def start(self):
-        pass
+        t1 = time.time()
+        self.get_list()
+        print(time.time() - t1)
 
 
 if __name__ == "__main__":
-
-    pass
+    P2PEye().start()
