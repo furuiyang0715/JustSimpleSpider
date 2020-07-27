@@ -1,9 +1,12 @@
+import os
 import sys
 import time
-from queue import Queue
-
 import requests
 from lxml import html
+
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
 
 from base import SpiderBase
 
@@ -13,7 +16,30 @@ class P2PEye(SpiderBase):
     def __init__(self):
         super(P2PEye, self).__init__()
         self.web_url = 'https://news.p2peye.com/'
-        self.list_queue = Queue()
+        # self.list_queue = Queue()
+        self.table_name = 'p2peye_news'
+        self.name = '网贷天眼查'
+        self.fields = ['pub_date', 'title', 'link', 'article']
+
+    def _create_table(self):
+        sql = '''
+        CREATE TABLE  IF NOT EXISTS `{}` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `pub_date` datetime NOT NULL COMMENT '发布时间',
+          `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章标题',
+          `link` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章详情页链接',
+          `article` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '详情页内容',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `link` (`link`),
+          KEY `pub_date` (`pub_date`),
+          KEY `update_time` (`UPDATETIMEJZ`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='{}'; 
+        '''.format(self.table_name, self.name)
+        self._spider_init()
+        self.spider_client.insert(sql)
+        self.spider_client.end()
 
     def parse_detail(self, link: str):
         try:
@@ -53,11 +79,12 @@ class P2PEye(SpiderBase):
                             item['title'] = title
                             item['pub_date'] = pub_date
                             item['article'] = article
-                            print(item)
-                            self.list_queue.put(item)
+                            ret = self._save(self.spider_client, item, self.table_name, self.fields)
+                            print(ret, ">>> ", item)
 
     def start(self):
         t1 = time.time()
+        self._create_table()
         self.get_list()
         print(time.time() - t1)
 

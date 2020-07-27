@@ -219,6 +219,10 @@ class DockerSwith(SpiderBase, Daemon):
         self.docker_run_spider('yicai', 'YiCai/yicai_spider.py')
         self.interval_start_task('yicai', 'YiCai/yicai_spider.py', 'NewsYicai', 'pub_date', (10, 'minutes'))
 
+        # 天眼网贷 / 每小时更新一次
+        self.docker_run_spider('p2peye', "P2Peye/p2peyespider.py")
+        self.interval_start_task('p2peye', "P2Peye/p2peyespider.py", 'p2peye_news', 'pub_date', (2, 'hours'))
+
         self.ding_crawl_information()
         schedule.every(2).hours.do(self.ding_crawl_information)
 
