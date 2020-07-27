@@ -141,14 +141,14 @@ class ClsDetail(SpiderBase):
                 item['title'] = title
                 item['pub_date'] = _pub_date
                 item['article'] = content
-                print(item)
+                # print(item)
                 items.append(item)
-                time.sleep(1)
+                self._save(self.spider_client, item, self.table_name, self.fields)
 
-        logger.info(f"爬取数据{len(items)}")
-        self._spider_init()
-        ret = self._batch_save(self.spider_client, items, self.table_name, self.fields)
-        logger.info(f"插入数量{ret}")
+        # logger.info(f"爬取数据{len(items)}")
+        # self._spider_init()
+        # ret = self._batch_save(self.spider_client, items, self.table_name, self.fields)
+        # logger.info(f"插入数量{ret}")
 
 
 if __name__ == "__main__":

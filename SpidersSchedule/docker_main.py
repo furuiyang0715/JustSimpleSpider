@@ -80,6 +80,7 @@ class DockerSwith(SpiderBase, Daemon):
             "tkg",
             "tgb",
             "yicai",
+            "p2peye",
 
         ]
         for name in container_names:
@@ -110,7 +111,7 @@ class DockerSwith(SpiderBase, Daemon):
         else:
             self.docker_containers_col.run(
                 "registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/spi:v1",
-                environment={"LOCAL": 1},
+                environment={"LOCAL": 0},
                 name='{}'.format(spider_name),
                 command='python {}'.format(spider_file_path),
                 detach=True,    # 守护进程运行
