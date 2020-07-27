@@ -1,5 +1,6 @@
 import sys
 import time
+from queue import Queue
 
 import requests
 from lxml import html
@@ -12,6 +13,7 @@ class P2PEye(SpiderBase):
     def __init__(self):
         super(P2PEye, self).__init__()
         self.web_url = 'https://news.p2peye.com/'
+        self.list_queue = Queue()
 
     def parse_detail(self, link: str):
         try:
@@ -43,11 +45,16 @@ class P2PEye(SpiderBase):
                             pub_date = one.xpath(".//span[@class='time']")[0].text_content()
                             link = "https:" + url if not url.startswith("https") else url
                             item['link'] = link
+                            if "/zt/" in link:   # 专题的数据较早了
+                                continue
                             article = self.parse_detail(link)
+                            if not article:
+                                continue
                             item['title'] = title
                             item['pub_date'] = pub_date
                             item['article'] = article
                             print(item)
+                            self.list_queue.put(item)
 
     def start(self):
         t1 = time.time()
