@@ -63,7 +63,7 @@ def get_t1_list():
         news_list = doc.xpath(".//div[@id='listbox92']")
         if news_list:
             news_list = news_list[0]
-            news = news_list.xpath("//div[@class='mod-leftfixed mod-news clearfix']")
+            news = news_list.xpath(".//div[@class='mod-leftfixed mod-news clearfix']")
             for part in news:
                 item = dict()
                 hd = part.xpath(".//div[@class='hd']/a")[0]
@@ -78,20 +78,55 @@ def get_t1_list():
 
 
 def get_t2_list():
+    # 从专栏文章获取
     url = 'https://news.p2peye.com/wdzl/2.html'
     resp = requests.get(url, headers=headers)
     if resp and resp.status_code == 200:
         body = resp.text
         doc = html.fromstring(body)
         news_list = doc.xpath(".//div[@id='listbox26']")
+        if news_list:
+            news_list = news_list[0]
+            news = news_list.xpath(".//div[@class='mod-leftfixed mod-news clearfix']")
+            for part in news:
+                item = dict()
+                hd = part.xpath(".//div[@class='hd']/a")[0]
+                link = hd.xpath("./@href")[0].lstrip("//")
+                title = hd.xpath("./@title")[0]
+                pub_date = part.xpath(".//div[@class='fd-left']/span")[-1].text_content()
+                item['link'] = link
+                item['title'] = title
+                item['pub_date'] = pub_date
+                print(item)
+                print()
 
-        pass
 
+def get_t3_list():
+    # 从天眼财经获取文章
+    items = []
+    url = 'https://news.p2peye.com/tycj/2.html'
+    resp = requests.get(url, headers=headers)
+    if resp and resp.status_code == 200:
+        body = resp.text
+        doc = html.fromstring(body)
+        news_list = doc.xpath(".//div[@id='listbox75']")
+        if news_list:
+            news_list = news_list[0]
+            news = news_list.xpath(".//div[@class='mod-leftfixed mod-news clearfix']")
+            for part in news:
+                item = dict()
+                hd = part.xpath(".//div[@class='hd']/a")[0]
+                link = hd.xpath("./@href")[0].lstrip("//")
+                title = hd.xpath("./@title")[0]
+                pub_date = part.xpath(".//div[@class='fd-left']/span")[-1].text_content()
+                item['link'] = link
+                item['title'] = title
+                item['pub_date'] = pub_date
+                print(item)
+                print()
 
-
-    pass
 
 # get_index_page()
 get_t1_list()
 # get_t2_list()
-
+# get_t3_list()
