@@ -52,8 +52,4 @@ def get_index_page():
             print()
 
 
-
-
-
-
 get_index_page()
