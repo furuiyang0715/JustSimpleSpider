@@ -1,6 +1,10 @@
 import os
 import sys
+import threading
 import time
+import traceback
+from queue import Queue
+
 import requests
 from lxml import html
 
@@ -16,7 +20,7 @@ class P2PEye(SpiderBase):
     def __init__(self):
         super(P2PEye, self).__init__()
         self.web_url = 'https://news.p2peye.com/'
-        # self.list_queue = Queue()
+        self.list_queue = Queue()
         self.table_name = 'p2peye_news'
         self.name = '网贷天眼查'
         self.fields = ['pub_date', 'title', 'link', 'article']
@@ -56,7 +60,19 @@ class P2PEye(SpiderBase):
                 txt = self._process_content(txt)
                 return txt
         except:
+            traceback.print_exc()
             print("*** ", link)
+
+    def get_detail(self):
+        while True:
+            item = self.list_queue.get()
+            print(item)
+            link = item.get("link")
+            article = self.parse_detail(link)
+            if article:
+                item['article'] = article
+                self._save(self.spider_client, item, self.table_name, self.fields)
+            self.list_queue.task_done()
 
     def get_list(self):
         resp = requests.get(self.web_url, headers=self.headers)
@@ -78,17 +94,12 @@ class P2PEye(SpiderBase):
                             item['link'] = link
                             if "/zt/" in link:   # 专题的数据较早了
                                 continue
-                            article = self.parse_detail(link)
-                            if not article:
-                                continue
                             item['title'] = title
                             item['pub_date'] = pub_date
-                            item['article'] = article
-                            ret = self._save(self.spider_client, item, self.table_name, self.fields)
-                            print(ret, ">>> ", item)
+                            self.list_queue.put(item)
 
     def _get_topic_list(self, format_url, id_mark):
-        for page in range(2, 101):
+        for page in range(2, 10):
             url = format_url.format(page)
             resp = requests.get(url, headers=self.headers)
             if resp and resp.status_code == 200:
@@ -101,27 +112,33 @@ class P2PEye(SpiderBase):
                     for part in news:
                         item = dict()
                         hd = part.xpath(".//div[@class='hd']/a")[0]
-                        link = hd.xpath("./@href")[0].lstrip("//")
+                        link = hd.xpath("./@href")[0]
+                        link = "https:" + link if not link.startswith("https") else link
                         title = hd.xpath("./@title")[0]
                         pub_date = part.xpath(".//div[@class='fd-left']/span")[-1].text_content()
                         item['link'] = link
                         item['title'] = title
                         item['pub_date'] = pub_date
-                        print(item)
+                        self.list_queue.put(item)
 
     def get_topic_list(self):
         # 获取专题页文章
         for url, id_mark in self.topic_info.items():
             print(url, id_mark)
-            self._get_topic_list(url, id_mark)
+            topic_spider = threading.Thread(target=self._get_topic_list, args=(url, id_mark))
+            topic_spider.start()
 
     def start(self):
+        self._create_table()
         self.get_topic_list()
 
-        # t1 = time.time()
-        # self._create_table()
-        # self.get_list()
-        # print(time.time() - t1)
+        index_spider = threading.Thread(target=self.get_list)
+        index_spider.start()
+
+        datas_saver = threading.Thread(target=self.get_detail)
+        datas_saver.start()
+
+        self.list_queue.join()
 
 
 if __name__ == "__main__":
