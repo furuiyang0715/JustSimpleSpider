@@ -11,7 +11,8 @@ class PingLun9666(SpiderBase):
     def __init__(self):
         super(PingLun9666, self).__init__()
         self.web_url = 'http://pinglun.9666.cn/zaowanping/'  # 早晚评
-        self.web_url2 = 'http://pinglun.9666.cn/shaizhanji/'
+        self.web_url2 = 'http://pinglun.9666.cn/shaizhanji/'  # 热点追踪
+        self.author_url = 'http://pinglun.9666.cn/zhuanlan/'   # 专栏
         self.format_url = 'http://pinglun.9666.cn/zaowanping/?pager.offset=15&pageNo={}&pageSize=15'
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36',
@@ -56,12 +57,58 @@ class PingLun9666(SpiderBase):
                         print(article)
                         print()
 
-    def start(self):
-        for page_num in range(1, 3):
-            url = self.format_url.format(page_num)
-            self.get_list(url)
+    def get_authors(self):
+        resp = requests.get(self.author_url, headers=self.headers)
+        if resp and resp.status_code == 200:
+            body = resp.text
+            doc = html.fromstring(body)
+            ret = doc.xpath(".//div[@class='box']/ul[@class='list list02']")[0]
+            links = ret.xpath(".//li/h3/a/@href")
+            return links
 
-        self.get_list(self.web_url2)
+    def get_zhuanlan(self, url):
+        resp = requests.get(url, headers=self.headers)
+        if resp and resp.status_code == 200:
+            body = resp.text
+            doc = html.fromstring(body)
+            boxs = doc.xpath(".//div[@class='article mt64']")
+            if boxs:
+                boxs = boxs[0]
+                boxs = boxs.xpath(".//div[@class='channel pb32 clearfix mt48']")
+                if boxs:
+                    for box in boxs:
+                        info = box.xpath(".//h2[@class='f24 fb']/a")[0]
+                        title = info.text_content()
+                        link = info.xpath("./@href")[0]
+                        article = self.get_detail(link)
+                        if article:
+                            pub_str = box.xpath(".//p[@class='list-info gray01']")[0]
+                            pub_str = pub_str.text_content().strip()
+                            pub_date = re.findall("\d{2}-\d{2} \d{2}:\d{2}", pub_str)[0]
+                            pub_date = str(datetime.datetime.now().year) + "-" + pub_date
+                            print(title)
+                            print(link)
+                            print(pub_date)
+                            print(article)
+                            print()
+
+    def start(self):
+        # # 爬取早晚评
+        # for page_num in range(1, 3):
+        #     url = self.format_url.format(page_num)
+        #     self.get_list(url)
+        #
+        # # 爬取热点追踪
+        # self.get_list(self.web_url2)
+
+        # 爬取专栏作者
+        zhuanlan_links = self.get_authors()
+        if zhuanlan_links:
+            for zlink in zhuanlan_links:
+                print(zlink)
+                self.get_zhuanlan(zlink)
+
+
 
 
 if __name__ == "__main__":
