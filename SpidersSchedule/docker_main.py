@@ -81,6 +81,7 @@ class DockerSwith(SpiderBase, Daemon):
             "tgb",
             "yicai",
             "p2peye",
+            'cn9666',
 
         ]
         for name in container_names:
@@ -93,6 +94,7 @@ class DockerSwith(SpiderBase, Daemon):
                 spider_container.remove(force=True)
 
     def docker_run_spider(self, spider_name, spider_file_path, restart=False):
+        local_int = 1 if LOCAL else 0
         try:
             spider_container = self.docker_containers_col.get(spider_name)
         except:
@@ -111,7 +113,7 @@ class DockerSwith(SpiderBase, Daemon):
         else:
             self.docker_containers_col.run(
                 "registry.cn-shenzhen.aliyuncs.com/jzdev/jzdata/spi:v1",
-                environment={"LOCAL": 0},
+                environment={"LOCAL": local_int},
                 name='{}'.format(spider_name),
                 command='python {}'.format(spider_file_path),
                 detach=True,    # 守护进程运行
@@ -223,6 +225,10 @@ class DockerSwith(SpiderBase, Daemon):
         # 天眼网贷 / 每小时更新一次
         self.docker_run_spider('p2peye', "P2Peye/p2peyespider.py")
         self.interval_start_task('p2peye', "P2Peye/p2peyespider.py", 'p2peye_news', 'pub_date', (2, 'hours'))
+
+        # 牛仔网 / 每 5 小时更新一次
+        self.docker_run_spider('cn9666', 'CN966/9666pinglun.py')
+        self.interval_start_task('cn9666', 'CN966/9666pinglun.py', '9666pinglun', 'pub_date', (5, 'hours'))
 
         self.ding_crawl_information()
         schedule.every(2).hours.do(self.ding_crawl_information)

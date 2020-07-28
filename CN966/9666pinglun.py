@@ -1,13 +1,22 @@
 import datetime
+import os
 import re
+import sys
 
 import requests
 from lxml import html
+
+cur_path = os.path.split(os.path.realpath(__file__))[0]
+file_path = os.path.abspath(os.path.join(cur_path, ".."))
+sys.path.insert(0, file_path)
 
 from base import SpiderBase
 
 
 class PingLun9666(SpiderBase):
+    table_name = '9666pinglun'
+    dt_benchmark = 'pub_date'
+
     def __init__(self):
         super(PingLun9666, self).__init__()
         self.web_url = 'http://pinglun.9666.cn/zaowanping/'  # 早晚评
@@ -18,7 +27,6 @@ class PingLun9666(SpiderBase):
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36',
             'Cookie': 'cowboy_website=2a1644a5-0b40-4d46-93ca-367c54e39220; cowboy_visit_time=1595899251676; Hm_lvt_94656c824ef4eacf1a61cd662f7a7f17=1595899253; __utmc=236883550; __utmz=236883550.1595899253.1.1.utmcsr=cn.bing.com|utmccn=(referral)|utmcmd=referral|utmcct=/; cowboy_login=C3AD5319C3B607C2840F46C286C3AEC2B9C393C2AD3D3060C2896512423AC3B7C3B1596E2B47C282C3A21145C28C3E41C395C393C390C2A7C38B; cowboy_login_imply=C3AD5319C3B607C2840F46C286C3AEC2B9C393C2AD3D3060C2896512423AC3B7C3B1596E2B47C282C3A21145C28C3E41C395C393C390C2A7C38B; cowboy_nick_name=e882a1e58f8b343838393937; cowboy_user_name=nz_d09e0490; cowboy_latest_login_time=1595899414; Hm_lvt_11beb42de0d3859b0af4fd1b6f3b45cf=1595899267,1595899423,1595899565; Hm_lpvt_94656c824ef4eacf1a61cd662f7a7f17=1595902758; Hm_lpvt_11beb42de0d3859b0af4fd1b6f3b45cf=1595902758; __utma=236883550.1639834052.1595899253.1595899253.1595902758.2; __utmt=1; __utmb=236883550.2.9.1595902758; JSESSIONID=DBE042153E24D84C8E659A9DFDB824ED',
         }
-        self.table_name = '9666pinglun'
         self.name = '牛仔网评论'
         self.fields = ['pub_date', 'title', 'article', 'link']
 
