@@ -11,6 +11,7 @@ class PingLun9666(SpiderBase):
     def __init__(self):
         super(PingLun9666, self).__init__()
         self.web_url = 'http://pinglun.9666.cn/zaowanping/'  # 早晚评
+        self.web_url2 = 'http://pinglun.9666.cn/shaizhanji/'
         self.format_url = 'http://pinglun.9666.cn/zaowanping/?pager.offset=15&pageNo={}&pageSize=15'
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36',
@@ -59,6 +60,8 @@ class PingLun9666(SpiderBase):
         for page_num in range(1, 3):
             url = self.format_url.format(page_num)
             self.get_list(url)
+
+        self.get_list(self.web_url2)
 
 
 if __name__ == "__main__":
