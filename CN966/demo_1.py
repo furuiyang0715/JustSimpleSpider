@@ -41,9 +41,23 @@ def get_list(url):
                 print()
 
 
-format_url = 'http://pinglun.9666.cn/zaowanping/?pager.offset=15&pageNo={}&pageSize=15'
+# format_url = 'http://pinglun.9666.cn/zaowanping/?pager.offset=15&pageNo={}&pageSize=15'
+#
+# for page_num in range(2, 10):
+#     print(page_num)
+#     url = format_url.format(page_num)
+#     get_list(url)
 
-for page_num in range(2, 10):
-    print(page_num)
-    url = format_url.format(page_num)
-    get_list(url)
+
+def get_detail(url):
+    resp = requests.get(url, headers=headers)
+    if resp and resp.status_code == 200:
+        body = resp.text
+        # print(body)
+        # print("而且可乘机高抛一点，" in body)
+        doc = html.fromstring(body)
+        article = doc.xpath("//div[@class='blog-article']")[0]
+        print(article.text_content())
+
+
+get_detail("http://pinglun.9666.cn/2540296.html")
