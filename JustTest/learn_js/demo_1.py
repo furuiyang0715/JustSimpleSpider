@@ -2,78 +2,37 @@ import hashlib
 import sys
 
 
-# def get_ascii():
-#     for c in "furuiyang":
-#         print(ord(c))
-#     print()
-#     for word in "沸羊羊":
-#         print(ord(word))
-#
-#
-# def get_char():
-#     asc_codes = [ord(c) for c in "happy"]
-#     for asc_code in asc_codes:
-#         print(chr(asc_code), end=',')
-#
-#
-# get_ascii()
-# get_char()
+# 注：两位十六进制常常用来显示一个二进制字节
+# 利用binascii模块可以将十六进制显示的字节转换成我们在加解密中更常用的显示方式：
+import binascii
+
+print('南北'.encode())
+print(binascii.b2a_hex('南北'.encode()))
+
+print(binascii.a2b_hex(b'e58d97e58c97'))
+print(binascii.a2b_hex(b'e58d97e58c97').decode())
 
 
-# def get_word_md5():
-#     """对字符串进行 hash """
-#     hm = hashlib.md5()
-#     # 进行 md5 的字符必须是 bytes 类型的
-#     hm.update("ruiyang".encode())
-#     print(hm.hexdigest())
-#
-#
-# def get_file_mds():
-#     """对文件进行 hash """
-#     hash_md5 = hashlib.md5()
-#     with open("./test.txt", "rb") as f:
-#         # 每次读取 10 字节的 bytes
-#         # 每次读取的大小不对最终的  hash 结果造成影响
-#         for chunk in iter(lambda: f.read(10), b""):
-#             hash_md5.update(chunk)
-#     print(hash_md5.hexdigest())
-#
-#
-# get_word_md5()
-# get_file_mds()
+# 导入DES模块
+import binascii
+from Crypto.Cipher import DES
 
+# 这是密钥
+key = b'abcdefgh'
+# 需要去生成一个DES对象
+des = DES.new(key, DES.MODE_ECB)
+# 需要加密的数据
+text = 'python spider!'
+text = text + (8 - (len(text) % 8)) * '='
 
-# # 对称加密
-# import base64
-#
-# from Crypto.Cipher import AES
-#
-#
-# class AESCipher(object):
-#     def __init__(self, key):
-#         self.bs = 16
-#         self.cipher = AES.new(key, AES.MODE_ECB)
-#
-#     def encrypt(self, raw):
-#         raw = self._pad(raw)
-#         encrypted = self.cipher.encrypt(raw)
-#         encoded = base64.b64decode(encrypted)
-#         return str(encoded, 'utf-8')
-#
-#     def decrypt(self, raw):
-#         decoded = base64.b64decode(raw)
-#         decrypted = self.cipher.decrypt(decoded)
-#         return str(self._unpad(decrypted), "utf-8")
-#
-#     def _pad(self, s):
-#         padded = s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
-#         return padded
-#
-#     def _unpad(self, s):
-#         return s[:-ord(s[len(s)-1:])]
-#
-#
-# print(AESCipher('aaaabbbbccccddd'))
+# 加密的过程
+encrypto_text = des.encrypt(text.encode())
+encrypto_text = binascii.b2a_hex(encrypto_text)
+print(encrypto_text)
+
+decrypto_text = des.decrypt(encrypto_text)
+print(decrypto_text)
+
 
 
 # # 使用字母表移位的方式进行简单的加密以及解密
@@ -125,46 +84,47 @@ import sys
 #     assert Decrypt(1, Encrypt(1, p)) == p
 
 
-def _move_leter(letter, n):
-    """
-    把字母变为字母表后n位的字母,z后面接a
-    :param letter: 小写字母
-    :param n: 要移动的字母
-    :return: 移动的结果
-    """
-    _first = ord("a")
-    _instance = ord(letter) - _first
-    _new_instance = (_instance + n) % 26
-    _new_char = chr(_new_instance + _first)
-    return _new_char
-
-    # return chr((ord(letter) - ord('a') + n) % 26 + ord('a'))
-
-
-def Decrypt(k, c):
-    """
-    移位密码解密函数D
-    :param k: 秘钥k,每个字母在字母表中移动k位
-    :param c: 密文c
-    :return: 明文p
-    """
-    letter_list = list(c.lower())
-    p = ''.join([_move_leter(x, -k) for x in letter_list])
-    return p
-
-
-def analyze(c):
-    """
-    移位密码分析
-    :param c: 密文c
-    :return:
-    """
-    for k in range(26):
-        # 用不同的秘钥k尝试解密
-        print('秘钥%d：' % k + Decrypt(k, c))
-
-
-if __name__ == '__main__':
-    # 模拟一个破解的过程 尝试不同的位移进行破解
-    c = 'jmpwfdpejoh'
-    analyze(c)
+# def _move_leter(letter, n):
+#     """
+#     把字母变为字母表后n位的字母,z后面接a
+#     :param letter: 小写字母
+#     :param n: 要移动的字母
+#     :return: 移动的结果
+#     """
+#     _first = ord("a")
+#     _instance = ord(letter) - _first
+#     _new_instance = (_instance + n) % 26
+#     _new_char = chr(_new_instance + _first)
+#     return _new_char
+#
+#     # return chr((ord(letter) - ord('a') + n) % 26 + ord('a'))
+#
+#
+# def Decrypt(k, c):
+#     """
+#     移位密码解密函数D
+#     :param k: 秘钥k,每个字母在字母表中移动k位
+#     :param c: 密文c
+#     :return: 明文p
+#     """
+#     letter_list = list(c.lower())
+#     p = ''.join([_move_leter(x, -k) for x in letter_list])
+#     return p
+#
+#
+# def analyze(c):
+#     """
+#     移位密码分析
+#     :param c: 密文c
+#     :return:
+#     """
+#     for k in range(26):
+#         # 用不同的秘钥k尝试解密
+#         print('秘钥%d：' % k + Decrypt(k, c))
+#
+#
+# if __name__ == '__main__':
+#     # 模拟一个破解的过程 尝试不同的位移进行破解
+#     # 秘钥空间太小，别人直接一一列举进行穷搜就能破解，这就提示我们：一个好的加密体制，它的秘钥空间应该是足够大的。
+#     c = 'jmpwfdpejoh'
+#     analyze(c)
