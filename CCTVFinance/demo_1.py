@@ -14,6 +14,12 @@ class CCTVFinance(SpiderBase):
         self.url = 'https://news.cctv.com/2019/07/gaiban/cmsdatainterface/page/economy_1.jsonp?cb=economy'
         self.extractor = GeneralNewsExtractor()
 
+    def _create_table(self):
+        sql = '''
+        
+        '''
+        pass
+
     def extract_content(self, body):
         try:
             result = self.extractor.extract(body)
