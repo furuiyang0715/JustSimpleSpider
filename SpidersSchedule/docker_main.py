@@ -230,6 +230,10 @@ class DockerSwith(SpiderBase, Daemon):
         self.docker_run_spider('cn9666', 'CN966/9666pinglun.py')
         self.interval_start_task('cn9666', 'CN966/9666pinglun.py', '9666pinglun', 'pub_date', (5, 'hours'))
 
+        # 央视网财经频道 / 每小时更新一次
+        self.docker_run_spider('cctv', 'CCTVFinance/cctv_spider.py')
+        self.interval_start_task('cctv', 'CCTVFinance/cctv_spider.py', 'cctvfinance', 'pub_date', (1, 'hours'))
+
         self.ding_crawl_information()
         schedule.every(2).hours.do(self.ding_crawl_information)
 

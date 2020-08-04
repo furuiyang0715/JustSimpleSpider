@@ -7,11 +7,12 @@ from base import SpiderBase
 
 
 class CCTVFinance(SpiderBase):
+    table_name = 'cctvfinance'
+
     def __init__(self):
         super(CCTVFinance, self).__init__()
         self.url = 'https://news.cctv.com/2019/07/gaiban/cmsdatainterface/page/economy_1.jsonp?cb=economy'
         self.extractor = GeneralNewsExtractor()
-        self.table_name = 'cctvfinance'
         self.fields = ['title', 'keywords', 'pub_date', 'brief', 'link', 'article']
 
     def _create_table(self):
