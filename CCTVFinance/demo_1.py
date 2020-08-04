@@ -4,7 +4,6 @@ import re
 
 import requests
 from gne import GeneralNewsExtractor
-
 from base import SpiderBase
 
 
@@ -32,9 +31,10 @@ class CCTVFinance(SpiderBase):
 
     def start(self):
         resp = requests.get(self.url, headers=self.headers)
+        items = []
         if resp.status_code == 200:
             body = resp.text.encode("ISO-8859-1").decode("utf-8")
-            datas_str = re.findall("economy\((.*)\)", body)[0]
+            datas_str = re.findall(r"economy\((.*)\)", body)[0]
             datas = json.loads(datas_str).get("data").get("list")
 
             for data in datas:
@@ -43,9 +43,15 @@ class CCTVFinance(SpiderBase):
                 item['keywords'] = data.get("keywords")
                 item['pub_date'] = data.get("focus_date")
                 item['brief'] = data.get('brief')
-                item['link'] = data.get("url")
-                item['article'] = data.get("content")
-                print(item)
+                link = data.get("url")
+                item['link'] = link
+                try:
+                    content = self.parse_detail(link)
+                except:
+                    content = None
+                if content:
+                    item['article'] = content
+                    items.append(item)
 
 
 if __name__ == "__main__":
