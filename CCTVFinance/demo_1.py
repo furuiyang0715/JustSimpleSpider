@@ -1,5 +1,4 @@
 import json
-import pprint
 import re
 
 import requests
@@ -8,17 +7,33 @@ from base import SpiderBase
 
 
 class CCTVFinance(SpiderBase):
-
     def __init__(self):
         super(CCTVFinance, self).__init__()
         self.url = 'https://news.cctv.com/2019/07/gaiban/cmsdatainterface/page/economy_1.jsonp?cb=economy'
         self.extractor = GeneralNewsExtractor()
+        self.table_name = 'cctvfinance'
+        self.fields = ['title', 'keywords', 'pub_date', 'brief', 'link', 'article']
 
     def _create_table(self):
-        sql = '''
-        
-        '''
-        pass
+        create_sql = '''
+        CREATE TABLE IF NOT EXISTS `{}`(
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `pub_date` datetime NOT NULL COMMENT '发布时间',
+          `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章标题',
+          `keywords` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章关键词',
+          `link` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章详情页链接',
+          `brief` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '文章摘要',
+          `article` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '详情页内容',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `link` (`link`),
+          KEY `pub_date` (`pub_date`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='央视网-财经频道';
+        '''.format(self.table_name)
+        self._spider_init()
+        self.spider_client.insert(create_sql)
+        self.spider_client.end()
 
     def extract_content(self, body):
         try:
@@ -36,6 +51,7 @@ class CCTVFinance(SpiderBase):
         return content
 
     def start(self):
+        self._create_table()
         resp = requests.get(self.url, headers=self.headers)
         items = []
         if resp.status_code == 200:
@@ -58,10 +74,8 @@ class CCTVFinance(SpiderBase):
                 if content:
                     item['article'] = content
                     items.append(item)
+                    ret = self._save(self.spider_client, item, self.table_name, self.fields)
 
 
 if __name__ == "__main__":
     CCTVFinance().start()
-    # link = 'https://jingji.cctv.com/2020/07/30/ARTIhNqfBNxfTbuV158ALTrq200730.shtml'
-    # content = CCTVFinance().parse_detail(link)
-    # print(content)
