@@ -7,10 +7,13 @@ import time
 import requests
 from lxml import html
 
+from base import SpiderBase
 
-class EEOSpider(object):
+
+class EEOSpider(SpiderBase):
     """经济观察网"""
     def __init__(self):
+        super(EEOSpider, self).__init__()
         # 起始首页链接
         self.index_url = 'http://www.eeo.com.cn/'
         # 需要爬取的分逻辑
@@ -55,6 +58,9 @@ class EEOSpider(object):
             'Upgrade-Insecure-Requests': '1',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36',
         }
+        self.table_name = 'EEONews'
+        self.name = '经济观察网新闻'
+        self.fields = ['pub_date', 'title', 'link', 'article', 'author']
 
     def get_topic(self, url):
         """获取栏目资讯"""
@@ -147,16 +153,44 @@ class EEOSpider(object):
                 items.append(item)
             return items
 
+    def create_table(self):
+        self._spider_init()
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `{}` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `pub_date` datetime NOT NULL COMMENT '发布时间',
+          `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章标题',
+          `author` varchar(10) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章作者',
+          `link` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章详情页链接',
+          `article` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '详情页内容',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `link` (`link`),
+          KEY `pub_date` (`pub_date`),
+          KEY `update_time` (`UPDATETIMEJZ`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT = '{}';  
+        '''.format(self.table_name, self.name)
+        self.spider_client.insert(sql)
+        self.spider_client.end()
+
     def start(self):
+        # 建表
+        self.create_table()
+
         # 网页解析部分
         for url in self.topic_urls:
             topic_index_items = self.get_topic(url)
+            if topic_index_items and isinstance(topic_index_items, list):
+                ret = self._batch_save(self.spider_client, topic_index_items, self.table_name, self.fields)
 
         # api 部分
         for topic in self.topic_words:
             cat_info = self.topic_code_map.get(topic)
             api_url = self.api_format_url % (cat_info.get("catid"), cat_info.get('allcid'))
             api_topic_items = self.parse_api(api_url)
+            if api_topic_items and isinstance(api_topic_items, list):
+                ret = self._batch_save(self.spider_client, api_topic_items, self.table_name, self.fields)
 
 
 if __name__ == '__main__':
