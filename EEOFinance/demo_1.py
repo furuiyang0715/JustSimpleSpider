@@ -19,10 +19,27 @@ import requests
 # &page=\
 # &_=1597038933283'
 
+# 商业产业
 api_url = 'http://app.eeo.com.cn/?app=wxmember&controller=index&action=getMoreArticle\
 &jsoncallback=jsonp{}\
 &catid=3572\
 &allcid=397442,397434,397412,397399,397393,397282,397264,397222,397116,397115,397015,397011,397008,397007,397006,397013\
+&page=0\
+&_={}'.format(int(time.time() * 1000), int(time.time() * 1000))
+
+# 财经
+api_url = 'http://app.eeo.com.cn/?app=wxmember&controller=index&action=getMoreArticle\
+&jsoncallback=jsonp{}\
+&catid=3548\
+&allcid=399177,399154,399124,399092,399076,399077,399071,399018,398686,398574,398450,398445,398374,398167,398165,398106\
+&page=0\
+&_={}'.format(int(time.time() * 1000), int(time.time() * 1000))
+
+# 地产
+api_url = 'http://app.eeo.com.cn/?app=wxmember&controller=index&action=getMoreArticle\
+&jsoncallback=jsonp{}\
+&catid=3583\
+&allcid=399218,399108,399085,398868,398630,398628,398561,398355,398341,398534,398380,398470,398465,398381,398405,398370\
 &page=0\
 &_={}'.format(int(time.time() * 1000), int(time.time() * 1000))
 
@@ -61,4 +78,16 @@ if resp and resp.status_code == 200:
     articles = datas.get("article")
     for one in articles:
         print(one)
+
+        # print(one.keys())
+        # dict_keys(['contentid', 'pv', 'catid', 'title', 'thumb', 'url', 'name', 'curl', 'comments',
+        # 'published', 'description', 'author', 'spaceid', 'differTime', 'catname', 'caturl'])
+
+        # 发布的时间戳: published
+        # 最后修改时间: differTime
+        pub_ts = int(one.get("published"))
+        pub_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(pub_ts))
+        print(pub_date)
+        print(one.get("differTime"))
+        print()
 
