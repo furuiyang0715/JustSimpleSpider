@@ -235,8 +235,12 @@ class DockerSwith(SpiderBase, Daemon):
         self.docker_run_spider('cctv', 'CCTVFinance/cctv_spider.py')
         self.interval_start_task('cctv', 'CCTVFinance/cctv_spider.py', 'cctvfinance', 'pub_date', (1, 'hours'))
 
+        # 经济观察网新闻 / 每 6 小时爬取一次
+        self.docker_run_spider('eeo', 'EEOFinance/eeospider.py')
+        self.interval_start_task('eeo', 'EEOFinance/eeospider.py', 'EEONews', 'pub_date', (6, 'hours'))
+
         self.ding_crawl_information()
-        schedule.every(2).hours.do(self.ding_crawl_information)
+        schedule.every(5).hours.do(self.ding_crawl_information)
 
         while True:
             # logger.info("当前调度系统中的任务列表是:\n{}".format(pprint.pformat(schedule.jobs)))
