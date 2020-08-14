@@ -53,7 +53,7 @@ api_url = ' http://app.eeo.com.cn/?app=wxmember&controller=index&action=getMoreA
 &_={}'.format(int(time.time() * 1000), int(time.time() * 1000))
 
 # tmt
-api_url = 'ttp://app.eeo.com.cn/?app=wxmember&controller=index&action=getMoreArticle\
+api_url = 'http://app.eeo.com.cn/?app=wxmember&controller=index&action=getMoreArticle\
 &jsoncallback=jsonp{}\
 &catid=3549\
 &allcid=399341,399316,399310,399192,399103,399064,399047,399040,399028,398919,398894,398891,398872,398678,398676,397930\
