@@ -1,4 +1,5 @@
 import datetime
+import json
 import re
 import sys
 import time
@@ -49,7 +50,7 @@ class EEOSpider(object):
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
             'Cookie': 'PHPSESSID=7avdv48orrl42d4s323eae4dn5; acw_tc=2760775215970417166888855e8f887a018cbf5f73aab22ec8d9ae03f7e2b4; SERVERID=adeed77a8e607bd6b1d16fea05016e81|1597041716|1597041716',
-            'Host': 'www.eeo.com.cn',
+            # 'Host': 'www.eeo.com.cn',
             'Pragma': 'no-cache',
             'Upgrade-Insecure-Requests': '1',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36',
@@ -57,7 +58,7 @@ class EEOSpider(object):
 
     def get_topic(self, url):
         """获取栏目资讯"""
-        resp = requests.get(url)
+        resp = requests.get(url, headers=self.headers)
         if resp and resp.status_code == 200:
             text = resp.text.encode("ISO-8859-1").decode("utf-8")
             doc = html.fromstring(text)
@@ -86,12 +87,13 @@ class EEOSpider(object):
                         'pub_date': ret[1],
                         'article': ret[2],
                     }
+                print(item)
                 items.append(item)
             return items
         return None
 
     def get_detail(self, url, is_api=False):
-        resp = requests.get(url)
+        resp = requests.get(url, headers=self.headers)
         if resp and resp.status_code == 200:
             body = resp.text.encode("ISO-8859-1").decode("utf-8")
             doc = html.fromstring(body)
@@ -118,20 +120,45 @@ class EEOSpider(object):
                 return author, pub_date, article
         return None
 
+    def parse_api(self, api_url):
+        print(api_url)
+        resp = requests.get(api_url, headers=self.headers)
+        if resp and resp.status_code == 200:
+            body = resp.text
+            body = body.encode("ISO-8859-1").decode("utf-8")
+            print(body)
+            data_str = re.findall('jsonp\d{13}\((.*)\)', body)[0]
+            try:
+                datas = json.loads(data_str)
+            except:
+                return
+
+            articles = datas.get("article")
+            items = []
+            for one in articles:
+                item = {}
+                pub_ts = int(one.get("published"))
+                pub_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(pub_ts))
+                item['pub_date'] = pub_date
+                item['title'] = one.get("title")
+                item['author'] = one.get("author")
+                item['link'] = one.get("url")
+                print(item)
+                items.append(item)
+            return items
+
     def start(self):
         # 网页解析部分
-        # for url in self.topic_urls:
-        #     topic_index_items = self.get_topic(url)
+        for url in self.topic_urls:
+            topic_index_items = self.get_topic(url)
 
         # api 部分
         for topic in self.topic_words:
             cat_info = self.topic_code_map.get(topic)
             api_url = self.api_format_url % (cat_info.get("catid"), cat_info.get('allcid'))
-            print(api_url)
+            api_topic_items = self.parse_api(api_url)
 
 
 if __name__ == '__main__':
     eeo = EEOSpider()
     eeo.start()
-
-    pass
