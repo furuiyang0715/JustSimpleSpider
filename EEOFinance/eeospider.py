@@ -119,22 +119,19 @@ class EEOSpider(object):
         return None
 
     def start(self):
-        for url in self.topic_urls:
-            print(url)
-            ret = self.get_topic(url)
-            for r in ret:
-                print(r)
+        # 网页解析部分
+        # for url in self.topic_urls:
+        #     topic_index_items = self.get_topic(url)
 
-            print()
-            print()
-            print()
-            print()
-
-            sys.exit(0)
+        # api 部分
+        for topic in self.topic_words:
+            cat_info = self.topic_code_map.get(topic)
+            api_url = self.api_format_url % (cat_info.get("catid"), cat_info.get('allcid'))
+            print(api_url)
 
 
 if __name__ == '__main__':
     eeo = EEOSpider()
-    # eeo.start()
+    eeo.start()
 
     pass
