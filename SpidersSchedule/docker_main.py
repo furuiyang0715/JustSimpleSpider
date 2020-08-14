@@ -83,6 +83,7 @@ class DockerSwith(SpiderBase, Daemon):
             "p2peye",
             'cn9666',
             'cctv',
+            'eeo',
 
         ]
         for name in container_names:

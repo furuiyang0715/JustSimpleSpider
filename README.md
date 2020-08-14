@@ -34,3 +34,8 @@
 | 官媒 | 国家统计局-统计动态 | gov_stats_tjdt.py | http://www.stats.gov.cn/tjgz/tjdt/index.html | 
 | 官媒 | 国家统计局-新闻发布会 | gov_stats_xwfbh.py | http://www.stats.gov.cn/tjsj/xwfbh/fbhwd/index.html | 
 | 官媒 | 国家统计局-最新发布 | gov_stats_zxfb.py | http://www.stats.gov.cn/tjsj/zxfb/index.html | 
+| 网贷天眼查 | | P2Peye/p2peyespider.py | https://news.p2peye.com/ |  
+| 牛仔网评论 | | CN966/9666pinglun.py | http://pinglun.9666.cn |  
+| 经济观察网 | | EEOFinance/eeospider.py | http://www.eeo.com.cn/ | 
+| 搜狐财经 | | sohu/sohu_spider.py | https://m.sohu.com/ch/15 | 
+| 第一财经新闻 | | YiCai/yicai_spider.py | https://www.yicai.com/ | 
