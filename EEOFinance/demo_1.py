@@ -44,6 +44,23 @@ api_url = 'http://app.eeo.com.cn/?app=wxmember&controller=index&action=getMoreAr
 &_={}'.format(int(time.time() * 1000), int(time.time() * 1000))
 
 
+# 汽车
+api_url = ' http://app.eeo.com.cn/?app=wxmember&controller=index&action=getMoreArticle\
+&jsoncallback=jsonp{}\
+&catid=3559\
+&allcid=399414,399388,398657,398623,398621,398611,398479,398349,398231,398227,397935,397847,397684,397523,397259,397207\
+&page=0\
+&_={}'.format(int(time.time() * 1000), int(time.time() * 1000))
+
+# tmt
+api_url = 'ttp://app.eeo.com.cn/?app=wxmember&controller=index&action=getMoreArticle\
+&jsoncallback=jsonp{}\
+&catid=3549\
+&allcid=399341,399316,399310,399192,399103,399064,399047,399040,399028,398919,398894,398891,398872,398678,398676,397930\
+&page=0\
+&_={}'.format(int(time.time() * 1000), int(time.time() * 1000))
+
+
 headers = {
     'Accept': '*/*',
     'Accept-Encoding': 'gzip, deflate',
