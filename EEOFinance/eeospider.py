@@ -1,6 +1,7 @@
 import datetime
 import re
 import sys
+import time
 
 import requests
 from lxml import html
@@ -22,8 +23,24 @@ class EEOSpider(object):
             'yanjiuyuan',     # 研究院
         ]
         self.topic_format_url = 'http://www.eeo.com.cn/{}/'
+        self.api_format_url = 'http://app.eeo.com.cn/?app=wxmember&controller=index&action=getMoreArticle\
+&jsoncallback=jsonp{}\
+&catid=%s\
+&allcid=%s\
+&page=0\
+&_={}'.format(int(time.time() * 1000), int(time.time() * 1000))
         self.topic_urls = [self.topic_format_url.format(topic) for topic in self.topic_words]
-        # print(self.topic_urls)
+        # 主题与代码类别编号的对应关系
+        self.topic_code_map = {
+            'shangyechanye': {"catid": '3572', 'allcid': '397442,397434,397412,397399,397393,397282,397264,397222,397116,397115,397015,397011,397008,397007,397006,397013'},
+            'caijing': {"catid": '3548', 'allcid': '399177,399154,399124,399092,399076,399077,399071,399018,398686,398574,398450,398445,398374,398167,398165,398106'},
+            'dichan': {"catid": '3583', 'allcid': '399218,399108,399085,398868,398630,398628,398561,398355,398341,398534,398380,398470,398465,398381,398405,398370'},
+            'qiche': {"catid": '3559', 'allcid': '399414,399388,398657,398623,398621,398611,398479,398349,398231,398227,397935,397847,397684,397523,397259,397207'},
+            'tmt': {"catid": '3549', 'allcid': '399341,399316,399310,399192,399103,399064,399047,399040,399028,398919,398894,398891,398872,398678,398676,397930'},
+            'pinglun': {"catid": '3550', 'allcid': '399073,399036,398817,397910,397659,397653,397648,397632,397534,397519,397440,397436,396928,396772,396765,396514'},
+            'yanjiuyuan': {"catid": '3674', 'allcid': '398618,398542,397159,396650,396662,396670,396467,395563,394953,394936,394658,394168,393817,393775,393772,393617'},
+        }
+        # print(self.api_format_url % ("hello", 'world'))
 
         self.headers = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -118,6 +135,6 @@ class EEOSpider(object):
 
 if __name__ == '__main__':
     eeo = EEOSpider()
-    eeo.start()
+    # eeo.start()
 
     pass

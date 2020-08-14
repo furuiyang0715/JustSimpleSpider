@@ -60,6 +60,22 @@ api_url = 'http://app.eeo.com.cn/?app=wxmember&controller=index&action=getMoreAr
 &page=0\
 &_={}'.format(int(time.time() * 1000), int(time.time() * 1000))
 
+# 评论
+api_url = 'http://app.eeo.com.cn/?app=wxmember&controller=index&action=getMoreArticle\
+&jsoncallback=jsonp{}\
+&catid=3550\
+&allcid=399073,399036,398817,397910,397659,397653,397648,397632,397534,397519,397440,397436,396928,396772,396765,396514\
+&page=0\
+&_={}'.format(int(time.time() * 1000), int(time.time() * 1000))
+
+# 研究院
+api_url = 'http://app.eeo.com.cn/?app=wxmember&controller=index&action=getMoreArticle\
+&jsoncallback=jsonp{}\
+&catid=3674\
+&allcid=398618,398542,397159,396650,396662,396670,396467,395563,394953,394936,394658,394168,393817,393775,393772,393617\
+&page=0\
+&_={}'.format(int(time.time() * 1000), int(time.time() * 1000))
+
 
 headers = {
     'Accept': '*/*',
