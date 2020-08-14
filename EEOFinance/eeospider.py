@@ -73,6 +73,10 @@ class EEOSpider(SpiderBase):
             for article in articles:
                 link = article.xpath("./a/@href")[0]   # 文章链接
                 title = article.xpath(".//p")[0].text_content()    # 文章标题
+
+                if len(title) > 64:
+                    title = title[:64]
+
                 ret = self.get_detail(link)
 
                 if not ret:
@@ -111,6 +115,7 @@ class EEOSpider(SpiderBase):
 
             if is_api:
                 return article
+
             else:
                 try:
                     head_part = doc.xpath(".//div[@class='xd-b-b']")[0]
@@ -121,10 +126,10 @@ class EEOSpider(SpiderBase):
                     pub_date = datetime.datetime.strptime(pub_date, "%Y-%m-%d")
                     author = re.findall(r'[\u4e00-\u9fa5]+', pub_info)[0]  # 匹配出作者
                 except:
-                    pub_date = ''
-                    author = ''
-                return author, pub_date, article
-        return None
+                    return
+                else:
+                    if isinstance(pub_date, datetime.datetime):
+                        return author, pub_date, article
 
     def parse_api(self, api_url):
         print(api_url)
@@ -132,7 +137,6 @@ class EEOSpider(SpiderBase):
         if resp and resp.status_code == 200:
             body = resp.text
             body = body.encode("ISO-8859-1").decode("utf-8")
-            print(body)
             data_str = re.findall('jsonp\d{13}\((.*)\)', body)[0]
             try:
                 datas = json.loads(data_str)
@@ -146,9 +150,15 @@ class EEOSpider(SpiderBase):
                 pub_ts = int(one.get("published"))
                 pub_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(pub_ts))
                 item['pub_date'] = pub_date
-                item['title'] = one.get("title")
+                title = one.get("title")
+                if len(title) > 64:
+                    title = title[:64]
+                item['title'] = title
                 item['author'] = one.get("author")
-                item['link'] = one.get("url")
+                link = one.get("url")
+                item['link'] = link
+                article = self.get_detail(link, is_api=True)
+                item['article'] = article
                 print(item)
                 items.append(item)
             return items
@@ -161,7 +171,7 @@ class EEOSpider(SpiderBase):
           `pub_date` datetime NOT NULL COMMENT '发布时间',
           `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章标题',
           `author` varchar(10) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章作者',
-          `link` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT '文章详情页链接',
+          `link` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL COMMENT '文章详情页链接',
           `article` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT '详情页内容',
           `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
           `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -182,7 +192,9 @@ class EEOSpider(SpiderBase):
         for url in self.topic_urls:
             topic_index_items = self.get_topic(url)
             if topic_index_items and isinstance(topic_index_items, list):
+                # print("in")
                 ret = self._batch_save(self.spider_client, topic_index_items, self.table_name, self.fields)
+                print(ret)
 
         # api 部分
         for topic in self.topic_words:
