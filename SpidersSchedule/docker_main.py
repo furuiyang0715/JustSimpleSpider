@@ -163,82 +163,82 @@ class DockerSwith(SpiderBase, Daemon):
     def run(self):   # TODO 改为读取更新配置的 或许可以配合 watch dog 主动构建？
         self.clear_all()
 
-        # 交易所日历公告爬虫 / 每天爬取 1 次
-        self.docker_run_spider("calendar_news", 'CalendarNewsRelease/news_release.py')
-        self.start_task("calendar_news", 'CalendarNewsRelease/news_release.py', 'calendar_news', 'PubDate', '01:00')
+        # # 交易所日历公告爬虫 / 每天爬取 1 次  （废弃）
+        # self.docker_run_spider("calendar_news", 'CalendarNewsRelease/news_release.py')
+        # self.start_task("calendar_news", 'CalendarNewsRelease/news_release.py', 'calendar_news', 'PubDate', '01:00')
 
         # 东财财富号 / 每天爬取 1 次
         # TODO 暂定 运行完一次时间较长 升频时添加一个制动混合启动
-        self.docker_run_spider("dongc", 'CArticle/ca_main.py')
-        self.start_task("dongc", 'CArticle/ca_main.py', "eastmoney_carticle", 'pub_date', "02:00", restart=True)
+        # self.docker_run_spider("dongc", 'CArticle/ca_main.py')
+        # self.start_task("dongc", 'CArticle/ca_main.py', "eastmoney_carticle", 'pub_date', "02:00", restart=True)
 
-        # 财新社
-        # 财新社电报 / 每小时爬取一次
-        # 财新社按照新闻编号爬取 / 每小时爬取一次
-        self.docker_run_spider("cls", 'ClsCnInfo/telegraphs.py')
-        self.docker_run_spider("cls2", 'ClsCnInfo/cls_details.py')
-        self.interval_start_task("cls", 'ClsCnInfo/telegraphs.py', 'cls_telegraphs', 'pub_date', (1, "hours"))
-        self.interval_start_task("cls2", 'ClsCnInfo/cls_details.py', 'cls_telegraphs', 'pub_date', (1, "hours"))
+        # # 财新社
+        # # 财新社电报 / 每小时爬取一次
+        # # 财新社按照新闻编号爬取 / 每小时爬取一次
+        # self.docker_run_spider("cls", 'ClsCnInfo/telegraphs.py')
+        # self.docker_run_spider("cls2", 'ClsCnInfo/cls_details.py')
+        # self.interval_start_task("cls", 'ClsCnInfo/telegraphs.py', 'cls_telegraphs', 'pub_date', (1, "hours"))
+        # self.interval_start_task("cls2", 'ClsCnInfo/cls_details.py', 'cls_telegraphs', 'pub_date', (1, "hours"))
 
         # 政府新闻等 / 每天爬取一次
-        self.docker_run_spider("gov", 'GovSpiders/gov_main.py')
-        self.start_task("gov", 'GovSpiders/gov_main.py', 'chinabank', 'pub_date', "03:00", restart=True)
+        # self.docker_run_spider("gov", 'GovSpiders/gov_main.py')
+        # self.start_task("gov", 'GovSpiders/gov_main.py', 'chinabank', 'pub_date', "03:00", restart=True)
 
-        # 巨丰财经 / 每 40 min 爬取一次
-        self.docker_run_spider('juf', 'JfInfo/jfinfo_main.py')
-        self.interval_start_task('juf', 'JfInfo/jfinfo_main.py', 'jfinfo', 'pub_date', (40, "minutes"))
+        # # 巨丰财经 / 每 40 min 爬取一次
+        # self.docker_run_spider('juf', 'JfInfo/jfinfo_main.py')
+        # self.interval_start_task('juf', 'JfInfo/jfinfo_main.py', 'jfinfo', 'pub_date', (40, "minutes"))
 
-        # 巨潮资讯 / 每 2 小时更新一次
-        self.docker_run_spider('juc', 'JuchaoInfo/juchao.py')
-        self.interval_start_task('juc', 'JuchaoInfo/juchao.py', "juchao_info", 'pub_date', (2, "hours"))
+        # # 巨潮资讯 / 每 2 小时更新一次
+        # self.docker_run_spider('juc', 'JuchaoInfo/juchao.py')
+        # self.interval_start_task('juc', 'JuchaoInfo/juchao.py', "juchao_info", 'pub_date', (2, "hours"))
 
         # 网易财经 / 每天更新一次 （TODO 新版页面升级）
-        self.docker_run_spider('m163', 'Money163/netease_money.py')
-        self.start_task('m163', 'Money163/netease_money.py', "netease_money", 'pub_date', "04:00")
+        # self.docker_run_spider('m163', 'Money163/netease_money.py')
+        # self.start_task('m163', 'Money163/netease_money.py', "netease_money", 'pub_date', "04:00")
 
         # 腾讯财经 / 每 50 min 更新一次 (TODO 新版页面升级)
-        self.docker_run_spider('qqf', 'QQStock/qq_stock.py')
-        self.interval_start_task('qqf', 'QQStock/qq_stock.py', "qq_Astock_news", 'pub_date', (50, "minutes"))
+        # self.docker_run_spider('qqf', 'QQStock/qq_stock.py')
+        # self.interval_start_task('qqf', 'QQStock/qq_stock.py', "qq_Astock_news", 'pub_date', (50, "minutes"))
 
-        # 上海证券报 / 每 30 min 更新一次
-        self.docker_run_spider('shcn', 'ShangHaiSecuritiesNews/cn_main.py')
-        self.interval_start_task('shcn', 'ShangHaiSecuritiesNews/cn_main.py', 'cn_stock', 'pub_date', (30, "minutes"))
+        # # 上海证券报 / 每 30 min 更新一次
+        # self.docker_run_spider('shcn', 'ShangHaiSecuritiesNews/cn_main.py')
+        # self.interval_start_task('shcn', 'ShangHaiSecuritiesNews/cn_main.py', 'cn_stock', 'pub_date', (30, "minutes"))
 
-        # 搜狐财经 / 每 10 min 更新一次
-        self.docker_run_spider('sohu', 'sohu/sohu_spider.py')
-        self.interval_start_task('sohu', 'sohu/sohu_spider.py', 'SohuFinance', 'pub_date', (10, "minutes"))
+        # # 搜狐财经 / 每 10 min 更新一次
+        # self.docker_run_spider('sohu', 'sohu/sohu_spider.py')
+        # self.interval_start_task('sohu', 'sohu/sohu_spider.py', 'SohuFinance', 'pub_date', (10, "minutes"))
 
-        # 中国证券报 / 每 20 min 更新一次
-        self.docker_run_spider('stcn', 'StockStcn/kuaixun.py')
-        self.interval_start_task('stcn', 'StockStcn/kuaixun.py', "stcn_info", 'pub_date', (20, 'minutes'))
+        # # 中国证券报 / 每 20 min 更新一次
+        # self.docker_run_spider('stcn', 'StockStcn/kuaixun.py')
+        # self.interval_start_task('stcn', 'StockStcn/kuaixun.py', "stcn_info", 'pub_date', (20, 'minutes'))
 
-        # 大公报 / 每 25 min 更新一次
-        self.docker_run_spider('tkg', 'Takungpao/takungpao_main.py')
-        self.interval_start_task('tkg', 'Takungpao/takungpao_main.py', 'Takungpao', 'pub_date', (25, "minutes"))
+        # # 大公报 / 每 25 min 更新一次
+        # self.docker_run_spider('tkg', 'Takungpao/takungpao_main.py')
+        # self.interval_start_task('tkg', 'Takungpao/takungpao_main.py', 'Takungpao', 'pub_date', (25, "minutes"))
 
         # 淘股吧 / 每天运行一次
         self.docker_run_spider('tgb', 'Taoguba/tgb_main.py')
         self.start_task('tgb', 'Taoguba/tgb_main.py', 'taoguba', 'pub_date', "05:00")
 
-        # 第一财经 / 每 10 min 爬取一次
-        self.docker_run_spider('yicai', 'YiCai/yicai_spider.py')
-        self.interval_start_task('yicai', 'YiCai/yicai_spider.py', 'NewsYicai', 'pub_date', (10, 'minutes'))
+        # # 第一财经 / 每 10 min 爬取一次
+        # self.docker_run_spider('yicai', 'YiCai/yicai_spider.py')
+        # self.interval_start_task('yicai', 'YiCai/yicai_spider.py', 'NewsYicai', 'pub_date', (10, 'minutes'))
 
-        # 天眼网贷 / 每小时更新一次
-        self.docker_run_spider('p2peye', "P2Peye/p2peyespider.py")
-        self.interval_start_task('p2peye', "P2Peye/p2peyespider.py", 'p2peye_news', 'pub_date', (2, 'hours'))
+        # # 天眼网贷 / 每小时更新一次
+        # self.docker_run_spider('p2peye', "P2Peye/p2peyespider.py")
+        # self.interval_start_task('p2peye', "P2Peye/p2peyespider.py", 'p2peye_news', 'pub_date', (2, 'hours'))
 
-        # 牛仔网 / 每 5 小时更新一次
-        self.docker_run_spider('cn9666', 'CN966/9666pinglun.py')
-        self.interval_start_task('cn9666', 'CN966/9666pinglun.py', '9666pinglun', 'pub_date', (5, 'hours'))
+        # # 牛仔网 / 每 5 小时更新一次
+        # self.docker_run_spider('cn9666', 'CN966/9666pinglun.py')
+        # self.interval_start_task('cn9666', 'CN966/9666pinglun.py', '9666pinglun', 'pub_date', (5, 'hours'))
 
-        # 央视网财经频道 / 每小时更新一次
-        self.docker_run_spider('cctv', 'CCTVFinance/cctv_spider.py')
-        self.interval_start_task('cctv', 'CCTVFinance/cctv_spider.py', 'cctvfinance', 'pub_date', (1, 'hours'))
+        # # 央视网财经频道 / 每小时更新一次
+        # self.docker_run_spider('cctv', 'CCTVFinance/cctv_spider.py')
+        # self.interval_start_task('cctv', 'CCTVFinance/cctv_spider.py', 'cctvfinance', 'pub_date', (1, 'hours'))
 
-        # 经济观察网新闻 / 每 6 小时爬取一次
-        self.docker_run_spider('eeo', 'EEOFinance/eeospider.py')
-        self.interval_start_task('eeo', 'EEOFinance/eeospider.py', 'EEONews', 'pub_date', (6, 'hours'))
+        # # 经济观察网新闻 / 每 6 小时爬取一次
+        # self.docker_run_spider('eeo', 'EEOFinance/eeospider.py')
+        # self.interval_start_task('eeo', 'EEOFinance/eeospider.py', 'EEONews', 'pub_date', (6, 'hours'))
 
         self.ding_crawl_information()
         schedule.every(5).hours.do(self.ding_crawl_information)

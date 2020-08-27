@@ -139,8 +139,8 @@ if __name__ == '__main__':
     #         with open(ofile, 'a+', encoding='utf-8')as f:
     #             f.write(word[2] + '\n')
 
-    test_in_file = '珠海地域名称.scel'
-    test_out_file = '珠海地域名称.ppcsv'
+    test_in_file = '广州市城市信息精选.scel'
+    test_out_file = '广州市城市信息精选.csv'
     for word in scel2txt(test_in_file):
         with open(test_out_file, 'a+', encoding='utf-8')as file:
             file.write(word[2] + '\n')
