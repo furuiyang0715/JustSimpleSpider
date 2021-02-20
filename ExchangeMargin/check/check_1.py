@@ -34,6 +34,7 @@ mysql> select * from sz_margin_history limit 1;
 
 class Checker(MarginBase):
     def __init__(self):
+        super(Checker, self).__init__()
         self.juyuan_table_name = 'MT_TargetSecurities'
         # 聚源数据库最后的更新时间点
         self.juyuan_last_day = datetime.datetime(2020, 4, 19)
@@ -46,9 +47,8 @@ class Checker(MarginBase):
 
     def juyuan_latest(self, market=90):
         # 查询聚源最新的数据
-        juyuan = self._init_pool(self.juyuan_cfg)
         sql = '''select InnerCode from {} where SecuMarket = {} and TargetCategory = 10 and TargetFlag = 1; '''.format(self.juyuan_table_name, market)
-        ret1 = juyuan.select_all(sql)
+        ret1 = self.juyuan_conn.query(sql)
         ret1 = sorted(set([r.get("InnerCode") for r in ret1]))
         print(ret1)
         print(len(ret1))
@@ -73,14 +73,16 @@ class Checker(MarginBase):
         pass
 
     def sz_dt_datas(self, dt1, _type=1):
-        spider = self._init_pool(self.spider_cfg)
+        # spider = self._init_pool(self.spider_cfg)
         sql_dt = '''select max(ListDate) as mx from {} where ListDate <= '{}'; 
         '''.format(self.sz_history_table_name, dt1)
-        dt1_ = spider.select_one(sql_dt).get("mx")
+        # dt1_ = spider.select_one(sql_dt).get("mx")
+        dt1_ = self.spider_conn.get(sql_dt).get("mx")
         if dt1_:
             sql = '''select InnerCode from {} where ListDate = '{}' and  FinanceBool = {}; 
             '''.format(self.sz_history_table_name, dt1_, _type)  # and FinanceBuyToday = 1
-            ret1 = spider.select_all(sql)
+            # ret1 = spider.select_all(sql)
+            ret1 = self.spider_conn.query(sql)
             ret1 = sorted(set([r.get("InnerCode") for r in ret1]))
             return ret1
         else:
@@ -118,13 +120,15 @@ class Checker(MarginBase):
         :param _type:
         :return:
         """
-        spider = self._init_pool(self.spider_cfg)
+        # spider = self._init_pool(self.spider_cfg)
         sql_dt = '''select max(ListDate) as mx from {} where ListDate <= '{}'; 
         '''.format(self.sh_list_table_name, dt)
-        dt1_ = spider.select_one(sql_dt).get("mx")
+        # dt1_ = spider.select_one(sql_dt).get("mx")
+        dt1_ = self.spider_conn.get(sql_dt).get("mx")
         sql = '''select InnerCode from {} where ListDate = '{}' and TargetCategory = {}; 
         '''.format(self.sh_list_table_name, dt1_, _category)
-        ret1 = spider.select_all(sql)
+        # ret1 = spider.select_all(sql)
+        ret1 = self.spider_conn.query(sql)
         ret1 = sorted(set([r.get("InnerCode") for r in ret1]))
         return ret1
 
@@ -137,10 +141,11 @@ class Checker(MarginBase):
         """
         # TODO 测试以及正式库
         # clinet = self._init_pool(self.product_cfg)
-        clinet = self._init_pool(self.dc_cfg)
+        # clinet = self._init_pool(self.dc_cfg)
         sql = '''select InnerCode from {} where SecuMarket = {} and TargetCategory = {} and TargetFlag = 1; 
         '''.format(self.target_table_name, market, category)
-        ret = clinet.select_all(sql)
+        # ret = clinet.select_all(sql)
+        ret = self.dc_conn.query(sql)
         ret = [r.get("InnerCode") for r in ret]
         return ret
 
@@ -156,8 +161,3 @@ class Checker(MarginBase):
 
 if __name__ == "__main__":
     Checker().sz_check()
-
-
-
-
-    pass
