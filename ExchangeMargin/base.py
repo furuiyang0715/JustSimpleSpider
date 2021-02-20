@@ -1,4 +1,5 @@
 import base64
+import datetime
 import hashlib
 import hmac
 import json
@@ -71,11 +72,6 @@ class MarginBase(object):
         self.target_table_name = 'stk_mttargetsecurities'
         self.juyuan_table_name = 'MT_TargetSecurities'
         self.is_local = LOCAL
-        self.dc_client = None
-        self.target_client = None
-        self.juyuan_client = None
-        self.test_client = None
-        self.spider_client = None
 
     def _process_content(self, vs):
         """
@@ -126,11 +122,10 @@ class MarginBase(object):
         https://dd.gildata.com/#/tableShow/27/column///
         https://dd.gildata.com/#/tableShow/718/column///
         """
-        # self._juyuan_init()
         # 8 是开放式基金
         # 加上 41 是因为 689009
-        sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2, 8, 41) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
-        # ret = self.juyuan_client.select_all(sql)
+        sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2, 8, 41) and \
+        SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
         ret = self.juyuan_conn.query(sql)
         info = {}
         for r in ret:
@@ -188,15 +183,13 @@ class MarginBase(object):
         ret = [r.get("InnerCode") for r in ret]
         return ret
 
-#     def sync_dc2test(self, table_name):
-#         dc_client = self._init_pool(self.dc_cfg)
-#         sql = '''select * from {}; '''.format(table_name)
-#         datas = dc_client.select_all(sql)
-#         test_client = self._init_pool(self.test_cfg)
-#         self._batch_save(test_client, datas, table_name, [])
-#         dc_client.dispose()
-#         test_client.dispose()
-#
+    # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+    # def sync_dc2test(self, table_name):
+    #     sql = '''select * from {}; '''.format(table_name)
+    #     datas = self.dc_conn.query(sql)
+    #     self.test_conn.batch_insert(datas, table_name, [])
+
 #     def select_error_datas(self):
 # #         sql = '''
 # #         select id  from stk_mttargetsecurities where SecuMarket = 83 and  InDate = '2020-05-11' \
@@ -209,14 +202,14 @@ class MarginBase(object):
 # #         dc_client.dispose()
 # #
 # #         sql = '''delete from stk_mttargetsecurities where id in {};'''.format(tuple(ids))
+#
 #         if self.is_local:
-#             client = self._init_pool(self.test_cfg)
+#             client = self.test_conn
 #         else:
-#             client = self._init_pool(self.product_cfg)
-# #
-# #         count = client.delete(sql)
-# #         print(count)
-# #         client.dispose()
+#             client = self.product_conn
+#
+#         # count = client.execute(sql)
+#         # print(count)
 #
 #         infos = {
 #             230468: '2020-06-10 00:00:00',
@@ -241,7 +234,7 @@ class MarginBase(object):
 #                     'UpdateTime': datetime.datetime.now()
 #                     }
 #             items.append(item)
-#         ret = self._batch_save(client, items, 'stk_mttargetsecurities', [])
+#         ret = client.batch_insert(items, 'stk_mttargetsecurities', [])
 #         print(ret)
 #
 #         infos2 = {
@@ -258,37 +251,31 @@ class MarginBase(object):
 #                     'UpdateTime': datetime.datetime.now()
 #                     }
 #             items2.append(item)
-#         ret = self._batch_save(client, items2, 'stk_mttargetsecurities', [])
+#         # ret = self._batch_save(client, items2, 'stk_mttargetsecurities', [])
+#         ret = client.batch_insert(items2, 'stk_mttargetsecurities', [])
 #         print(ret)
 #
-#         # client.dispose()
-#
-#     # def list_check(self):
-#     #     # 今日的清单
-#     #     test_client = self._init_pool(self.test_cfg)
-#     #     sql = '''select InnerCode from margin_sh_list_spider where ListDate = '2020-06-17' and TargetCategory = 20; '''
-#     #     ret = test_client.select_all(sql)
-#     #     list_datas = set([r.get("InnerCode") for r in ret])
-#     #     print(list_datas)
-#     #     test_client.dispose()
-#     #
-#     #     # dc 的清单
-#     #     # dc_client = self._init_pool(self.dc_cfg)
-#     #     dc_client = self._init_pool(self.test_cfg)
-#     #     sql = '''select InnerCode from stk_mttargetsecurities where TargetFlag = 1 and TargetCategory = 20 and SecuMarket = 83; '''
-#     #     ret = dc_client.select_all(sql)
-#     #     dc_datas = set([r.get("InnerCode") for r in ret])
-#     #     print(dc_datas)
-#     #     dc_client.dispose()
-#     #
-#     #     print(dc_datas == list_datas)
-#     #     print(dc_datas - list_datas)
-#     #     print(list_datas - dc_datas)
-#
-#
+    # def list_check(self):
+    #     # 今日的清单
+    #     sql = '''select InnerCode from margin_sh_list_spider where ListDate = '2020-06-17' and TargetCategory = 20; '''
+    #     ret = self.test_conn.query(sql)
+    #     list_datas = set([r.get("InnerCode") for r in ret])
+    #     print(list_datas)
+    #
+    #     # dc 的清单
+    #     sql = '''select InnerCode from stk_mttargetsecurities where TargetFlag = 1 and TargetCategory = 20 and SecuMarket = 83; '''
+    #     ret = self.dc_conn.query(sql)
+    #     dc_datas = set([r.get("InnerCode") for r in ret])
+    #     print(dc_datas)
+    #
+    #     print(dc_datas == list_datas)
+    #     print(dc_datas - list_datas)
+    #     print(list_datas - dc_datas)
+
+
 # if __name__ == "__main__":
 #     mb = MarginBase()
 #     # mb.sync_dc2test("stk_mttargetsecurities")
 #     # mb.select_error_datas()
 #     # mb.list_check()
-#     mb.select_error_datas()
+#     # mb.select_error_datas()

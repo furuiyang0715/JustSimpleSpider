@@ -95,8 +95,7 @@ class ShSync(MarginBase):
                 and TargetCategory = 20  and TargetFlag = 1; '''
 
             sql = base_sql.format(self.target_table_name, dt, inner_code)
-            count = self.target_client.update(sql)
-            self.target_client.end()
+            count = self.product_conn.execute(sql)
 
     def start(self):
         msg = ''
