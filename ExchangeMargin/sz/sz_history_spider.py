@@ -17,7 +17,7 @@ from ExchangeMargin.base import MarginBase, logger
 
 class SzListSpider(MarginBase):
     def __init__(self):
-        super(SzListSpider, SzListSpider).__init__()
+        super(SzListSpider, self).__init__()
         # 主页链接
         # self.web_url = 'http://www.szse.cn/disclosure/margin/object/index.html'
         # api 接口
@@ -118,14 +118,16 @@ class SzListSpider(MarginBase):
             # print(item)
             items.append(item)
 
-        client = self._init_pool(self.spider_cfg)
+        # client = self._init_pool(self.spider_cfg)
         for item in items:
-            self._save(client, item, self.history_table_name, fields)
-        try:
-            client.dispose()
-        except:
-            logger.warning("dispose error")
-            raise
+            self.spider_conn.table_insert(self.history_table_name, item, fields)
+            # self._save(client, item, self.history_table_name, fields)
+
+        # try:
+        #     client.dispose()
+        # except:
+        #     logger.warning("dispose error")
+        #     raise
 
         # return True
         return '数据更新成功'
@@ -212,9 +214,11 @@ class SzListSpider(MarginBase):
           UNIQUE KEY `un2` (`ListDate`, `InnerCode`) USING BTREE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='深交所融资融券标的证券历史清单';
         '''.format(self.history_table_name)
-        spider = self._init_pool(self.spider_cfg)
-        spider.insert(sql)
-        spider.dispose()
+        self.spider_conn.execute(sql)
+
+        # spider = self._init_pool(self.spider_cfg)
+        # spider.insert(sql)
+        # spider.dispose()
 
     def start(self):
         self._create_table()
@@ -257,19 +261,19 @@ def sz_history_task():
 
 
 if __name__ == '__main__':
-    scheduler = BlockingScheduler()
+    # scheduler = BlockingScheduler()
     # 确保重启时可以执行一次
     sz_history_task()
 
-    scheduler.add_job(sz_history_task, 'cron', hour='3, 9, 15', max_instances=10, id="spider_task")
-    logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
-    try:
-        scheduler.start()
-    except (KeyboardInterrupt, SystemExit):
-        pass
-    except Exception as e:
-        logger.info(f"本次任务执行出错{e}")
-        sys.exit(0)
+    # scheduler.add_job(sz_history_task, 'cron', hour='3, 9, 15', max_instances=10, id="spider_task")
+    # logger.info('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
+    # try:
+    #     scheduler.start()
+    # except (KeyboardInterrupt, SystemExit):
+    #     pass
+    # except Exception as e:
+    #     logger.info(f"本次任务执行出错{e}")
+    #     sys.exit(0)
 
 
 '''部署 
