@@ -52,7 +52,7 @@ class MarginBroadcast(MarginBase):
 
     def _create_table(self):
         """对公告爬虫建表 """
-        self._spider_init()
+        # self._spider_init()
         sql = '''
         CREATE TABLE IF NOT EXISTS `{}` (
           `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
@@ -69,7 +69,8 @@ class MarginBroadcast(MarginBase):
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='交易所融资融券公告信息';
         
         '''.format(self.announcement_table)
-        self.spider_client.insert(sql)
+        self.spider_conn.execute(sql)
+        # self.spider_client.insert(sql)
         logger.info("爬虫公告表建表成功")
 
     def _make_sz_params(self, page_num):

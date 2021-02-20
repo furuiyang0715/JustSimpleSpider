@@ -115,7 +115,7 @@ class SzListSpider(MarginBase):
             item['SecurityBool'] = 1 if data[3] == 'Y' else 0  # 融券标的
             item['SecuritySellToday'] = 1 if data[5] == "Y" else 0  # 当日可融券
             item['SecuritySellLimit'] = 1 if data[6] == "Y" else 0  # 融券卖出价格限制
-            # print(item)
+            print(item)
             items.append(item)
 
         # client = self._init_pool(self.spider_cfg)

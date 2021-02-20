@@ -21,22 +21,24 @@ class BoardCast(MarginBase):
 
     def show_info(self, market):
         """选择爬虫库的原始资讯数据"""
-        self._spider_init()
+        # self._spider_init()
         sql = """
         select time, content from {} where market = {} and time >= '{}'; 
         """.format(self.table, market, self.early_day)
-        board_info = self.spider_client.select_all(sql)
+        # board_info = self.spider_client.select_all(sql)
+        board_info = self.spider_conn.query(sql)
         return board_info
 
     def show_sql_info(self, secu_code):
         """查看 datacenter 数据库的情况"""
-        self._dc_init()
+        # self._dc_init()
         format_str = "聚源内部编码: {} 列出时间: {}, 移除时间: {} 当前是否在清单内: {}\n"
         inner_code = self.get_inner_code(secu_code)
         sql = """
         select * from {} where InnerCode = {};  
         """.format(self.target_table_name, inner_code)
-        ret = self.dc_client.select_all(sql)
+        # ret = self.dc_client.select_all(sql)
+        ret = self.dc_conn.select_all(sql)
         # 将其转化为 str 语句
         msg1 = '融资:'
         msg2 = '融券:'
