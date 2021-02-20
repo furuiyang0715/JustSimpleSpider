@@ -49,9 +49,6 @@ class SHMarginSpider(MarginBase):
         '''.format(self.spider_table_name)
         self.spider_conn.execute(sql)
 
-        # self.spider_client.insert(sql)
-        # self.spider_client.end()
-
     def start(self):
         """
         <li><a href="#tableData_961" data-toggle="tab">融资买入标的证券一览表
@@ -59,8 +56,6 @@ class SHMarginSpider(MarginBase):
         </a></li><li><a href="#tableData_960" data-toggle="tab">融资融券可充抵保证金证券一览表
         """
         msg = '本地测试:\n' if LOCAL else "远程:\n"
-
-        # self._spider_init()
         self._create_table()
 
         resp = requests.get(self.url)
@@ -69,7 +64,6 @@ class SHMarginSpider(MarginBase):
             doc = html.fromstring(page)
 
             fields = ['SecuMarket', 'InnerCode', 'SecuCode', 'SecuAbbr', 'SerialNumber', 'ListDate', 'TargetCategory']
-            # spider = self._init_pool(self.spider_cfg)
 
             # 962
             datas = doc.xpath("//div[@class='table-responsive sse_table_T01 tdclickable']/table[@class='table search_']/script[@type='text/javascript']")[0].text
@@ -97,7 +91,6 @@ class SHMarginSpider(MarginBase):
                 item['InnerCode'] = inner_code
                 print(item)
                 items.append(item)
-            # self._batch_save(self.spider_client, items, self.spider_table_name, fields)
             self.spider_conn.batch_insert(items, self.spider_table_name, fields)
 
             msg += "{} 上交所的融券卖出标的爬虫入库成功\n".format(show_dt)
@@ -129,7 +122,6 @@ class SHMarginSpider(MarginBase):
                 item['InnerCode'] = inner_code
                 print(item)
                 items.append(item)
-            # self._batch_save(self.spider_client, items, self.spider_table_name, fields)
             self.spider_conn.batch_insert(items, self.spider_table_name, fields)
 
             msg += "{} 上交所的融资买入标的爬虫入库成功\n".format(show_dt)
@@ -139,11 +131,7 @@ class SHMarginSpider(MarginBase):
 
 
 def sh_list_task():
-    try:
-        SHMarginSpider().start()
-    except:
-        # TODO 发出钉钉预警
-        pass
+    SHMarginSpider().start()
 
 
 if __name__ == '__main__':
