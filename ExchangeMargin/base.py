@@ -239,7 +239,8 @@ class MarginBase(object):
         """
         self._juyuan_init()
         # 8 是开放式基金
-        sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2, 8) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
+        # 加上 41 是因为 689009
+        sql = 'SELECT SecuCode,InnerCode from SecuMain WHERE SecuCategory in (1, 2, 8, 41) and SecuMarket in (83, 90) and ListedSector in (1, 2, 6, 7);'
         ret = self.juyuan_client.select_all(sql)
         info = {}
         for r in ret:

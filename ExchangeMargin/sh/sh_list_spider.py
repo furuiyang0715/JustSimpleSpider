@@ -93,6 +93,7 @@ class SHMarginSpider(MarginBase):
                 item['SecuCode'] = secu_code
                 inner_code = self.get_inner_code(secu_code)
                 item['InnerCode'] = inner_code
+                print(item)
                 items.append(item)
             self._batch_save(self.spider_client, items, self.spider_table_name, fields)
 
@@ -123,6 +124,7 @@ class SHMarginSpider(MarginBase):
                 item['SecuCode'] = secu_code
                 inner_code = self.get_inner_code(secu_code)
                 item['InnerCode'] = inner_code
+                print(item)
                 items.append(item)
             self._batch_save(self.spider_client, items, self.spider_table_name, fields)
 
@@ -138,7 +140,6 @@ def sh_list_task():
 
 if __name__ == '__main__':
     sh_list_task()
-
 
 
 # '''
