@@ -26,25 +26,27 @@ class ShSync(MarginBase):
 
     def get_spider_latest_list(self, market, category):
         """获取爬虫库中最新的清单"""
-        self._spider_init()
+        # self._spider_init()
         sql = '''select InnerCode from {} where ListDate = (select max(ListDate) from {} \
         where SecuMarket = {} and TargetCategory = {}) and SecuMarket = {} and TargetCategory = {}; 
         '''.format(self.spider_table_name, self.spider_table_name, market, category, market, category)
-        ret = self.spider_client.select_all(sql)
+        # ret = self.spider_client.select_all(sql)
+        ret = self.spider_conn.query(sql)
         ret = [r.get("InnerCode") for r in ret]
         return ret
 
     def get_spider_dt_list(self, dt, category):
         """获取爬虫库中具体某一天的清单"""
-        self._spider_init()
+        # self._spider_init()
         sql_dt = '''select max(ListDate) as mx from {} where ListDate <= '{}' and SecuMarket =83 and TargetCategory = {}; 
         '''.format(self.spider_table_name, dt, category)
-        dt_ = self.spider_client.select_one(sql_dt).get("mx")
+        # dt_ = self.spider_client.select_one(sql_dt).get("mx")
+        dt_ = self.spider_conn.get(sql_dt).get("mx")
         logger.info("距离 {} 最近的之前的一天是{}".format(dt, dt_))
         if dt_:
             sql = '''select InnerCode from {} where ListDate = '{}' and SecuMarket = 83 and TargetCategory = {};
             '''.format(self.spider_table_name, dt_, category)
-            ret = self.spider_client.select_all(sql)
+            ret = self.spider_conn.query(sql)
             ret = [r.get("InnerCode") for r in ret]
             return ret
         else:
@@ -59,7 +61,7 @@ class ShSync(MarginBase):
         :param to_add: 1 移入 0 移出
         :return:
         """
-        self._target_init()
+        # self._target_init()
         if to_add:  # 被列入的情况
             if type == 10:    # 融资
                 item = {
@@ -81,7 +83,8 @@ class ShSync(MarginBase):
                     'ChangeReasonDesc': None,
                     'UpdateTime': datetime.datetime.now(),
                 }
-            count = self._save(self.target_client, item, self.target_table_name, self.fields)
+            # count = self._save(self.target_client, item, self.target_table_name, self.fields)
+            self.product_conn.table_insert(self.spider_table_name, item, self.fields)
 
         else:   # 被移出列表的情况
             if type == 10:    # 融资
@@ -153,17 +156,21 @@ class ShSync(MarginBase):
 
 
 def diff_task():
-    ShSync().start()
+    try:
+        ShSync().start()
+    except:
+        # TODO 异常处理
+        pass
 
 
 if __name__ == "__main__":
     diff_task()
 
-    schedule.every().day.at("12:00").do(diff_task)
-
-    while True:
-        schedule.run_pending()
-        time.sleep(10)
+    # schedule.every().day.at("12:00").do(diff_task)
+    #
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(10)
 
 
 '''部署
