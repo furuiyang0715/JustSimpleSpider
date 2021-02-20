@@ -66,10 +66,10 @@ else:
     PRODUCT_MYSQL_DB = env.get("PRODUCT_MYSQL_DB", cf.get('product', 'PRODUCT_MYSQL_DB'))
 
 
-if __name__ == "__main__":
-    import sys
-    mod = sys.modules[__name__]
-    attrs = dir(mod)
-    attrs = [attr for attr in attrs if not attr.startswith("__") and attr.isupper()]
-    for attr in attrs:
-        print(attr, ":", getattr(mod, attr))
+# if __name__ == "__main__":
+#     import sys
+#     mod = sys.modules[__name__]
+#     attrs = dir(mod)
+#     attrs = [attr for attr in attrs if not attr.startswith("__") and attr.isupper()]
+#     for attr in attrs:
+#         print(attr, ":", getattr(mod, attr))
