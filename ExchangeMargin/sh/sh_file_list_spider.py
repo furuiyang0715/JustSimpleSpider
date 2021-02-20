@@ -37,6 +37,21 @@ for sheet_name in ('融资买入标的证券一览表', '融券卖出标的证�
     rows = detail.nrows - 1
     print("总数据量 {}".format(rows))
 
+    head_fields = detail.row_values(0)
+    print("表头信息", head_fields)   # 表头信息 ['证券代码', '证券简称']
+    head_fields = ['SecuCode', 'SecuAbbr']
+
+    items = []
+    for i in range(1, rows + 1):
+        data = detail.row_values(i)
+        # print(data)
+        item = dict(zip(head_fields, data))
+        # print(item)
+        items.append(item)
+
+    print("ok...")
+    print()
+
 
 # (3) 整理并且存入数据库
 
