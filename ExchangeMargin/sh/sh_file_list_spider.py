@@ -43,16 +43,13 @@ for sheet_name in ('融资买入标的证券一览表', '融券卖出标的证�
 
     items = []
     for i in range(1, rows + 1):
-        data = detail.row_values(i)
-        # print(data)
-        item = dict(zip(head_fields, data))
-        # print(item)
+        row_val = detail.row_values(i)
+        item = dict(zip(head_fields, row_val))
+        item['SerialNumber'] = i
+        # item['ListDate'] = show_dt
+        # item['TargetCategory'] = 10
+        # item['InnerCode'] = inner_code
+        item['SecuMarket'] = 83
+
         items.append(item)
-
-    print("ok...")
-    print()
-
-
-# (3) 整理并且存入数据库
-
 
