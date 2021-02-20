@@ -135,7 +135,11 @@ class SHMarginSpider(MarginBase):
 
 
 def sh_list_task():
-    SHMarginSpider().start()
+    try:
+        SHMarginSpider().start()
+    except:
+        # TODO 发出钉钉预警
+        pass
 
 
 if __name__ == '__main__':
