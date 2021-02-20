@@ -20,7 +20,7 @@ class MarginBroadcast(MarginBase):
     """爬取上交所和深交所的融资融券公告"""
     def __init__(self):
         super(MarginBroadcast, self).__init__()
-        self. firelds = ['title', 'link', 'time', 'content', 'keyword']
+        self.fields = ['title', 'link', 'time', 'content', 'keyword']
 
         # sh
         self.sh_url = 'http://www.sse.com.cn/disclosure/magin/announcement/s_index.htm'
@@ -114,7 +114,7 @@ class MarginBroadcast(MarginBase):
         return ret
 
     def sz_start(self):
-        self._spider_init()
+        # self._spider_init()
         for page in range(1, 8):
             logger.info("page is {}".format(page))
             datas = self._make_sz_params(page)
@@ -138,7 +138,8 @@ class MarginBroadcast(MarginBase):
                     item['content'] = content
                     items.append(item)
                 print(items)
-                ret = self._batch_save(self.spider_client, items, self.announcement_table, self.firelds)
+                # ret = self._batch_save(self.spider_client, items, self.announcement_table, self.firelds)
+                self.spider_conn.batch_insert(items, self.announcement_table, self.fields)
             else:
                 self.error_pages.append(page)
 
@@ -151,7 +152,7 @@ class MarginBroadcast(MarginBase):
             self.post_sh(url)
 
     def post_sh(self, url):
-        self._spider_init()
+        # self._spider_init()
         resp = requests.post(url)
         if resp.status_code == 200:
             body = resp.text
@@ -189,7 +190,8 @@ class MarginBroadcast(MarginBase):
                 items.append(item)
 
             print(items)
-            ret = self._batch_save(self.spider_client, items, self.announcement_table, self.firelds)
+            # ret = self._batch_save(self.spider_client, items, self.announcement_table, self.firelds)
+            self.spider_conn.batch_insert(items, self.announcement_table, self.fields)
 
     def parse_sh_detail(self, url):
         """
