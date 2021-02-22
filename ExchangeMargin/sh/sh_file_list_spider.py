@@ -25,6 +25,7 @@ class MarginSHFileSpider(object):
     )
 
     def __init__(self, dt: datetime.datetime):
+        self.show_dt = dt
         self.datetime_str = dt.strftime('%Y%m%d')
         self.file_url = f'''http://biz.sse.com.cn//report/rzrq/dbp/zqdbp{self.datetime_str}.xls'''
         # self.file_url = '''http://biz.sse.com.cn//report/rzrq/dbp/zqdbp20210222.xls'''
@@ -98,7 +99,7 @@ class MarginSHFileSpider(object):
                 row_val = detail.row_values(i)
                 item = dict(zip(head_fields, row_val))
                 item['SerialNumber'] = i
-                # item['ListDate'] = show_dt
+                item['ListDate'] = self.show_dt
                 item['TargetCategory'] = sheet_map[sheet_name]
                 item['InnerCode'] = self.get_jyinner_code(item['SecuCode'])
                 item['SecuMarket'] = 83
@@ -117,4 +118,4 @@ class MarginSHFileSpider(object):
 
 
 if __name__ == '__main__':
-    MarginSHFileSpider(datetime.datetime(2021, 2, 14)).start()
+    MarginSHFileSpider(datetime.datetime(2021, 2, 1)).start()
