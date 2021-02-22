@@ -7,7 +7,8 @@ import requests
 import xlrd
 
 
-from ExchangeMargin.configs import JUY_HOST, JUY_DB, JUY_USER, JUY_PASSWD, JUY_PORT
+from ExchangeMargin.configs import JUY_HOST, JUY_DB, JUY_USER, JUY_PASSWD, JUY_PORT, SPIDER_MYSQL_HOST, SPIDER_MYSQL_DB, \
+    SPIDER_MYSQL_USER, SPIDER_MYSQL_PASSWORD, SPIDER_MYSQL_PORT
 from ExchangeMargin.sql_base import Connection
 
 
@@ -24,12 +25,42 @@ class MarginSHFileSpider(object):
         port=JUY_PORT,
     )
 
+    spider_conn = Connection(
+        host=SPIDER_MYSQL_HOST,
+        database=SPIDER_MYSQL_DB,
+        user=SPIDER_MYSQL_USER,
+        password=SPIDER_MYSQL_PASSWORD,
+        port=SPIDER_MYSQL_PORT,
+    )
+
+    fields = ['SecuMarket', 'InnerCode', 'SecuCode', 'SecuAbbr', 'SerialNumber', 'ListDate', 'TargetCategory']
+
     def __init__(self, dt: datetime.datetime):
         self.show_dt = dt
         self.datetime_str = dt.strftime('%Y%m%d')
         self.file_url = f'''http://biz.sse.com.cn//report/rzrq/dbp/zqdbp{self.datetime_str}.xls'''
         # self.file_url = '''http://biz.sse.com.cn//report/rzrq/dbp/zqdbp20210222.xls'''
         print(self.file_url)
+
+    def _create_table(self):
+        """创建 sh list 爬虫数据库"""
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `margin_sh_list_spider` (
+          `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+          `SecuMarket` int(11) DEFAULT NULL COMMENT '证券市场',
+          `InnerCode` int(11) NOT NULL COMMENT '证券内部编码',
+          `SecuCode` varchar(10) DEFAULT NULL COMMENT '证券代码',
+          `SecuAbbr` varchar(200) DEFAULT NULL COMMENT '证券简称',
+          `SerialNumber` int(10) DEFAULT NULL COMMENT '网站清单序列号',
+          `ListDate` datetime NOT NULL COMMENT '列入时间',
+          `TargetCategory` int(11) NOT NULL COMMENT '标的类别',
+          `CREATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP,
+          `UPDATETIMEJZ` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `un2` (`SecuMarket`, `TargetCategory`,`ListDate`, `InnerCode`) USING BTREE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='融资融券标的证券清单';
+        '''
+        self.spider_conn.execute(sql)
 
     def download_file(self, file_url: str) -> str :
         file_name = file_url.split('/')[-1]
@@ -115,6 +146,10 @@ class MarginSHFileSpider(object):
 
         # (2) 解析文件数据
         items = self.parse_xl_file(file_path)
+
+        # (3)  插入数据
+        count = self.spider_conn.batch_insert(items, 'margin_sh_list_spider', self.fields)
+        print(count)
 
 
 if __name__ == '__main__':
