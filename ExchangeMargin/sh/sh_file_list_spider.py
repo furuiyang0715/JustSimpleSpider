@@ -1,4 +1,5 @@
 # 从上交所的爬虫文件中获取到信息
+import datetime
 import traceback
 from functools import cached_property
 
@@ -23,8 +24,11 @@ class MarginSHFileSpider(object):
         port=JUY_PORT,
     )
 
-    def __init__(self):
-        self.file_url = '''http://biz.sse.com.cn//report/rzrq/dbp/zqdbp20210222.xls'''
+    def __init__(self, dt: datetime.datetime):
+        self.datetime_str = dt.strftime('%Y%m%d')
+        self.file_url = f'''http://biz.sse.com.cn//report/rzrq/dbp/zqdbp{self.datetime_str}.xls'''
+        # self.file_url = '''http://biz.sse.com.cn//report/rzrq/dbp/zqdbp20210222.xls'''
+        print(self.file_url)
 
     def download_file(self, file_url: str) -> str :
         file_name = file_url.split('/')[-1]
@@ -113,5 +117,4 @@ class MarginSHFileSpider(object):
 
 
 if __name__ == '__main__':
-    MarginSHFileSpider().start()
-
+    MarginSHFileSpider(datetime.datetime(2021, 2, 14)).start()
