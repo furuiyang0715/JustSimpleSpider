@@ -2,7 +2,7 @@ jsonpath==0.82
 APScheduler==3.6.3
 PyMySQL==0.9.3
 schedule==0.6.0
-lxml==4.5.0
+lxml==4.9.1
 selenium==3.141.0
 xlrd==1.2.0
 pandas==1.0.3
